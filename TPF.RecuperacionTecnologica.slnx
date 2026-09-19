@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/docs/">
+    <File Path="CONVENCIONES.md" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/TPF.RecuperacionTecnologica.Web/TPF.RecuperacionTecnologica.Web.csproj" />
   </Folder>
