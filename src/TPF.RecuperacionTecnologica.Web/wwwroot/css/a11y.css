@@ -1,0 +1,196 @@
+/* ==========================================================
+   ACCESIBILIDAD
+   Variables y atributos para a accesibilidad de la app.
+   Se carga después de tokens.css!!
+   ========================================================== */
+
+:root {
+    --fs: 1;
+}
+
+html {
+    font-size: calc(14px * var(--fs));
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: calc(16px * var(--fs));
+    }
+}
+
+html[data-contrast="high"] {
+    --bs-body-color: #000000;
+    --bs-border-color: #000000;
+    --bs-secondary-color: #000000;
+}
+
+    html[data-contrast="high"][data-bs-theme="dark"] {
+        --bs-body-color: #FFFFFF;
+        --bs-border-color: #FFFFFF;
+        --bs-secondary-color: #FFFFFF;
+    }
+
+    html[data-contrast="high"] .btn,
+    html[data-contrast="high"] .form-control,
+    html[data-contrast="high"] .form-select,
+    html[data-contrast="high"] .card,
+    html[data-contrast="high"] .badge,
+    html[data-contrast="high"] .alert {
+        border-width: 2px;
+    }
+
+    html[data-contrast="high"] :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+        outline-width: 3px;
+        outline-offset: 3px;
+    }
+
+html[data-motion="reduce"] *,
+html[data-motion="reduce"] *::before,
+html[data-motion="reduce"] *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ==========================================================
+   PANEL DE ACCESIBILIDAD
+
+   ========================================================== */
+
+.btn-a11y {
+    min-height: 32px;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: calc(13px * var(--fs));
+    border-radius: var(--radius-lg);
+    justify-content: center;
+}
+
+@media (max-width: 767.98px) {
+    .btn-a11y {
+        width: 32px;
+        padding: 0;
+    }
+}
+
+.a11y-panel {
+    width: min(360px, calc(100vw - 24px));
+    background-color: var(--app-surface);
+    border: 1px solid var(--app-border-strong);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    padding: 16px;
+}
+
+.a11y-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+    .a11y-head h2 {
+        font-size: calc(16px * var(--fs));
+        font-weight: 600;
+        margin: 0;
+    }
+
+.a11y-set {
+    border: 0;
+    margin: 0 0 14px;
+    padding: 0;
+    min-width: 0;
+}
+
+    .a11y-set legend {
+        font-size: calc(13px * var(--fs));
+        font-weight: 600;
+        padding: 0;
+        margin-bottom: 6px;
+    }
+
+.seg-radio {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+    .seg-radio.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+.seg-opt {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 52px;
+    padding: 6px 4px;
+    border: 1px solid var(--app-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--app-surface);
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.2;
+}
+
+    .seg-opt input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .seg-opt .seg-l {
+        font-size: calc(11px * var(--fs));
+        color: var(--bs-secondary-color);
+    }
+
+    .seg-opt:has(input:checked) {
+        background: var(--app-accent-soft);
+        border: 2px solid var(--bs-primary);
+        color: var(--bs-link-color);
+        font-weight: 600;
+    }
+
+        .seg-opt:has(input:checked) .seg-l {
+            color: var(--bs-link-color);
+            font-weight: 600;
+        }
+
+        .seg-opt:has(input:checked)::after {
+            content: "\2713";
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+    .seg-opt:has(input:focus-visible) {
+        outline: 2px solid var(--bs-primary);
+        outline-offset: 2px;
+    }
+
+.check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: calc(13px * var(--fs));
+    cursor: pointer;
+    min-height: 32px;
+}

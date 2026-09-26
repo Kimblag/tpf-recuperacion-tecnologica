@@ -1,0 +1,129 @@
+﻿/*==========================================================
+   TOKENS DE COLOR
+   Aquí solo definimos las variables de color para el proyecto.
+    No incluye nada de componentes. Este se va a cargar en el 
+    head, justo después de bootstrap, ya que depende de este.
+   ==========================================================*/
+
+:root {
+    /* --- MODO LIGHT: Sobreescribe las variables de bootstrap con la paleta de nuestra startup */
+    --bs-body-bg: #F7F8F6;
+    --bs-body-color: #202426;
+    
+    /* --- fuentes --- */
+    --app-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    --app-font-brand: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --app-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --bs-body-font-family: var(--app-font);
+
+
+    --bs-border-color: #D9DED7;
+    --bs-border-color-translucent: #D9DED7;
+    --bs-secondary-bg: #EEF1EC;
+    --bs-tertiary-bg: #EEF1EC;
+    --bs-secondary-color: #656D67;
+    --bs-emphasis-color: #202426;
+    --bs-primary: #557744;
+    --bs-primary-rgb: 85, 119, 68;
+    --bs-link-color: #476339;
+    --bs-link-hover-color: #557744;
+    --bs-focus-ring-color: rgba(85, 119, 68, .25);
+    --bs-danger: #A63D32;
+    --bs-danger-rgb: 166, 61, 50;
+    --bs-danger-bg-subtle: #FBEEEC;
+    --bs-danger-text-emphasis: #8A2F25;
+    --bs-danger-border-subtle: #EBC6C0;
+    --bs-warning: #A88019;
+    --bs-warning-rgb: 168, 128, 25;
+    --bs-warning-bg-subtle: #FBF6E9;
+    --bs-warning-text-emphasis: #7A5B10;
+    --bs-warning-border-subtle: #E8D9AF;
+    --bs-info: #486E94;
+    --bs-info-rgb: 72, 110, 148;
+    --bs-info-bg-subtle: #EEF2F6;
+    --bs-info-text-emphasis: #2C4863;
+    --bs-info-border-subtle: #CAD5E0;
+    --bs-success: #557744;
+    --bs-success-rgb: 85, 119, 68;
+    --bs-success-bg-subtle: #E5EEDC;
+    --bs-success-text-emphasis: #476339;
+    --bs-success-border-subtle: #D9DED7;
+
+    /* ---- tokens personalizados de nuestra app ---- */
+    --app-surface: #FFFFFF;
+    --app-surface-low: #EEF1EC;
+    --app-accent-soft: #E5EEDC;
+    --app-border-strong: #8B958A;
+    --app-text-muted: #8D968F;
+
+    /* colores de estado de equipo (EstadoEquipo) */
+    --st-disponible: #557744;
+    --st-recepcion: #8F9E8B;
+    --st-reparacion: #B3A98B;
+    --st-asignado: #788896;
+    --st-entregado: #91BE68;
+    --st-baja: #B8BFB7;
+
+    /* radios reutilizables */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-card: 10px;
+}
+
+[data-bs-theme="dark"] {
+    /* ---- MODO DARK: sobreescibe las variables de bootstrap ---- */
+    --bs-body-bg: #0D0F10;
+    --bs-body-color: #F2F2F0;
+    --bs-border-color: #2E3335;
+    --bs-border-color-translucent: #2E3335;
+    --bs-secondary-bg: #181B1C;
+    --bs-tertiary-bg: #181B1C;
+    --bs-secondary-color: #A4A7A5;
+    --bs-emphasis-color: #F2F2F0;
+
+    --bs-primary: #91BE68;
+    --bs-primary-rgb: 145, 190, 104;
+    --bs-link-color: #91BE68;
+    --bs-link-hover-color: #A4CE7D;
+    --bs-focus-ring-color: rgba(145, 190, 104, .3);
+
+    --bs-danger: #D9685A;
+    --bs-danger-rgb: 217, 104, 90;
+    --bs-danger-bg-subtle: rgba(181, 71, 58, .14);
+    --bs-danger-text-emphasis: #F0A79E;
+    --bs-danger-border-subtle: rgba(181, 71, 58, .38);
+
+    --bs-warning: #FBBF24;
+    --bs-warning-rgb: 251, 191, 36;
+    --bs-warning-bg-subtle: rgba(69, 26, 3, .4);
+    --bs-warning-text-emphasis: #FCD34D;
+    --bs-warning-border-subtle: rgba(146, 64, 14, .4);
+
+    --bs-info: #6698C8;
+    --bs-info-rgb: 102, 152, 200;
+    --bs-info-bg-subtle: #1F2B38;
+    --bs-info-text-emphasis: #8CB4D9;
+    --bs-info-border-subtle: #2D3E52;
+
+    --bs-success: #91BE68;
+    --bs-success-rgb: 145, 190, 104;
+    --bs-success-bg-subtle: rgba(145, 190, 104, .12);
+    --bs-success-text-emphasis: #91BE68;
+    --bs-success-border-subtle: #2E3335;
+
+    /* ---- tokens personalizados de nuestra app ---- */
+    --app-surface: #202426;
+    --app-surface-low: #181B1C;
+    --app-accent-soft: rgba(145, 190, 104, .12);
+    --app-border-strong: #6B7275;
+    --app-text-muted: #6C706E;
+
+    /* colores de estado de equipo (EstadoEquipo) */
+    --st-disponible: #91BE68;
+    --st-recepcion: #788876;
+    --st-reparacion: #A3997A;
+    --st-asignado: #5B7184;
+    --st-entregado: #557744;
+    --st-baja: #484E52;
+}
