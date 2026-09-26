@@ -1,0 +1,60 @@
+﻿<div class="dropdown">
+    <button type="button" class="btn btn-surface btn-a11y dropdown-toggle d-inline-flex align-items-center" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+            aria-expanded="false" aria-label="Accesibilidad" title="Accesibilidad">
+        <partial name="_Icon" model="@("access")" />
+        <span class="d-none d-md-inline">Accesibilidad</span>
+    </button>
+    <div class="dropdown-menu dropdown-menu-end a11y-panel">
+        <div class="a11y-head">
+            <h2>Accesibilidad</h2>
+        </div>
+        <fieldset class="a11y-set">
+            <legend>Tamaño del texto</legend>
+            <div class="seg-radio">
+                <label class="seg-opt">
+                    <input type="radio" name="a11y-fs" value="1" onchange="RTA11y.setTextScale(this.value)">
+                    <span aria-hidden="true" style="font-size:13px;font-weight:600">Aa</span>
+                    <span class="seg-l">Normal</span>
+                </label>
+                <label class="seg-opt">
+                    <input type="radio" name="a11y-fs" value="1.15" onchange="RTA11y.setTextScale(this.value)">
+                    <span aria-hidden="true" style="font-size:16px;font-weight:600">Aa</span>
+                    <span class="seg-l">Grande</span>
+                </label>
+                <label class="seg-opt">
+                    <input type="radio" name="a11y-fs" value="1.3" onchange="RTA11y.setTextScale(this.value)">
+                    <span aria-hidden="true" style="font-size:19px;font-weight:600">Aa</span>
+                    <span class="seg-l">Muy grande</span>
+                </label>
+                <label class="seg-opt">
+                    <input type="radio" name="a11y-fs" value="1.5" onchange="RTA11y.setTextScale(this.value)">
+                    <span aria-hidden="true" style="font-size:22px;font-weight:600">Aa</span>
+                    <span class="seg-l">Extra grande</span>
+                </label>
+            </div>
+        </fieldset>
+        <fieldset class="a11y-set">
+            <legend>Contraste de colores</legend>
+            <div class="seg-radio two">
+                <label class="seg-opt">
+                    <input type="radio" name="a11y-contrast" value="normal" onchange="RTA11y.setContrast(this.value)">
+                    <span style="font-weight:600">Normal</span>
+                </label>
+                <label class="seg-opt">
+                    <input type="radio" name="a11y-contrast" value="high" onchange="RTA11y.setContrast(this.value)">
+                    <span style="font-weight:600">Alto</span>
+                </label>
+            </div>
+            <p class="form-text">Alto: letras más oscuras y bordes más marcados.</p>
+        </fieldset>
+        <fieldset class="a11y-set">
+            <legend>Movimiento</legend>
+            <label class="check">
+                <input type="checkbox" id="a11y-motion" onchange="RTA11y.setMotion(this.checked ? 'reduce' : 'normal')">
+                <span>Reducir animaciones</span>
+            </label>
+        </fieldset>
+        <button type="button" class="btn btn-surface btn-sm" onclick="RTA11y.reset()">Restablecer</button>
+        <p class="form-text mb-0 mt-2">Tus elecciones se guardan en este dispositivo.</p>
+    </div>
+</div>

@@ -1,49 +1,121 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - TPF.RecuperacionTecnologica.Web</title>
     <script type="importmap"></script>
+    <script>
+            (function () {
+                var html = document.documentElement;
+                try {
+                    var theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                    html.setAttribute('data-bs-theme', theme);
+                } catch (e) { }
+                try {
+                    var saved = JSON.parse(localStorage.getItem('a11y') || 'null');
+                    if (saved) {
+                        html.style.setProperty('--fs', saved.fs || '1');
+                        html.setAttribute('data-contrast', saved.contrast || 'normal');
+                        html.setAttribute('data-motion', saved.motion || 'normal');
+                    } else if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                        html.setAttribute('data-motion', 'reduce');
+                    }
+                } catch (e) { }
+            })();
+    </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/a11y.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TPF.RecuperacionTecnologica.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">TPF.RecuperacionTecnologica.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+    <a class="visually-hidden-focusable btn btn-primary position-fixed top-0 start-0 m-2" style="z-index:1080;" href="#main-content">Ir al contenido</a>
+    <a class="visually-hidden-focusable btn btn-primary position-fixed top-0 start-0 m-2" style="z-index:1080;" href="#sidebarNav">Ir al menú</a>
+
+    <div class="app-shell d-flex">
+        <div class="offcanvas-lg offcanvas-start border-end" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+            <div class="offcanvas-header">
+                <span class="visually-hidden" id="sidebarOffcanvasLabel">Menú de navegación</span>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Cerrar menú"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center brand-mark fw-semibold" style="width:28px;height:28px;">R</span>
+                    <span class="fw-semibold" style="font-family:var(--app-font-brand)">Recuperación Tecnológica</span>
+                </div>
+                <!-- TODO: estos links son de ejemplo mientras implementamos todo -->
+                @{
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    var isHome = currentController == "Home" && currentAction == "Index";
+                    var isPrivacy = currentController == "Home" && currentAction == "Privacy";
+                }
+                <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
+                    <a class="nav-link d-flex align-items-center gap-2@(isHome ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(isHome ? "page" : null)">
+                        <span class="nav-dot"></span>
+                        <partial name="_Icon" model="@("grid")" />Inicio
+                    </a>
+                    <a class="nav-link d-flex align-items-center gap-2@(isPrivacy ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy" aria-current="@(isPrivacy ? "page" : null)">
+                        <span class="nav-dot"></span>
+                        <partial name="_Icon" model="@("file")" />Privacidad
+                    </a>
+                </nav>
+                <!-- TODO: datos de user de ejemplo!!  -->
+                <div class="sidebar-foot dropdown dropup">
+                    <button type="button" class="profile dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="menu">
+                        <span class="d-flex align-items-center gap-2 min-w-0">
+                            <span class="avatar" aria-hidden="true">US</span>
+                            <span class="min-w-0">
+                                <span class="profile-name d-block text-truncate">Usuario</span>
+                                <span class="profile-role d-block text-truncate">Cuenta</span>
+                            </span>
+                        </span>
+                        <partial name="_Icon" model="@("chevrons")" />
+                    </button>
+                    <ul class="dropdown-menu w-100 profile-menu">
+                        <li><a class="dropdown-item" href="#"><partial name="_Icon" model="@("user")" />Mi perfil</a></li>
+                        <li><a class="dropdown-item" href="#"><partial name="_Icon" model="@("logout")" />Cerrar sesión</a></li>
                     </ul>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </div>
+
+        <div class="d-flex flex-column flex-grow-1 min-vw-0">
+            <header class="topbar bg-body border-bottom d-flex align-items-center justify-content-between gap-2 px-3">
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <button type="button" class="btn btn-surface btn-icon d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Abrir menú de navegación">
+                        <partial name="_Icon" model="@("menu")" />
+                    </button>
+                    <span class="fw-medium text-truncate">@ViewData["Title"]</span>
+                </div>
+                <!-- TODO: buscador y botón de acción quedan pendientes porque dependen del rol o pantalla activa -->
+                <div class="d-flex align-items-center gap-2">
+                    <partial name="_AccessibilityMenu" />
+                    <partial name="_ThemeToggle" />
+                </div>
+            </header>
+
+            <main id="main-content" class="flex-grow-1 p-4" tabindex="-1">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer px-4">
+                <span>Recuperación Tecnológica</span>
+                <span>Plataforma para la Recuperación y Redistribución de Equipos Tecnológicos</span>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - TPF.RecuperacionTecnologica.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/js/a11y.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
