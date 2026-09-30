@@ -16,18 +16,27 @@ src/TPF.RecuperacionTecnologica.Web/
 ├── Data/
 │   ├── Configurations/
 │   └── ApplicationDbContext.cs
-├── Domain/
-│   ├── Entities/
-│   └── Enums/
+├── Models/
+│   ├── Enums/
+│   └── <Entidad>.cs
 ├── Identity/
 ├── Services/
+│   └── <Dominio>/
+│       ├── I<Entidad>Service.cs
+│       └── <Entidad>Service.cs
 ├── ViewModels/
+│   └── <Dominio>/
+│       └── <Nombre>ViewModel.cs
 ├── Views/
 ├── Migrations/
 └── wwwroot/
 ```
 
 Cada elemento debe ubicarse en la carpeta correspondiente a su responsabilidad.
+
+Las entidades y sus enumeraciones se ubican directamente en `Models/` y `Models/Enums/` (no en `Domain/`).
+
+`ViewModels/` y `Services/` se organizan con una subcarpeta por dominio (por ejemplo `Solicitudes/`, `Equipos/`, `Donacion/`, `Personal/`, `Configuracion/`), agrupando ahí los archivos relacionados con esa área funcional. No se crean todos los ViewModels o Services sueltos directamente dentro de `ViewModels/` o `Services/`.
 
 ## 2. Clases
 
