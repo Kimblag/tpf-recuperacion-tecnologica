@@ -16,18 +16,27 @@ src/TPF.RecuperacionTecnologica.Web/
 ├── Data/
 │   ├── Configurations/
 │   └── ApplicationDbContext.cs
-├── Domain/
-│   ├── Entities/
-│   └── Enums/
-├── Identity/
+├── Models/
+│   ├── Enums/
+│   └── <Entidad>.cs
 ├── Services/
+│   └── <Funcionalidad>/
+│       ├── I<Nombre>Service.cs
+│       └── <Nombre>Service.cs
 ├── ViewModels/
+│   └── <Funcionalidad>/
+│       └── <Nombre>ViewModel.cs
 ├── Views/
+│   └── <Funcionalidad>/
 ├── Migrations/
 └── wwwroot/
 ```
 
 Cada elemento debe ubicarse en la carpeta correspondiente a su responsabilidad.
+
+Las entidades y sus enumeraciones se ubican directamente en `Models/` y `Models/Enums/`.
+
+`Views/`, `ViewModels/` y `Services/` se organizan con una subcarpeta por funcionalidad. Esa subcarpeta lleva el mismo nombre que el controlador sin el sufijo `Controller`. Por ejemplo, `SolicitudesController` utiliza `Views/Solicitudes/`, `ViewModels/Solicitudes/` y `Services/Solicitudes/`. No se ubican ViewModels ni Services sueltos directamente dentro de `ViewModels/` o `Services/`.
 
 ## 2. Clases
 
@@ -61,20 +70,19 @@ Ejemplos:
 Usuario
 Personal
 Equipo
-Donacion
 Diagnostico
 Solicitud
 Asignacion
-LiberacionAsignacion
-ActaEntrega
-ParametroInstitucional
-Auditoria
+Entrega
+ConfiguracionInstitucional
+RegistroAuditoria
+ImagenEquipo
 ```
 
 Las entidades se ubican en:
 
 ```text
-Domain/Entities/
+Models/
 ```
 
 Las entidades representan conceptos del dominio y no deben utilizarse directamente como modelos específicos de formularios o pantallas.
@@ -140,10 +148,12 @@ AuditoriaService
 ReporteService
 ```
 
-Se ubican en:
+Cada Service se define mediante una interfaz `I<Nombre>Service` y su implementación `<Nombre>Service`, ubicadas juntas en la subcarpeta de su funcionalidad:
 
 ```text
-Services/
+Services/<Funcionalidad>/
+├── I<Nombre>Service.cs
+└── <Nombre>Service.cs
 ```
 
 Los Services contienen la lógica de negocio que no corresponde directamente al Controller.
@@ -158,6 +168,8 @@ Por ejemplo:
 
 Los Controllers no deben concentrar la lógica de negocio.
 
+Los servicios transversales utilizan su propia subcarpeta, por ejemplo `Services/Auditoria/` y `Services/Email/`.
+
 ## 7. ViewModels
 
 Los ViewModels utilizan el nombre de la pantalla u operación seguido de `ViewModel`.
@@ -165,18 +177,18 @@ Los ViewModels utilizan el nombre de la pantalla u operación seguido de `ViewMo
 Ejemplos:
 
 ```text
-RegistrarDonacionViewModel
-EditarUsuarioViewModel
+RegistroDonacionViewModel
+EdicionUsuarioViewModel
 SolicitudDetalleViewModel
-RegistrarDiagnosticoViewModel
-ConfigurarParametrosViewModel
-AuditoriaListadoViewModel
+DiagnosticoInicialViewModel
+ConfiguracionInstitucionalViewModel
+AuditoriaFiltroViewModel
 ```
 
-Se ubican en:
+Se ubican en la subcarpeta de su funcionalidad:
 
 ```text
-ViewModels/
+ViewModels/<Funcionalidad>/
 ```
 
 Los ViewModels deben contener únicamente los datos necesarios para una determinada vista u operación.
@@ -185,7 +197,7 @@ No se debe utilizar una entidad de dominio como modelo de un formulario cuando e
 
 ## 8. Controllers
 
-Los Controllers utilizan el nombre del recurso en plural seguido de `Controller`.
+Los Controllers utilizan el nombre del recurso en plural seguido de `Controller`. Los que no corresponden a una entidad utilizan un nombre que describa su función.
 
 Ejemplos:
 
@@ -197,8 +209,14 @@ DonacionesController
 DiagnosticosController
 SolicitudesController
 AsignacionesController
+EntregasController
+AccountController
+CatalogoController
+ConfiguracionController
 AuditoriaController
-ReportesController
+LegajoEquipoController
+ReporteController
+InicioController
 ```
 
 Se ubican en:
@@ -216,6 +234,8 @@ Los Controllers deben:
 5. devolver el resultado HTTP.
 
 La lógica de negocio debe permanecer en los Services.
+
+No se crean controladores por rol. Las pantallas de cada rol se resuelven como acciones del controlador de la entidad, con la política de autorización correspondiente en cada acción.
 
 ## 9. Métodos asíncronos
 
@@ -378,13 +398,19 @@ Ejemplo:
 ```csharp
 public class DonacionesController : Controller
 {
-    private readonly DonacionService _donacionService;
+    private readonly IDonacionService _donacionService;
 
-    public DonacionesController(DonacionService donacionService)
+    public DonacionesController(IDonacionService donacionService)
     {
         _donacionService = donacionService;
     }
 }
+```
+
+Los Services se registran con su interfaz en `Program.cs`:
+
+```csharp
+builder.Services.AddScoped<IDonacionService, DonacionService>();
 ```
 
 Evitar crear manualmente Services, DbContexts u otras dependencias dentro de Controllers.
@@ -469,29 +495,36 @@ La descripción debe ser concreta y expresar qué cambio se realizó.
 
 ## 17. Branches
 
-Cada tarea debe desarrollarse en una branch independiente.
+Cada tarea debe desarrollarse en una branch independiente, creada siempre a partir de `main` actualizado.
 
 Convención:
 
 ```text
 feature/<numero>-<descripcion>
 fix/<numero>-<descripcion>
-chore/<numero>-<descripcion>
+docs/<numero>-<descripcion>
 ```
+
+`<numero>` es el número de la Issue de GitHub correspondiente. Cuando el cambio no tiene Issue, se omite el número.
 
 Ejemplos:
 
 ```text
-feature/4.2-registrar-donacion
-fix/6.4-validar-solicitud
-chore/0.3-configurar-ef-core
+feature/91-entidad-equipo
+feature/96-dbcontext
+fix/validar-solicitud-duplicada
+docs/actualizar-estructura-convenciones
 ```
 
 Usar:
 
-* `feature/` para funcionalidades nuevas;
+* `feature/` para funcionalidades nuevas, configuración y tareas técnicas;
 * `fix/` para correcciones;
-* `chore/` para configuración, mantenimiento o tareas técnicas.
+* `docs/` para documentación.
+
+Los nombres deben ser descriptivos. No se utilizan nombres como `rama1`, `prueba`, `cosas` o `final`.
+
+Antes de realizar commits, verificar la branch activa con `git branch`.
 
 No realizar desarrollo directamente sobre `main`.
 
@@ -521,6 +554,13 @@ Merge
 main
 ```
 
+Antes de crear el Pull Request:
+
+1. Ejecutar `dotnet build`.
+2. Si existen pruebas, ejecutar `dotnet test`.
+3. Verificar el estado con `git status`.
+
+No se crea un Pull Request si el proyecto no compila.
 El Pull Request debe estar relacionado con la Issue correspondiente.
 
 Cuando corresponda, utilizar referencias como:
