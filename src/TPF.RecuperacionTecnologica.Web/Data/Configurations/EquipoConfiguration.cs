@@ -28,8 +28,12 @@ public class EquipoConfiguration : IEntityTypeConfiguration<Equipo>
 
         builder.ComplexProperty(e => e.EspecificacionesDeclaradas, especificaciones =>
         {
-            especificaciones.Property(x => x.Otros)
-                .HasMaxLength(300);
+            especificaciones.Property(x => x.Procesador).HasMaxLength(100);
+            especificaciones.Property(x => x.MemoriaRam).HasMaxLength(30);
+            especificaciones.Property(x => x.Almacenamiento).HasMaxLength(30);
+            especificaciones.Property(x => x.TamanoPantalla).HasMaxLength(30);
+            especificaciones.Property(x => x.EstadoBateria).HasMaxLength(100);
+            especificaciones.Property(x => x.Otros).HasMaxLength(300);
         });
 
         builder.Property(e => e.MotivoCancelacion)

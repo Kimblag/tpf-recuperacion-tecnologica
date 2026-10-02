@@ -45,5 +45,12 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
 
         builder.Property(u => u.MotivoBaja)
             .HasMaxLength(300);
+
+        builder.HasIndex(u => u.CorreoElectronico)
+            .IsUnique();
+
+        builder.ToTable(t => t.HasCheckConstraint(
+            "CK_Usuario_NroDocumento_SoloDigitos",
+            "[NroDocumento] NOT LIKE '%[^0-9]%'"));
     }
 }
