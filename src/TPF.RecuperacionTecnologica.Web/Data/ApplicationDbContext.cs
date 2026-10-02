@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Models;
 
 namespace TPF.RecuperacionTecnologica.Web.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -11,9 +12,9 @@ namespace TPF.RecuperacionTecnologica.Web.Data
         }
 
         public DbSet<Usuario> Usuarios => Set<Usuario>();
-        public DbSet<Personal> Personal => Set<Personal>();
+        public DbSet<Personal> PersonalInterno => Set<Personal>();
         public DbSet<Equipo> Equipos => Set<Equipo>();
-        public DbSet<ImagenEquipo> ImagenesEqipo => Set<ImagenEquipo>();
+        public DbSet<ImagenEquipo> ImagenEquipos => Set<ImagenEquipo>();
         public DbSet<Diagnostico> Diagnosticos => Set<Diagnostico>();
         public DbSet<Solicitud> Solicitudes => Set<Solicitud>();
         public DbSet<Asignacion> Asignaciones => Set<Asignacion>();
