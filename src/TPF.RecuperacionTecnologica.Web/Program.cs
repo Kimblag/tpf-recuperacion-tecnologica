@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 builder.Services
     .AddIdentity<IdentityUser, IdentityRole>(options =>

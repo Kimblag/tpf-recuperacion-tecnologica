@@ -1,0 +1,105 @@
+/* ==========================================================
+   AUTENTICACIÓN
+   Layout de las pantallas sin sesión (login, registro, etc.).
+   ========================================================== */
+
+.auth {
+    min-height: 100vh;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 56px 16px 32px;
+    position: relative;
+}
+
+.auth-main {
+    display: contents;
+}
+
+.auth-theme {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .auth-brand .brand-mark {
+        width: 28px;
+        height: 28px;
+        flex: none;
+        display: grid;
+        place-items: center;
+        font-family: var(--app-font-brand);
+        font-weight: 600;
+        font-size: calc(14px * var(--fs));
+    }
+
+.brand-name {
+    font-family: var(--app-font-brand);
+    font-weight: 600;
+    font-size: calc(16px * var(--fs));
+    line-height: 1.2;
+    letter-spacing: -.01em;
+    color: var(--bs-body-color);
+}
+
+.auth-card {
+    width: min(400px, 100%);
+    background-color: var(--app-surface);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--radius-card);
+    padding: 24px;
+}
+
+    .auth-card.wide {
+        width: min(560px, 100%);
+    }
+
+    .auth-card h1 {
+        margin: 0;
+        font-size: calc(20px * var(--fs));
+        font-weight: 600;
+        letter-spacing: -.02em;
+    }
+
+    .auth-card .lead {
+        margin: 4px 0 16px;
+        font-size: calc(13px * var(--fs));
+        font-weight: 400;
+        color: var(--bs-secondary-color);
+    }
+
+.auth .stack {
+    gap: 14px;
+}
+
+.auth-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    font-size: calc(12px * var(--fs));
+}
+
+.auth-foot {
+    margin: 0;
+    font-size: calc(12px * var(--fs));
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+
+@media (max-width: 767.98px) {
+    .auth-card {
+        padding: 20px;
+    }
+}
