@@ -33,5 +33,8 @@ public class EntregaConfiguration : IEntityTypeConfiguration<Entrega>
         builder.Property(e => e.DocumentoIdentidadQuienRetira)
             .IsRequired()
             .HasMaxLength(20);
+
+        builder.Property(e => e.FechaEntrega)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
     }
 }

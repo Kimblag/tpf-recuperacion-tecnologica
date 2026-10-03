@@ -42,6 +42,9 @@ public class EquipoConfiguration : IEntityTypeConfiguration<Equipo>
         builder.Property(e => e.ImagenUrl)
             .HasMaxLength(500);
 
+        builder.Property(e => e.FechaRegistro)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
+        
         builder.Property(e => e.RowVersion)
             .IsRowVersion();
     }

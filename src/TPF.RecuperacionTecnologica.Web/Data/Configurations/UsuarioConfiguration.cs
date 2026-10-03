@@ -49,8 +49,17 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.HasIndex(u => u.CorreoElectronico)
             .IsUnique();
 
-        builder.ToTable(t => t.HasCheckConstraint(
-            "CK_Usuario_NroDocumento_SoloDigitos",
-            "[NroDocumento] NOT LIKE '%[^0-9]%'"));
+        builder.Property(u => u.FechaAlta)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
+
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint(
+                "CK_Usuario_NroDocumento_SoloDigitos",
+                "[NroDocumento] NOT LIKE '%[^0-9]%'");
+            t.HasCheckConstraint(
+                "CK_Usuario_FechaBaja_Coherente",
+                "[FechaBaja] IS NULL OR [FechaBaja] >= [FechaAlta]");
+        });
     }
 }

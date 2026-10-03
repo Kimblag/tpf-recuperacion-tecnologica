@@ -43,5 +43,8 @@ public class DiagnosticoConfiguration : IEntityTypeConfiguration<Diagnostico>
             especificaciones.Property(x => x.EstadoBateria).HasMaxLength(100);
             especificaciones.Property(x => x.Otros).HasMaxLength(300);
         });
+
+        builder.Property(d => d.FechaDiagnostico)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
     }
 }

@@ -26,5 +26,8 @@ public class ImagenEquipoConfiguration : IEntityTypeConfiguration<ImagenEquipo>
 
         builder.Property(i => i.Angulo)
             .HasMaxLength(40);
+
+        builder.Property(i => i.FechaCarga)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
     }
 }
