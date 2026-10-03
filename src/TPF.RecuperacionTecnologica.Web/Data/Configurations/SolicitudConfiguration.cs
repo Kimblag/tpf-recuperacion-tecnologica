@@ -33,6 +33,9 @@ public class SolicitudConfiguration : IEntityTypeConfiguration<Solicitud>
         builder.Property(s => s.MotivoCancelacion)
             .HasMaxLength(300);
 
+        builder.Property(s => s.FechaSolicitud)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
+
         builder.Property(s => s.RowVersion)
             .IsRowVersion();
     }

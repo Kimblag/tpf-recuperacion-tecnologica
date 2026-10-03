@@ -21,5 +21,8 @@ public class RegistroAuditoriaConfiguration : IEntityTypeConfiguration<RegistroA
 
         builder.Property(r => r.Detalle)
             .HasMaxLength(500);
+
+        builder.Property(r => r.FechaHora)
+            .HasDefaultValueSql("SYSUTCDATETIME()");
     }
 }
