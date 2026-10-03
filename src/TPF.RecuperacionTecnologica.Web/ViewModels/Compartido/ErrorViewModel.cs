@@ -1,4 +1,4 @@
-namespace TPF.RecuperacionTecnologica.Web.Models;
+namespace TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 public class ErrorViewModel
 {
