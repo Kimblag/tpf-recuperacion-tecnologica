@@ -28,6 +28,7 @@ builder.Services
         options.User.RequireUniqueEmail = true;
 
         // Bloqueo temporal tras 5 intentos fallidos
+        options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
