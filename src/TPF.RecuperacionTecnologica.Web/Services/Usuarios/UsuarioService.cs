@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client.NativeInterop;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
@@ -44,60 +45,55 @@ public class UsuarioService : IUsuarioService
             });
         }
 
-        // crear la cuenta de usuario
-        var identityUser = new IdentityUser { UserName = correo, Email = correo };
-        var resultado = await _userManager.CreateAsync(identityUser, modelo.Password);
+        Usuario usuario;
 
-        if (!resultado.Succeeded)
-        {
-            // como el UserName es el correo, un correo repetido devuelve dos errores en inglés; se unifican en uno
-            var correoDuplicado = resultado.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName");
-
-            return correoDuplicado
-                ? IdentityResult.Failed(new IdentityError
-                {
-                    Code = "CorreoDuplicado",
-                    Description = "Ya existe una cuenta con ese correo electrónico."
-                })
-                : resultado;
-        }
-
-        // crear la ficha del usuario
-        var esPersona = modelo.TipoUsuario == TipoUsuario.Persona;
-        var usuario = new Usuario
-        {
-            IdentityUserId = identityUser.Id,
-            TipoUsuario = modelo.TipoUsuario,
-            Nombre = esPersona ? modelo.Nombre?.Trim() : null,
-            Apellido = esPersona ? modelo.Apellido?.Trim() : null,
-            RazonSocial = esPersona ? null : modelo.RazonSocial?.Trim(),
-            TipoDocumento = modelo.TipoDocumento,
-            NroDocumento = modelo.NroDocumento,
-            Direccion = modelo.Direccion?.Trim(),
-            Telefono = modelo.Telefono?.Trim(),
-            CorreoElectronico = correo,
-            EstadoUsuario = EstadoUsuario.Activo,
-            FechaAlta = DateTime.UtcNow
-        };
-
+        // 2 la cuenta y ficha se guardan juntas, es todo o nada para evitar inconsistencias
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
 
         try
         {
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex)
-        {
-            // Si falla la ficha, entonces se borra la cuenta recién creada por consistencia de datos
-            _context.Entry(usuario).State = EntityState.Detached;
-            var borrado = await _userManager.DeleteAsync(identityUser);
+            var identityUser = new IdentityUser { UserName = correo, Email = correo };
+            var resultado = await _userManager.CreateAsync(identityUser, modelo.Password);
 
-            if (!borrado.Succeeded)
+            if (!resultado.Succeeded)
             {
-                _logger.LogCritical("No se pudo eliminar la cuenta huérfana {IdentityUserId}", identityUser.Id);
+                // al tener el user name igual al correo, va a generar error por duplicados (email, username)
+                // unifico los mensajes en uno
+                var correoDuplicado = resultado.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail");
+
+                // sale sin commitear la transaccion, no se guarda nada
+                return correoDuplicado ? IdentityResult.Failed(
+                    new IdentityError
+                {
+                    Code = "CorreoDuplicado",
+                    Description = "Ya existe una cuenta con ese correo electrónico."
+                }) : resultado;
             }
 
-            _logger.LogError(ex, "Falló el alta del Usuario; se eliminó la cuenta {IdentityUserId}", identityUser.Id);
+            var esPersona = modelo.TipoUsuario == TipoUsuario.Persona;
+            usuario = new Usuario
+            {
+                IdentityUserId = identityUser.Id,
+                TipoUsuario = modelo.TipoUsuario,
+                Nombre = esPersona ? modelo.Nombre?.Trim() : null,
+                Apellido = esPersona ? modelo.Apellido?.Trim() : null,
+                RazonSocial = esPersona ? null : modelo.RazonSocial?.Trim(),
+                TipoDocumento = modelo.TipoDocumento,
+                NroDocumento = modelo.NroDocumento,
+                Direccion = modelo.Direccion?.Trim(),
+                Telefono = modelo.Telefono?.Trim(),
+                CorreoElectronico = correo,
+                EstadoUsuario = EstadoUsuario.Activo,
+                FechaAlta = DateTime.UtcNow
+            };
+
+            _context.Usuarios.Add(usuario);
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló el alta del Usuario; se revirtió la transacción");
 
             return IdentityResult.Failed(new IdentityError
             {
@@ -107,9 +103,18 @@ public class UsuarioService : IUsuarioService
         }
 
 
-        // se audita si todo sale ok
-        await _auditoriaService.RegistrarEventoAsync(TipoOperacionAuditoria.AltaUsuario, null, nameof(Usuario), usuario.NroUsuario, $"Alta de usuario ({usuario.TipoUsuario})");
-
+        // registrar auditoria fuera de la transaccion porque si falla, el registro ya estara hecho
+        // no se debe informar error
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+            TipoOperacionAuditoria.AltaUsuario, null, nameof(Usuario), usuario.NroUsuario,
+            $"Alta de usuario ({usuario.TipoUsuario})");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar el alta del Usuario {NroUsuario}", usuario.NroUsuario);
+        }
         return IdentityResult.Success;
     }
 }
