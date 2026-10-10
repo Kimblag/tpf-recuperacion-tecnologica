@@ -53,7 +53,7 @@ public class CuentaService : ICuentaService
             if (!estabaBloqueada)
             {
                 await AuditarSesionAsync(TipoOperacionAuditoria.BloqueoCuenta, identityUser.Id,
-                    "Cuenta bloqueada temporalmente por intentos fallidos");
+                        "Cuenta bloqueada temporalmente por intentos fallidos", actorAutenticado: false);
             }
 
             return ResultadoInicioSesion.CuentaBloqueada;
@@ -62,7 +62,7 @@ public class CuentaService : ICuentaService
         if (!verificacion.Succeeded)
         {
             await AuditarSesionAsync(TipoOperacionAuditoria.IntentoFallidoSesion, identityUser.Id,
-                "Contraseña incorrecta");
+                "Contraseña incorrecta", actorAutenticado: false);
 
             return ResultadoInicioSesion.CredencialesInvalidas;
         }
@@ -111,7 +111,7 @@ public class CuentaService : ICuentaService
         }
     }
 
-    private async Task AuditarSesionAsync(TipoOperacionAuditoria tipoOperacion, string identityUserId, string detalle)
+    private async Task AuditarSesionAsync(TipoOperacionAuditoria tipoOperacion, string identityUserId, string detalle, bool actorAutenticado = true)
     {
         // la auditoría nunca debe impedir iniciar o cerrar sesión: si falla, solo registramos en el log
         try
@@ -124,7 +124,11 @@ public class CuentaService : ICuentaService
             }
 
             await _auditoriaService.RegistrarEventoAsync(
-                tipoOperacion, ficha.Value.CodigoPersonal, ficha.Value.Entidad, ficha.Value.Id, detalle);
+                tipoOperacion,
+                actorAutenticado ? ficha.Value.CodigoPersonal : null,
+                ficha.Value.Entidad,
+                ficha.Value.Id,
+                detalle);
         }
         catch (Exception ex)
         {
