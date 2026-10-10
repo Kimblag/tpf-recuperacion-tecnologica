@@ -1,0 +1,102 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.UsuarioListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li aria-current="page">Usuarios</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Usuarios</h1></div>
+            <p class="page-sub">Usuarios externos registrados en la plataforma</p>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Usuarios">
+        <form class="filters" role="search" method="get" asp-action="Index">
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, DNI o correo" />
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoUsuario>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("users")" /></span>
+                    <h3>No se encontraron usuarios</h3>
+                    <p>Pruebe con otro nombre, documento o correo.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Usuarios externos</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Usuario</th>
+                                <th scope="col">Nombre o razón social</th>
+                                <th scope="col">Documento</th>
+                                <th scope="col">Correo</th>
+                                <th scope="col">Teléfono</th>
+                                <th scope="col">Alta</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Usuario"><a class="mono" asp-action="Detalle" asp-route-id="@fila.NroUsuario">@fila.Codigo</a></td>
+                                    <td data-label="Nombre o razón social">@fila.NombreVisible</td>
+                                    <td data-label="Documento"><span class="mono">@fila.DocumentoFormateado</span></td>
+                                    <td data-label="Correo"><span class="muted">@fila.CorreoElectronico</span></td>
+                                    <td data-label="Teléfono">@fila.Telefono</td>
+                                    <td data-label="Alta">@fila.FechaAlta.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Estado"><partial name="_EstadoUsuarioBadge" model="fila.EstadoUsuario" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroUsuario" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-foot">
+                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
+                    <nav aria-label="Paginación">
+                        <div class="pagination">
+                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
+                            <button type="button" class="page-btn" aria-current="page">1</button>
+                            <button type="button" class="page-btn" aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
+                        </div>
+                    </nav>
+                </div>
+            }
+        </div>
+    </section>
+</div>

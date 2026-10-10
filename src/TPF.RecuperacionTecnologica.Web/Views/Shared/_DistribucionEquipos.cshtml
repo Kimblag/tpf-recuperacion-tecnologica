@@ -1,0 +1,33 @@
+@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Administrador.EquipoEstadoCantidadViewModel>
+@using System.Globalization
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var total = Model.Sum(e => e.Cantidad);
+
+    string ClaseColor(EstadoEquipo estado) => estado switch
+    {
+        EstadoEquipo.PendienteRecepcion => "s-recepcion",
+        EstadoEquipo.Disponible => "s-disponible",
+        EstadoEquipo.EnReparacion => "s-reparacion",
+        EstadoEquipo.Asignado => "s-asignado",
+        EstadoEquipo.Entregado => "s-entregado",
+        _ => "s-baja"
+    };
+
+    string Porcentaje(int cantidad) => (total == 0 ? 0 : cantidad * 100.0 / total).ToString("0.0", CultureInfo.InvariantCulture);
+}
+<div class="distbar" role="img" aria-label="Distribución de equipos por estado. Total @total.">
+    @foreach (var item in Model)
+    {
+        <span class="@ClaseColor(item.Estado)" style="width:@Porcentaje(item.Cantidad)%"></span>
+    }
+</div>
+<div class="legend">
+    @foreach (var item in Model)
+    {
+        <div>
+            <span class="dot @ClaseColor(item.Estado)"></span>
+            <span><b>@Html.DisplayFor(m => item.Estado)</b><span class="mono">@item.Cantidad</span></span>
+        </div>
+    }
+</div>

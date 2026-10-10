@@ -1,0 +1,38 @@
+@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria.AuditoriaFilaViewModel>
+<div class="table-wrap">
+    <table class="table table-stack">
+        <caption class="visually-hidden">Registro de auditoría</caption>
+        <thead>
+            <tr>
+                <th scope="col">Fecha y hora</th>
+                <th scope="col">Personal</th>
+                <th scope="col">Operación</th>
+                <th scope="col">Entidad</th>
+                <th scope="col">Identificador</th>
+                <th scope="col">Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fila in Model)
+            {
+                <tr>
+                    <td data-label="Fecha y hora"><span class="nowrap">@fila.FechaHora.ToString("dd/MM/yyyy HH:mm")</span></td>
+                    <td data-label="Personal"><span class="mono">@fila.Personal</span></td>
+                    <td data-label="Operación"><span class="tag">@Html.DisplayFor(m => fila.Operacion)</span></td>
+                    <td data-label="Entidad">@fila.Entidad</td>
+                    <td data-label="Identificador">
+                        @if (fila.Entidad == "Personal")
+                        {
+                            <a class="mono" asp-controller="Personal" asp-action="Detalle" asp-route-id="@fila.IdEntidad">@fila.Identificador</a>
+                        }
+                        else
+                        {
+                            <span class="mono">@fila.Identificador</span>
+                        }
+                    </td>
+                    <td data-label="Detalle"><span class="muted">@fila.Detalle</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

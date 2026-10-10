@@ -1,0 +1,71 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Administrador.AdministradorInicioViewModel
+@{
+    ViewData["Title"] = "Dashboard administrativo";
+    var variacion = Model.VariacionEntregasPorcentaje >= 0 ? $"+{Model.VariacionEntregasPorcentaje}%" : $"{Model.VariacionEntregasPorcentaje}%";
+    var personalDetalle = $"{Model.Administradores} Administrador · {Model.Coordinadores} Coordinadores · {Model.Tecnicos} Técnicos";
+    var inactivos = Model.PersonalInactivo == 1 ? "1 inactivo" : $"{Model.PersonalInactivo} inactivos";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li aria-current="page">Inicio</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Dashboard</h1></div>
+            <p class="page-sub">Resumen administrativo de la plataforma</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-controller="Reportes" asp-action="Index"><partial name="_Icon" model="@("file")" /><span>Ver reportes</span></a>
+            <a class="btn btn-primary" asp-controller="Personal" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
+        </div>
+    </div>
+
+    <div class="g-metrics">
+        <partial name="_Metrica" model="@(("Usuarios externos", "users", "i-info", Model.UsuariosExternos.ToString(), $"+{Model.UsuariosNuevosDelMes} este mes", "ok", "Cuentas registradas"))" />
+        <partial name="_Metrica" model="@(("Personal activo", "idcard", "i-ok", Model.PersonalActivo.ToString(), inactivos, "", personalDetalle))" />
+        <partial name="_Metrica" model="@(("Equipos registrados", "laptop", "i-ok", Model.EquiposRegistrados.ToString(), "", "", "En todos los estados"))" />
+        <partial name="_Metrica" model="@(("Entregas este mes", "truck", "i-ok", Model.EntregasDelMes.ToString(), variacion, "ok", "Respecto del mes anterior"))" />
+    </div>
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Equipos por estado</h2>
+                <p class="card-sub">Distribución actual del inventario (Total: @Model.EquiposRegistrados equipos)</p>
+            </div>
+            <a class="link" asp-controller="Reportes" asp-action="EquiposPorEstado">Ver reporte</a>
+        </div>
+        <div class="card-body">
+            <partial name="_DistribucionEquipos" model="Model.EquiposPorEstado" />
+        </div>
+    </section>
+
+    <section class="card overflow">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Auditoría reciente</h2>
+                <p class="card-sub">Últimas operaciones registradas</p>
+            </div>
+        </div>
+        <div class="card-body flush">
+            @if (Model.AuditoriaReciente.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("history")" /></span>
+                    <h3>Sin movimientos recientes</h3>
+                    <p>Las operaciones del sistema se registran acá.</p>
+                </div>
+            }
+            else
+            {
+                <partial name="_TablaAuditoria" model="Model.AuditoriaReciente" />
+            }
+            <div class="card-foot center">
+                <a asp-controller="Auditoria" asp-action="Index">Ver registro completo de auditoría →</a>
+            </div>
+        </div>
+    </section>
+</div>
