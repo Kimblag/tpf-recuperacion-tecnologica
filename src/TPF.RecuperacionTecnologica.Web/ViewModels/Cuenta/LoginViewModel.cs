@@ -4,14 +4,20 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 public class LoginViewModel
 {
-[Required(ErrorMessage = "El correo electrónico es obligatorio.")]
-[EmailAddress(ErrorMessage = "Ingresá un correo electrónico válido.")]
-public string CorreoElectronico { get; set; } = string.Empty;
+    [Display(Name = "Correo electrónico")]
+    [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
+    [EmailAddress(ErrorMessage = "Ingrese un correo electrónico válido.")]
+    [StringLength(254, ErrorMessage = "Máximo 254 caracteres.")]
+    public string CorreoElectronico { get; set; } = string.Empty;
 
-[Required(ErrorMessage = "La contraseña es obligatoria.")]
-[DataType(DataType.Password)]
-public string Password { get; set; } = string.Empty;
 
-public bool RecordarSesion { get; set; }
+    [Display(Name = "Contraseña")]
+    [Required(ErrorMessage = "La contraseña es obligatoria.")]
+    [DataType(DataType.Password)]
+    [StringLength(128, ErrorMessage = "Máximo 128 caracteres.")]
+    public string Password { get; set; } = string.Empty;
+
+    [Display(Name = "Recordar sesión")]
+    public bool RecordarSesion { get; set; }
 
 }
