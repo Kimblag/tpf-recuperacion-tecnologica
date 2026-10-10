@@ -28,6 +28,14 @@ public class UsuarioService : IUsuarioService
         _logger = logger;
     }
 
+    // por seguridad correo y documento duplicados devuelven el mismo resultado porque así no se confirma cuál de los dos datos ya existe
+    private static IdentityResult RegistroDuplicado() =>
+        IdentityResult.Failed(new IdentityError
+        {
+            Code = "RegistroDuplicado",
+            Description = "No se pudo completar el registro con los datos ingresados. Si ya tiene una cuenta, inicie sesión o recupere su contraseña."
+        });
+
     public async Task<IdentityResult> RegistrarAsync(RegistroUsuarioViewModel modelo)
     {
         var correo = modelo.CorreoElectronico.Trim();
@@ -37,11 +45,7 @@ public class UsuarioService : IUsuarioService
 
         if (documentoExiste)
         {
-            return IdentityResult.Failed(new IdentityError
-            {
-                Code = "DocumentoDuplicado",
-                Description = "Ya existe un usuario registrado con ese número de documento."
-            });
+            return RegistroDuplicado();
         }
 
         Usuario usuario;
@@ -61,12 +65,7 @@ public class UsuarioService : IUsuarioService
                 var correoDuplicado = resultado.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail");
 
                 // sale sin commitear la transaccion, no se guarda nada
-                return correoDuplicado ? IdentityResult.Failed(
-                    new IdentityError
-                {
-                    Code = "CorreoDuplicado",
-                    Description = "Ya existe una cuenta con ese correo electrónico."
-                }) : resultado;
+                return correoDuplicado ? RegistroDuplicado() : resultado;
             }
 
             var esPersona = modelo.TipoUsuario == TipoUsuario.Persona;
