@@ -66,22 +66,43 @@
                         <partial name="_Icon" model="@("file")" />Privacidad
                     </a>
                 </nav>
-                <!-- TODO: datos de user de ejemplo!!  -->
+               
+                @{
+                    var estaAutenticado = User.Identity?.IsAuthenticated == true;
+                    var nombreSesion = User.FindFirst("nombre")?.Value ?? User.Identity?.Name ?? string.Empty;
+                    var iniciales = User.FindFirst("iniciales")?.Value
+                        ?? (nombreSesion.Length >= 2 ? nombreSesion[..2] : nombreSesion).ToUpperInvariant();
+                    var rolSesion = User.FindFirst("rol")?.Value;
+                }
                 <div class="sidebar-foot dropdown dropup">
-                    <button type="button" class="profile dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="menu">
-                        <span class="d-flex align-items-center gap-2 min-w-0">
-                            <span class="avatar" aria-hidden="true">US</span>
-                            <span class="min-w-0">
-                                <span class="profile-name d-block text-truncate">Usuario</span>
-                                <span class="profile-role d-block text-truncate">Cuenta</span>
+                    @if (estaAutenticado)
+                    {
+                        <button type="button" class="profile dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="menu">
+                            <span class="d-flex align-items-center gap-2 min-w-0">
+                                <span class="avatar" aria-hidden="true">@iniciales</span>
+                                <span class="min-w-0">
+                                    <span class="profile-name d-block text-truncate" title="@nombreSesion">@nombreSesion</span>
+                                    @if (!string.IsNullOrEmpty(rolSesion))
+                                    {
+                                        <span class="profile-role d-block text-truncate">@rolSesion</span>
+                                    }
+                                </span>
                             </span>
-                        </span>
-                        <partial name="_Icon" model="@("chevrons")" />
-                    </button>
-                    <ul class="dropdown-menu w-100 profile-menu">
-                        <li><a class="dropdown-item" href="#"><partial name="_Icon" model="@("user")" />Mi perfil</a></li>
-                        <li><a class="dropdown-item" href="#"><partial name="_Icon" model="@("logout")" />Cerrar sesión</a></li>
-                    </ul>
+                            <partial name="_Icon" model="@("chevrons")" />
+                        </button>
+                        <ul class="dropdown-menu w-100 profile-menu">
+                            <li><a class="dropdown-item" href="#"><partial name="_Icon" model="@("user")" />Mi perfil</a></li>
+                            <li>
+                                <form asp-controller="Cuenta" asp-action="Logout" method="post">
+                                    <button type="submit" class="dropdown-item"><partial name="_Icon" model="@("logout")" />Cerrar sesión</button>
+                                </form>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <a class="btn btn-primary btn-lg w-100" asp-controller="Cuenta" asp-action="Login"><span>Iniciar sesión</span></a>
+                    }
                 </div>
             </div>
         </div>
@@ -102,12 +123,6 @@
             </header>
 
             <main id="main-content" class="flex-grow-1 p-4" tabindex="-1">
-                @if (TempData["Mensaje"] is string mensaje)
-                {
-                    <div class="alert alert-success" role="status">
-                        <div class="alert-body">@mensaje</div>
-                    </div>
-                }
                 @RenderBody()
             </main>
 

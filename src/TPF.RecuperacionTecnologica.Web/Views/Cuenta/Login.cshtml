@@ -1,0 +1,63 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar sesión";
+    Layout = "_LayoutAuth";
+
+    var erroresGenerales = ViewData.ModelState.TryGetValue(string.Empty, out var entrada) ? entrada.Errors : null;
+}
+
+<div class="auth-card">
+    <h1>Iniciar sesión</h1>
+    <p class="lead">Ingrese con su correo electrónico y su contraseña.</p>
+
+    <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" id="f-login" novalidate>
+        <div class="stack">
+            @if (erroresGenerales is { Count: > 0 })
+            {
+                <div class="alert alert-danger" role="alert" tabindex="-1" id="resumen-errores">
+                    <partial name="_Icon" model="@("x-circle")" />
+                    <div class="alert-body">
+                        @foreach (var error in erroresGenerales)
+                        {
+                            <div>@error.ErrorMessage</div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="field">
+                <label class="form-label" asp-for="CorreoElectronico"></label>
+                <input asp-for="CorreoElectronico" class="form-control" type="email" autocomplete="username" />
+                <span asp-validation-for="CorreoElectronico"></span>
+            </div>
+
+            <div class="field">
+                <label class="form-label" asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="Password"></span>
+            </div>
+
+            <label class="check">
+                <input asp-for="RecordarSesion" type="checkbox" />
+                <span>Recordar sesión</span>
+            </label>
+
+            <div>
+                <button type="submit" class="btn btn-primary btn-lg"><span>Iniciar sesión</span></button>
+            </div>
+        </div>
+    </form>
+
+    <div class="auth-links">
+        <span class="muted">¿No tiene cuenta?</span>
+        <a class="link" asp-controller="Cuenta" asp-action="Registrar">Crear cuenta</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}

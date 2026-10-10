@@ -122,6 +122,10 @@
     z-index: 20;
 }
 
+.min-w-0 {
+    min-width: 0;
+}
+
 .sidebar-foot {
     padding-top: 12px;
     border-top: 1px solid var(--bs-border-color);
