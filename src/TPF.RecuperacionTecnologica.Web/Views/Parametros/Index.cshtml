@@ -1,0 +1,114 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Parametros.ParametrosViewModel
+@{
+    ViewData["Title"] = "Parámetros institucionales";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li aria-current="page">Parámetros</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Parámetros institucionales</h1></div>
+            <p class="page-sub">Configuración de la organización que usa la plataforma</p>
+        </div>
+    </div>
+
+    <div class="grid-3-1">
+        <form class="card" asp-action="Index" method="post" id="f-parametros" novalidate aria-labelledby="f-parametros-titulo">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title" id="f-parametros-titulo">Configuración institucional</h2>
+                    <p class="card-sub">Estos valores se aplican a toda la aplicación</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="stack" style="gap:16px">
+                    <partial name="_ResumenErrores" />
+
+                    <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                    <div class="form-grid">
+                        <div class="field span-2">
+                            <label class="form-label" for="NombreOrganizacion">Nombre de la organización<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="NombreOrganizacion" class="form-control" aria-describedby="NombreOrganizacion-hint" />
+                            <div class="form-text" id="NombreOrganizacion-hint">Se muestra en la barra lateral, la pantalla de ingreso y el pie de página.</div>
+                            <span asp-validation-for="NombreOrganizacion"></span>
+                        </div>
+                        <div class="field span-2">
+                            <label class="form-label" for="ZonaCobertura">Zona de cobertura<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="ZonaCobertura" class="form-control" aria-describedby="ZonaCobertura-hint" />
+                            <div class="form-text" id="ZonaCobertura-hint">Área geográfica dentro de la cual se realizan entregas.</div>
+                            <span asp-validation-for="ZonaCobertura"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="DiasLimiteRetiro">Días límite de retiro<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="DiasLimiteRetiro" type="number" min="1" max="365" class="form-control" aria-describedby="DiasLimiteRetiro-hint" />
+                            <div class="form-text" id="DiasLimiteRetiro-hint">Días corridos que tiene quien solicita para retirar un equipo asignado.</div>
+                            <span asp-validation-for="DiasLimiteRetiro"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-secondary btn-lg" asp-action="Index">Restablecer</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
+            </div>
+        </form>
+
+        <div class="stack">
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Vista previa</h2>
+                        <p class="card-sub">Identidad institucional en la barra lateral</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="preview-brand">
+                        <span class="brand-mark" aria-hidden="true" id="vista-previa-inicial">@(string.IsNullOrEmpty(Model.NombreOrganizacion) ? "—" : Model.NombreOrganizacion[..1])</span>
+                        <div>
+                            <div class="preview-name" id="vista-previa-nombre">@(string.IsNullOrEmpty(Model.NombreOrganizacion) ? "—" : Model.NombreOrganizacion)</div>
+                            <div class="preview-sub">Área Administrador</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div><h2 class="card-title">Valores vigentes</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Zona de cobertura</dt>
+                        <dd>@Model.ZonaCobertura</dd>
+                        <dt>Retiro</dt>
+                        <dd>@Model.DiasLimiteRetiro días</dd>
+                        <dt>Última modificación</dt>
+                        <dd>@(Model.UltimaModificacion ?? "—")</dd>
+                    </dl>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+
+        var campo = document.getElementById('NombreOrganizacion');
+        var nombre = document.getElementById('vista-previa-nombre');
+        var inicial = document.getElementById('vista-previa-inicial');
+        campo.addEventListener('input', function () {
+            var valor = campo.value.trim();
+            nombre.textContent = valor || '—';
+            inicial.textContent = valor ? valor.charAt(0).toUpperCase() : '—';
+        });
+    </script>
+}

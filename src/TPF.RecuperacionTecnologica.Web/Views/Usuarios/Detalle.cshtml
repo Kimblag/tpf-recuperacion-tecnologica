@@ -1,0 +1,95 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.UsuarioDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Detalle de usuario";
+
+    var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Usuarios</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">@Model.NombreVisible</h1>
+                <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
+            </div>
+            <p class="page-sub">Usuario externo @Model.Codigo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Datos del usuario</h2>
+                    <p class="card-sub">Registro de usuario externo</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Código</dt>
+                    <dd><span class="mono">@Model.Codigo</span></dd>
+                    <dt>@(esPersona ? "Documento (DNI)" : "CUIT")</dt>
+                    <dd><span class="mono">@Model.DocumentoFormateado</span></dd>
+                    <dt>@(esPersona ? "Nombre y apellido" : "Razón social")</dt>
+                    <dd>@Model.NombreVisible</dd>
+                    <dt>Dirección</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Direccion) ? "—" : Model.Direccion)</dd>
+                    <dt>Teléfono</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
+                    <dt>Fecha de alta</dt>
+                    <dd>@Model.FechaAlta.ToString("dd/MM/yyyy")</dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Cuenta de acceso</h2>
+                    <p class="card-sub">Credenciales de inicio de sesión</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Correo de acceso</dt>
+                    <dd>@Model.CorreoElectronico</dd>
+                    <dt>Estado de la cuenta</dt>
+                    <dd><partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" /></dd>
+                    <dt>Tipo de usuario</dt>
+                    <dd>@Html.DisplayFor(m => m.TipoUsuario)</dd>
+                    <dt>Rol</dt>
+                    <dd>Usuario externo</dd>
+                </dl>
+            </div>
+        </section>
+    </div>
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Actividad del usuario</h2>
+                <p class="card-sub">Resumen de donaciones y solicitudes</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="dl">
+                <dt>Donaciones registradas</dt>
+                <dd>@Model.DonacionesRegistradas</dd>
+                <dt>Solicitudes realizadas</dt>
+                <dd>@Model.SolicitudesRealizadas</dd>
+                <dt>Entregas recibidas</dt>
+                <dd>@Model.EntregasRecibidas</dd>
+            </dl>
+        </div>
+    </section>
+</div>

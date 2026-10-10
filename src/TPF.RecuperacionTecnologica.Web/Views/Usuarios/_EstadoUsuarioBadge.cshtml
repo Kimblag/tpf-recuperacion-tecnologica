@@ -1,0 +1,3 @@
+@model TPF.RecuperacionTecnologica.Web.Models.Enums.EstadoUsuario
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<partial name="_Badge" model="@(Model == EstadoUsuario.Activo ? ("Activo", "ok") : ("Inactivo", "muted"))" />

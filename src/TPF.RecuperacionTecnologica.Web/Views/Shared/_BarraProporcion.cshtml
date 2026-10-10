@@ -1,0 +1,6 @@
+@using System.Globalization
+@model (double Porcentaje, string Etiqueta)
+<div class="hbar">
+    <span class="hbar-track" role="img" aria-label="@Model.Etiqueta"><span style="width:@Model.Porcentaje.ToString("0.#", CultureInfo.InvariantCulture)%"></span></span>
+    <span class="mono hbar-label">@Model.Etiqueta</span>
+</div>

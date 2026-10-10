@@ -32,6 +32,9 @@
     <link rel="stylesheet" href="~/css/a11y.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/datos.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/panel.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/TPF.RecuperacionTecnologica.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -113,7 +116,18 @@
                     <button type="button" class="btn btn-surface btn-icon d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Abrir menú de navegación">
                         <partial name="_Icon" model="@("menu")" />
                     </button>
-                    <span class="fw-medium text-truncate">@ViewData["Title"]</span>
+                    <nav aria-label="Ruta de navegación" class="min-w-0">
+                        <ol class="breadcrumb">
+                            @if (IsSectionDefined("Migas"))
+                            {
+                                @await RenderSectionAsync("Migas")
+                            }
+                            else
+                            {
+                                <li aria-current="page">@ViewData["Title"]</li>
+                            }
+                        </ol>
+                    </nav>
                 </div>
                 <!-- TODO: buscador y botón de acción quedan pendientes porque dependen del rol o pantalla activa -->
                 <div class="d-flex align-items-center gap-2">

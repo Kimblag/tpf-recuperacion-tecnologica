@@ -1,0 +1,15 @@
+@model (string Etiqueta, string Icono, string ClaseIcono, string Valor, string Chip, string ClaseChip, string Detalle)
+<div class="card metric">
+    <div class="metric-label">
+        <span>@Model.Etiqueta</span>
+        <span class="@Model.ClaseIcono"><partial name="_Icon" model="@Model.Icono" /></span>
+    </div>
+    <div class="metric-row">
+        <span class="metric-value">@Model.Valor</span>
+        @if (!string.IsNullOrEmpty(Model.Chip))
+        {
+            <span class="metric-chip @Model.ClaseChip">@Model.Chip</span>
+        }
+    </div>
+    <p class="metric-hint">@Model.Detalle</p>
+</div>

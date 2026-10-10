@@ -1,0 +1,84 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Reportes.ReporteEquiposPorEstadoViewModel
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using System.Reflection
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Equipos por estado";
+
+    string Variante(EstadoEquipo estado) => estado switch
+    {
+        EstadoEquipo.Disponible => "ok",
+        EstadoEquipo.PendienteRecepcion => "muted d-recepcion",
+        EstadoEquipo.EnReparacion => "warn",
+        EstadoEquipo.Asignado => "info",
+        EstadoEquipo.Entregado => "neutral",
+        _ => "muted"
+    };
+
+    string Nombre(EstadoEquipo estado) => typeof(EstadoEquipo).GetMember(estado.ToString())[0]
+        .GetCustomAttribute<DisplayAttribute>()?.Name ?? estado.ToString();
+
+    double Proporcion(int cantidad) => Model.Total == 0 ? 0 : cantidad * 100.0 / Model.Total;
+
+    double AnchoBarra(int cantidad) => Math.Min(100, Proporcion(cantidad) * 2.4);
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Reportes</a></li>
+    <li aria-current="page">Equipos por estado</li>
+}
+
+<div class="stack">
+    <partial name="_EncabezadoReporte" model="@(("Equipos por estado", "Situación actual del inventario.", Model.PeriodoConsultado))" />
+
+    @if (Model.Total == 0)
+    {
+        <partial name="_ReporteVacio" />
+    }
+    else
+    {
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Distribución</h2>
+                    <p class="card-sub">Total: @Model.Total equipos</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <partial name="_DistribucionEquipos" model="Model.Estados" />
+            </div>
+        </section>
+
+        <section class="card overflow">
+            <div class="card-header">
+                <div><h2 class="card-title">Detalle por estado</h2></div>
+            </div>
+            <div class="card-body flush">
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Detalle de equipos por estado</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="num">Cantidad</th>
+                                <th scope="col">Proporción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Estados)
+                            {
+                                <tr>
+                                    <td data-label="Estado"><partial name="_Badge" model="@((Nombre(item.Estado), Variante(item.Estado)))" /></td>
+                                    <td class="num" data-label="Cantidad"><span class="mono">@item.Cantidad</span></td>
+                                    <td data-label="Proporción"><partial name="_BarraProporcion" model="@((AnchoBarra(item.Cantidad), Proporcion(item.Cantidad).ToString("0.0", CultureInfo.InvariantCulture) + "%"))" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    }
+</div>

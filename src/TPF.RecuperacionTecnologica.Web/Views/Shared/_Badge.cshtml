@@ -1,0 +1,3 @@
+@* Badge de estado con punto de color. Modelo: (texto, variante) con variante ok, warn, info, danger, neutral o muted. *@
+@model (string Texto, string Variante)
+<span class="badge b-@Model.Variante"><span class="dot"></span>@Model.Texto</span>
