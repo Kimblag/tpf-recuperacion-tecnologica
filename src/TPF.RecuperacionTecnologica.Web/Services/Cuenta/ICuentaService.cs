@@ -7,5 +7,8 @@ public interface ICuentaService
     /// </summary>
     Task<ResultadoInicioSesion> IniciarSesionAsync(string correoElectronico, string password, bool recordarSesion);
 
-    Task CerrarSesionAsync();
+    /// <summary>
+    /// Cierra la sesión y audita el cierre de la cuenta indicada.
+    /// </summary>
+    Task CerrarSesionAsync(string? identityUserId);
 }

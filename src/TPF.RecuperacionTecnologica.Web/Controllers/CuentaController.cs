@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
@@ -19,6 +20,11 @@ public class CuentaController : Controller
     [HttpGet]
     public IActionResult Registrar()
     {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
         return View(new RegistroUsuarioViewModel());
     }
 
@@ -43,13 +49,18 @@ public class CuentaController : Controller
             return View(modelo);
         }
 
-        TempData["Mensaje"] = "Registro exitoso.";
-        return RedirectToAction("Index", "Home");
+        TempData["Mensaje"] = "Cuenta creada correctamente. Ya puede iniciar sesión.";
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
         ViewData["ReturnUrl"] = returnUrl;
         return View(new LoginViewModel());
     }
@@ -79,18 +90,16 @@ public class CuentaController : Controller
 
                 return RedirectToAction("Index", "Home");
 
-            case ResultadoInicioSesion.CuentaBloqueada:
-                ModelState.AddModelError(string.Empty,
-                    "La cuenta está bloqueada temporalmente por varios intentos fallidos. Intente nuevamente más tarde.");
-                break;
-
             case ResultadoInicioSesion.CuentaInactiva:
                 ModelState.AddModelError(string.Empty,
                     "Su cuenta no está habilitada para ingresar. Comuníquese con la organización.");
                 break;
 
             default:
-                ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos.");
+                // credenciales incorrectas y cuenta bloqueada muestran el mismo mensaje
+                // para no revelar qué correos existen
+                ModelState.AddModelError(string.Empty,
+                    "No se pudo iniciar sesión. Verifique sus datos o intente nuevamente más tarde.");
                 break;
         }
 
@@ -101,8 +110,10 @@ public class CuentaController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        await _cuentaService.CerrarSesionAsync();
-        return RedirectToAction("Index", "Home");
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        await _cuentaService.CerrarSesionAsync(identityUserId);
+
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]

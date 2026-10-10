@@ -12,5 +12,9 @@ public enum TipoOperacionAuditoria
     Entrega,
     AltaPersonal,
     InactivacionPersonal,
-    ModificacionParametro
+    ModificacionParametro,
+    InicioSesion,
+    CierreSesion,
+    IntentoFallidoSesion,
+    BloqueoCuenta
 }
