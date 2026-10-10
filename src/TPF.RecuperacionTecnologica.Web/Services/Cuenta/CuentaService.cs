@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using System.Globalization;
 using System.Security.Claims;
+using System.Text;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Email;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 
@@ -15,19 +19,32 @@ public class CuentaService : ICuentaService
     private readonly UserManager<IdentityUser> _userManager;
     private readonly ApplicationDbContext _context;
     private readonly IAuditoriaService _auditoriaService;
+    private readonly IEmailSender _emailSender;
+    private readonly IMemoryCache _cache;
+    private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _entorno;
     private readonly ILogger<CuentaService> _logger;
+
 
     public CuentaService(
         SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager,
         ApplicationDbContext context,
         IAuditoriaService auditoriaService,
+        IEmailSender emailSender,
+        IMemoryCache cache,
+        IConfiguration configuration,
+        IHostEnvironment entorno,
         ILogger<CuentaService> logger)
     {
         _signInManager = signInManager;
         _userManager = userManager;
         _context = context;
         _auditoriaService = auditoriaService;
+        _emailSender = emailSender;
+        _cache = cache;
+        _configuration = configuration;
+        _entorno = entorno;
         _logger = logger;
     }
 
@@ -109,6 +126,136 @@ public class CuentaService : ICuentaService
         {
             await AuditarSesionAsync(TipoOperacionAuditoria.CierreSesion, identityUserId, "Cierre de sesión");
         }
+    }
+
+
+    public async Task SolicitarRestablecimientoAsync(string correoElectronico, Func<string, string, string> construirRuta, string urlBaseSolicitud)
+    {
+        /// El correo se envía en segundo plano para evitar una mala experiencia al usuario
+        var identityUser = await _userManager.FindByEmailAsync(correoElectronico.Trim());
+
+        if (identityUser is null)
+        {
+            return;
+        }
+
+        // agrego esto para que cada solicitud tenga un límite de 2 minutos, para no llenar el correo 
+        // si alguien hace spam solicitando muchas veces
+        var claveLimite = $"recuperacion:{identityUser.Id}";
+
+        if (_cache.TryGetValue(claveLimite, out _))
+        {
+            return;
+        }
+
+        // ignoramos cuentas dadas de baja 
+        if (!await EstaHabilitadaAsync(identityUser.Id))
+        {
+            return;
+        }
+
+        // en desarrollo usamos el host actual, en prod sólo usamos el que nos pasen configurado
+        // ya que pueden falsificarlo en prod
+        var urlBase = _entorno.IsDevelopment()
+            ? urlBaseSolicitud
+            : _configuration["Aplicacion:UrlBase"];
+
+        if (string.IsNullOrWhiteSpace(urlBase))
+        {
+            _logger.LogError("No se envió el enlace de recuperación: falta configurar Aplicacion:UrlBase (variable de entorno Aplicacion__UrlBase)");
+            return;
+        }
+
+        _cache.Set(claveLimite, true, TimeSpan.FromMinutes(2));
+
+        try
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(identityUser);
+
+            // como el token tiene caracteres que no viajan bien en una url se codifica en Base64Url
+            var tokenCodificado = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var enlace = urlBase.TrimEnd('/') + construirRuta(identityUser.Id, tokenCodificado);
+
+            var organizacion = await ObtenerNombreOrganizacionAsync();
+
+            var destinatario = identityUser.Email!;
+            var asunto = $"Restablecer su contraseña - {organizacion}";
+            var cuerpo = PlantillaRecuperacionContrasena.Armar(enlace, organizacion);
+            var idCuenta = identityUser.Id;
+
+            // evita que se quede colgada la vista mientras se envía el mail
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailSender.SendEmailAsync(destinatario, asunto, cuerpo);
+                }
+                catch (Exception ex)
+                {
+                    // si falla, liberamos para que intente de nuevo
+                    _cache.Remove(claveLimite);
+                    _logger.LogError(ex, "No se pudo enviar el correo de recuperación a la cuenta {IdentityUserId}", idCuenta);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            // falló antes de enviar (por ejemplo al generar el token): también se libera el límite
+            _cache.Remove(claveLimite);
+            _logger.LogError(ex, "No se pudo preparar el correo de recuperación de la cuenta {IdentityUserId}", identityUser.Id);
+        }
+    }
+
+    public async Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena)
+    {
+        var enlaceInvalido = IdentityResult.Failed(new IdentityError
+        {
+            Code = "InvalidToken",
+            Description = "El enlace no es válido o ya venció. Solicite uno nuevo."
+        });
+
+        var identityUser = await _userManager.FindByIdAsync(idUsuario);
+
+        if (identityUser is null)
+        {
+            return enlaceInvalido;
+        }
+
+        string tokenOriginal;
+
+        try
+        {
+            tokenOriginal = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        }
+        catch (FormatException)
+        {
+            return enlaceInvalido;
+        }
+
+        var resultado = await _userManager.ResetPasswordAsync(identityUser, tokenOriginal, nuevaContrasena);
+
+        if (!resultado.Succeeded)
+        {
+            // si el problema es el token, siempre se devuelve el mismo mensaje
+            return resultado.Errors.Any(e => e.Code == "InvalidToken") ? enlaceInvalido : resultado;
+        }
+
+        // reestablecemos la pass y se levanta bloqueo si hay alguno
+        await _userManager.SetLockoutEndDateAsync(identityUser, null);
+        await _userManager.ResetAccessFailedCountAsync(identityUser);
+
+        return resultado;
+    }
+
+    private async Task<string> ObtenerNombreOrganizacionAsync()
+    {
+        // el nombre sale de la configuración institucional. si todavía no se cargó, usamos uno por defecto
+        var nombre = await _context.ConfiguracionInstitucional
+            .AsNoTracking()
+            .Select(c => c.NombreOrganizacion)
+            .FirstOrDefaultAsync();
+
+        return string.IsNullOrWhiteSpace(nombre) ? "Recuperación Tecnológica" : nombre.Trim();
     }
 
     private async Task AuditarSesionAsync(TipoOperacionAuditoria tipoOperacion, string identityUserId, string detalle, bool actorAutenticado = true)

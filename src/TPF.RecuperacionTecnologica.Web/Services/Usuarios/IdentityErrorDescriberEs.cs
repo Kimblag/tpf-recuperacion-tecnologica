@@ -29,10 +29,10 @@ public class IdentityErrorDescriberEs : IdentityErrorDescriber
         new() { Code = nameof(PasswordRequiresNonAlphanumeric), Description = "La contraseña debe incluir al menos un símbolo." };
 
     public override IdentityError DuplicateEmail(string email) =>
-        new() { Code = nameof(DuplicateEmail), Description = "Ya existe una cuenta con ese correo electrónico." };
+        new() { Code = nameof(DuplicateEmail), Description = "No se pudo completar el registro con los datos ingresados. Si ya tiene una cuenta, inicie sesión o recupere su contraseña." };
 
     public override IdentityError DuplicateUserName(string userName) =>
-        new() { Code = nameof(DuplicateUserName), Description = "Ya existe una cuenta con ese correo electrónico." };
+        new() { Code = nameof(DuplicateUserName), Description = "No se pudo completar el registro con los datos ingresados. Si ya tiene una cuenta, inicie sesión o recupere su contraseña." };
 
     public override IdentityError InvalidEmail(string? email) =>
         new() { Code = nameof(InvalidEmail), Description = "El correo electrónico no es válido." };

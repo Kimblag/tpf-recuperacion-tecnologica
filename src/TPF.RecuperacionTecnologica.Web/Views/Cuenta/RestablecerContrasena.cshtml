@@ -1,0 +1,65 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.RestablecerContrasenaViewModel
+@{
+    ViewData["Title"] = "Restablecer contraseña";
+    Layout = "_LayoutAuth";
+
+        var erroresGenerales = ViewData.ModelState
+        .Where(e => e.Key.Length == 0 || e.Key == nameof(Model.IdUsuario) || e.Key == nameof(Model.Token))
+        .SelectMany(e => e.Value!.Errors)
+        .ToList();
+}
+
+<div class="auth-card">
+    <h1>Restablecer contraseña</h1>
+    <p class="lead">Elija una contraseña nueva para su cuenta.</p>
+
+    <form asp-action="RestablecerContrasena" method="post" id="f-restablecer" novalidate>
+        <input type="hidden" asp-for="IdUsuario" />
+        <input type="hidden" asp-for="Token" />
+
+        <div class="stack">
+            @if (erroresGenerales.Count > 0)
+            {
+                <div class="alert alert-danger" role="alert" tabindex="-1" id="resumen-errores">
+                    <partial name="_Icon" model="@("x-circle")" />
+                    <div class="alert-body">
+                        @foreach (var error in erroresGenerales)
+                        {
+                            <div>@error.ErrorMessage</div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="field">
+                <label class="form-label" for="Password">Contraseña nueva<span class="req-word"> (obligatorio)</span></label>
+                <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
+                <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                <span asp-validation-for="Password"></span>
+            </div>
+
+            <div class="field">
+                <label class="form-label" for="ConfirmPassword">Confirmar contraseña nueva<span class="req-word"> (obligatorio)</span></label>
+                <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                <span asp-validation-for="ConfirmPassword"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100"><span>Guardar contraseña</span></button>
+        </div>
+    </form>
+
+    @if (ViewData["EnlaceInvalido"] is true)
+    {
+        <div class="auth-links">
+            <a class="link" asp-action="RecuperarContrasena">Solicitar un nuevo enlace</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}

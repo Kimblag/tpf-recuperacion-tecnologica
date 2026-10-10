@@ -1,0 +1,33 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.RecuperarContrasenaViewModel
+@{
+    ViewData["Title"] = "Recuperar contraseña";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-card">
+    <h1>Recuperar contraseña</h1>
+    <p class="lead">Ingrese su correo y le enviaremos las instrucciones para restablecerla.</p>
+
+    <form asp-action="RecuperarContrasena" method="post" id="f-recuperar" novalidate>
+        <div class="stack">
+            <div class="field">
+                <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req-word"> (obligatorio)</span></label>
+                <input asp-for="CorreoElectronico" class="form-control" type="email" autocomplete="email" />
+                <span asp-validation-for="CorreoElectronico"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100"><span>Enviar instrucciones</span></button>
+        </div>
+    </form>
+
+    <div class="auth-links">
+        <a class="link d-inline-flex align-items-center gap-1" asp-action="Login">
+            <partial name="_Icon" model="@("arrow-left")" />
+            <span>Volver a iniciar sesión</span>
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
