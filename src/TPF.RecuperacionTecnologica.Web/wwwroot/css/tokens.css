@@ -51,6 +51,8 @@
 
     /* ---- tokens personalizados de nuestra app ---- */
     --app-surface: #FFFFFF;
+    --app-primary-hover: #476339;
+    --app-on-primary: #FFFFFF;
     --app-surface-low: #EEF1EC;
     --app-accent-soft: #E5EEDC;
     --app-border-strong: #8B958A;
@@ -114,6 +116,8 @@
 
     /* ---- tokens personalizados de nuestra app ---- */
     --app-surface: #202426;
+    --app-primary-hover: #A4CE7D;
+    --app-on-primary: #0D0F10;
     --app-surface-low: #181B1C;
     --app-accent-soft: rgba(145, 190, 104, .12);
     --app-border-strong: #6B7275;
