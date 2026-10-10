@@ -583,3 +583,15 @@ para vincular el Pull Request con la Issue.
 * Validar reglas críticas en el servidor.
 * Mantener los nombres consistentes con estas convenciones.
 * Ante una excepción justificada a estas reglas, priorizar la claridad y documentar el motivo cuando sea necesario.
+
+## Creación del primer administrador
+## Primer Administrador (desarrollo)
+
+Al iniciar la app en desarrollo, si no existe ningún Administrador, se crea uno con el correo y la contraseña que cada uno define en sus user-secrets. No hay credenciales en el repositorio. Si faltan, no se crea nada y la consola lo avisa.
+
+```bash
+dotnet user-secrets set "SeedAdmin:Correo" "tu-correo@ejemplo.com" --project src/TPF.RecuperacionTecnologica.Web
+dotnet user-secrets set "SeedAdmin:Password" "ClaveSegura123" --project src/TPF.RecuperacionTecnologica.Web
+```
+
+La contraseña debe cumplir la política de Identity (mínimo 8 caracteres, mayúscula, minúscula y número) y la base debe estar migrada. También se crea la fila de `ConfiguracionInstitucional` con valores por defecto.
