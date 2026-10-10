@@ -1,0 +1,71 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Reportes.ReporteTiposSolicitadosViewModel
+@using System.Globalization
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Tipos de equipo más solicitados";
+
+    double Proporcion(int solicitudes) => Model.Total == 0 ? 0 : solicitudes * 100.0 / Model.Total;
+
+    string Icono(TipoEquipo tipo) => tipo switch
+    {
+        TipoEquipo.Notebook => "laptop",
+        TipoEquipo.Celular => "smartphone",
+        TipoEquipo.Periferico => "keyboard",
+        _ => "monitor"
+    };
+
+    double AnchoBarra(int solicitudes) => Model.Filas.Count == 0 ? 0 : solicitudes * 100.0 / Model.Filas.Max(f => f.Solicitudes);
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Reportes</a></li>
+    <li aria-current="page">Tipos más solicitados</li>
+}
+
+<div class="stack">
+    <partial name="_EncabezadoReporte" model="@(("Tipos de equipo más solicitados", "Ranking según la cantidad de solicitudes registradas.", Model.PeriodoConsultado))" />
+
+    @if (Model.Total == 0)
+    {
+        <partial name="_ReporteVacio" />
+    }
+    else
+    {
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Ranking</h2>
+                    <p class="card-sub">Total: @Model.Total solicitudes</p>
+                </div>
+            </div>
+            <div class="card-body flush">
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Ranking de tipos de equipo más solicitados</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col" class="num">Posición</th>
+                                <th scope="col">Tipo de equipo</th>
+                                <th scope="col" class="num">Solicitudes</th>
+                                <th scope="col">Proporción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var i = 0; i < Model.Filas.Count; i++)
+                            {
+                                var fila = Model.Filas[i];
+                                <tr>
+                                    <td class="num" data-label="Posición"><span class="mono">@(i + 1)</span></td>
+                                    <td data-label="Tipo de equipo"><span class="nowrap"><partial name="_Icon" model="@Icono(fila.TipoEquipo)" /> @Html.DisplayFor(m => fila.TipoEquipo)</span></td>
+                                    <td class="num" data-label="Solicitudes"><span class="mono">@fila.Solicitudes</span></td>
+                                    <td data-label="Proporción"><partial name="_BarraProporcion" model="@((AnchoBarra(fila.Solicitudes), Proporcion(fila.Solicitudes).ToString("0.0", CultureInfo.InvariantCulture) + "%"))" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    }
+</div>

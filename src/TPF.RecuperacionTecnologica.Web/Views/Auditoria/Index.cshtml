@@ -1,0 +1,91 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria.AuditoriaListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria
+@{
+    ViewData["Title"] = "Auditoría";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li aria-current="page">Auditoría</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Auditoría</h1></div>
+            <p class="page-sub">Registro centralizado de las operaciones realizadas en la plataforma</p>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Registro de auditoría">
+        <form class="filters" role="search" method="get" asp-action="Index">
+            <div class="filter">
+                <label for="Desde">Desde</label>
+                <input asp-for="Desde" type="date" class="form-control sm" />
+            </div>
+            <div class="filter">
+                <label for="Hasta">Hasta</label>
+                <input asp-for="Hasta" type="date" class="form-control sm" />
+            </div>
+            <div class="filter">
+                <label for="Operacion">Tipo de operación</label>
+                <div class="select">
+                    <select asp-for="Operacion" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoOperacionAuditoria>()">
+                        <option value="">Todas</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="CodigoPersonal">Código de personal</label>
+                <input asp-for="CodigoPersonal" class="form-control sm" placeholder="PER-0000" />
+            </div>
+            <div class="filter">
+                <label for="Entidad">Entidad</label>
+                <div class="select">
+                    <select asp-for="Entidad" class="form-select sm" asp-items="@(AuditoriaListadoViewModel.EntidadesDisponibles.Select(e => new SelectListItem(e, e)))">
+                        <option value="">Todas</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Identificador">Identificador</label>
+                <input asp-for="Identificador" class="form-control sm" placeholder="Ej.: DON-000048" />
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("history")" /></span>
+                    <h3>Sin operaciones para los filtros elegidos</h3>
+                    <p>Amplíe el rango de fechas o quite algún filtro.</p>
+                </div>
+            }
+            else
+            {
+                <partial name="_TablaAuditoria" model="Model.Filas" />
+
+                <div class="card-foot">
+                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
+                    <nav aria-label="Paginación">
+                        <div class="pagination">
+                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
+                            <button type="button" class="page-btn" aria-current="page">1</button>
+                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
+                        </div>
+                    </nav>
+                </div>
+            }
+        </div>
+    </section>
+</div>

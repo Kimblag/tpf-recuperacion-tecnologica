@@ -1,0 +1,85 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Reportes.ReporteEntregasPorPeriodoViewModel
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Reportes
+@{
+    ViewData["Title"] = "Entregas por período";
+
+    string Titulo() => Model.Agrupacion switch
+    {
+        AgrupacionPeriodo.Trimestre => "Entregas por trimestre",
+        AgrupacionPeriodo.Anio => "Entregas por año",
+        _ => "Entregas por mes"
+    };
+
+    double Proporcion(int cantidad) => Model.Maximo == 0 ? 0 : cantidad * 100.0 / Model.Maximo;
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Reportes</a></li>
+    <li aria-current="page">Entregas por período</li>
+}
+
+<div class="stack">
+    <partial name="_EncabezadoReporte" model="@(("Entregas por período", "Equipos entregados por mes, trimestre o año.", Model.PeriodoConsultado))" />
+
+    @if (Model.Total == 0)
+    {
+        <partial name="_ReporteVacio" />
+    }
+    else
+    {
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Agrupar por</h2>
+                    <p class="card-sub">La lista siempre respeta el rango elegido en Reportes</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="demo-row">
+                    <div class="segmented" role="group" aria-label="Agrupar por">
+                        @foreach (var agrupacion in Enum.GetValues<AgrupacionPeriodo>())
+                        {
+                            var activa = agrupacion == Model.Agrupacion;
+                            <a asp-action="EntregasPorPeriodo" asp-route-desde="@Model.Desde?.ToString("yyyy-MM-dd")" asp-route-hasta="@Model.Hasta?.ToString("yyyy-MM-dd")" asp-route-agrupacion="@agrupacion" aria-current="@(activa ? "true" : null)">@Html.DisplayFor(m => agrupacion)</a>
+                        }
+                    </div>
+                    <span class="form-text" style="margin:0">Total del período: <b>@Model.Total entregas</b></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">@Titulo()</h2>
+                    <p class="card-sub">@Model.Filas[0].Etiqueta a @Model.Filas[^1].Etiqueta</p>
+                </div>
+            </div>
+            <div class="card-body flush">
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">@Titulo()</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Período</th>
+                                <th scope="col" class="num">Entregas</th>
+                                <th scope="col">Volumen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Período">@fila.Etiqueta</td>
+                                    <td class="num" data-label="Entregas"><span class="mono">@fila.Cantidad</span></td>
+                                    <td data-label="Volumen"><partial name="_BarraProporcion" model="@((Proporcion(fila.Cantidad), fila.Cantidad.ToString()))" /></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    }
+</div>

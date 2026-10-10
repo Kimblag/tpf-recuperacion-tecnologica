@@ -1,0 +1,10 @@
+@model (string Titulo, string Descripcion, string Periodo)
+<div class="page-head">
+    <div>
+        <div class="h-id"><h1 tabindex="-1">@Model.Titulo</h1></div>
+        <p class="page-sub">@Model.Descripcion @Model.Periodo</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-secondary" asp-controller="Reportes" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Reportes</span></a>
+    </div>
+</div>
