@@ -1,0 +1,27 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Personal.InactivarPersonalViewModel
+
+<div class="modal fade" id="modal-inactivar" tabindex="-1" aria-labelledby="modal-inactivar-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" asp-action="Inactivar" method="post" novalidate>
+            <input type="hidden" asp-for="CodigoPersonal" />
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-inactivar-titulo"><partial name="_Icon" model="@("ban")" />Inactivar personal</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <div class="modal-body">
+                <p>Va a inactivar a <b>@Model.NombreCompleto</b> (<span class="mono">@Model.Codigo</span>).</p>
+                <p>No podrá iniciar sesión, pero sus registros históricos y de auditoría se conservan.</p>
+                <div class="field" style="margin-top:14px">
+                    <label class="form-label" for="MotivoInactivacion">Motivo de inactivación<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                    <textarea asp-for="MotivoInactivacion" class="form-control" rows="3" aria-describedby="MotivoInactivacion-hint"></textarea>
+                    <div class="form-text" id="MotivoInactivacion-hint">Se guarda junto con la fecha de hoy en el legajo de personal.</div>
+                    <span asp-validation-for="MotivoInactivacion"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                <button type="submit" class="btn btn-danger">Inactivar personal</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,101 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Personal.AltaPersonalViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Alta de personal";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Personal</a></li>
+    <li aria-current="page">Alta</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Alta de personal</h1></div>
+            <p class="page-sub">Registre a un integrante del personal interno y asígnele un rol</p>
+        </div>
+    </div>
+
+    <form class="card" asp-action="Alta" method="post" id="f-personal" novalidate aria-labelledby="f-personal-titulo">
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-personal-titulo">Datos del personal</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <h3 class="span-2 sec-title">Datos de personal</h3>
+
+                    <div class="field">
+                        <label class="form-label" for="Dni">DNI<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Dni" class="form-control" inputmode="numeric" placeholder="12345678" />
+                        <span asp-validation-for="Dni"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="CodigoPersonal">Código de personal</label>
+                        <input id="CodigoPersonal" class="form-control" value="Se genera al guardar" disabled aria-describedby="CodigoPersonal-hint" />
+                        <div class="form-text" id="CodigoPersonal-hint">Identificador técnico usado en diagnósticos y auditoría.</div>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Nombre">Nombre<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Nombre" class="form-control" autocomplete="given-name" />
+                        <span asp-validation-for="Nombre"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Apellido">Apellido<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Apellido" class="form-control" autocomplete="family-name" />
+                        <span asp-validation-for="Apellido"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Telefono">Teléfono</label>
+                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="11 5555-0000" />
+                        <span asp-validation-for="Telefono"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="RolAsignado">Rol<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <div class="select">
+                            <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)"></select>
+                            <partial name="_Icon" model="@("chevron-down")" />
+                        </div>
+                        <span asp-validation-for="RolAsignado"></span>
+                    </div>
+
+                    <h3 class="span-2 sec-title">Cuenta de acceso</h3>
+
+                    <div class="field span-2">
+                        <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="CorreoElectronico" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="CorreoElectronico"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Password">Contraseña inicial<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
+                        <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                        <span asp-validation-for="Password"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Estado">Estado</label>
+                        <input id="Estado" class="form-control" value="Activo" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Dar de alta</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}

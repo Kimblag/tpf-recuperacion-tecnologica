@@ -1,0 +1,28 @@
+@* Resumen de errores de validación del formulario actual. Lee el ModelState de la vista que lo incluye. *@
+@{
+    var campos = ViewData.ModelState.Where(e => e.Value is { Errors.Count: > 0 }).ToList();
+    var soloGenerales = campos.All(c => string.IsNullOrEmpty(c.Key));
+}
+@if (campos.Count > 0)
+{
+    <div class="alert alert-danger" role="alert" tabindex="-1" id="resumen-errores">
+        <partial name="_Icon" model="@("x-circle")" />
+        <div class="alert-body">
+            <div class="alert-title">@(soloGenerales ? "No se pudo completar la operación" : "Revise los campos marcados")</div>
+            <ul>
+                @foreach (var campo in campos)
+                {
+                    if (string.IsNullOrEmpty(campo.Key))
+                    {
+                        <li>@campo.Value!.Errors[0].ErrorMessage</li>
+                    }
+                    else
+                    {
+                        var nombre = ViewData.ModelMetadata.Properties.FirstOrDefault(p => p.Name == campo.Key)?.DisplayName ?? campo.Key;
+                        <li><a href="#@campo.Key">@nombre</a></li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+}

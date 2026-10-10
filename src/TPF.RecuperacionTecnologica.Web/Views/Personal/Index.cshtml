@@ -1,0 +1,118 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Personal.PersonalListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Personal";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li aria-current="page">Personal</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Personal</h1></div>
+            <p class="page-sub">Personal interno con acceso a la plataforma</p>
+        </div>
+        @if (Model.Filas.Count > 0)
+        {
+            <div class="page-actions">
+                <a class="btn btn-primary" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
+            </div>
+        }
+    </div>
+
+    <section class="card overflow" aria-label="Personal">
+        <form class="filters" role="search" method="get" asp-action="Index">
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, código o DNI" />
+            </div>
+            <div class="filter">
+                <label for="Rol">Rol</label>
+                <div class="select">
+                    <select asp-for="Rol" class="form-select sm" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoPersonal>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("idcard")" /></span>
+                    <h3>No hay personal cargado</h3>
+                    <p>Dé de alta al primer integrante del personal.</p>
+                    <a class="btn btn-primary" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Personal</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Código</th>
+                                <th scope="col">Nombre y apellido</th>
+                                <th scope="col">DNI</th>
+                                <th scope="col">Correo</th>
+                                <th scope="col">Rol</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Código"><a class="mono" asp-action="Detalle" asp-route-id="@fila.CodigoPersonal">@fila.Codigo</a></td>
+                                    <td data-label="Nombre y apellido">@fila.NombreCompleto</td>
+                                    <td data-label="DNI"><span class="mono">@fila.DniFormateado</span></td>
+                                    <td data-label="Correo"><span class="muted">@fila.CorreoElectronico</span></td>
+                                    <td data-label="Rol">@Html.DisplayFor(m => fila.RolAsignado)</td>
+                                    <td data-label="Estado"><partial name="_EstadoPersonalBadge" model="fila.EstadoPersonal" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.CodigoPersonal" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                        <a class="btn btn-ghost btn-sm btn-icon" asp-action="Editar" asp-route-id="@fila.CodigoPersonal" aria-label="Editar @fila.Codigo"><partial name="_Icon" model="@("edit")" /></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @* pendiente: la paginación real la implementa el backend; hoy es solo la maqueta *@
+                <div class="card-foot">
+                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
+                    <nav aria-label="Paginación">
+                        <div class="pagination">
+                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
+                            <button type="button" class="page-btn" aria-current="page">1</button>
+                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
+                        </div>
+                    </nav>
+                </div>
+            }
+        </div>
+    </section>
+</div>

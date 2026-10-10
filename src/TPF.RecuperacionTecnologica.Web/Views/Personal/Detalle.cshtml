@@ -1,0 +1,118 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Personal.PersonalDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Personal
+@{
+    ViewData["Title"] = "Detalle de personal";
+
+    var estaActivo = Model.EstadoPersonal == EstadoPersonal.Activo;
+    var erroresGenerales = ViewData.ModelState.TryGetValue(string.Empty, out var entrada) ? entrada.Errors : null;
+    var hayErrorEnModal = ViewData.ModelState.TryGetValue("MotivoInactivacion", out var motivo) && motivo.Errors.Count > 0;
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Personal</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">@Model.NombreCompleto</h1>
+                <partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" />
+            </div>
+            <p class="page-sub">@Html.DisplayFor(m => m.RolAsignado) · Código @Model.Codigo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.CodigoPersonal"><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></a>
+            @if (estaActivo)
+            {
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-inactivar"><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+            }
+        </div>
+    </div>
+
+    @if (erroresGenerales is { Count: > 0 })
+    {
+        <div class="alert alert-danger" role="alert" tabindex="-1" id="resumen-errores">
+            <partial name="_Icon" model="@("x-circle")" />
+            <div class="alert-body">
+                @foreach (var error in erroresGenerales)
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!estaActivo)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Este personal está inactivo y no puede iniciar sesión. Sus registros históricos se conservan.</div></div>
+        </div>
+    }
+
+    <div class="grid-2">
+        <section class="card">
+            <div class="card-header">
+                <div><h2 class="card-title">Datos de personal</h2></div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Código</dt>
+                    <dd><span class="mono">@Model.Codigo</span></dd>
+                    <dt>DNI</dt>
+                    <dd><span class="mono">@Model.DniFormateado</span></dd>
+                    <dt>Nombre</dt>
+                    <dd>@Model.Nombre</dd>
+                    <dt>Apellido</dt>
+                    <dd>@Model.Apellido</dd>
+                    <dt>Teléfono</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
+                    <dt>Rol</dt>
+                    <dd>@Html.DisplayFor(m => m.RolAsignado)</dd>
+                    <dt>Estado</dt>
+                    <dd><partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" /></dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Cuenta de acceso</h2>
+                    <p class="card-sub">Credenciales de inicio de sesión</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Correo de acceso</dt>
+                    <dd>@Model.CorreoElectronico</dd>
+                    <dt>Cuenta</dt>
+                    <dd><partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" /></dd>
+                </dl>
+            </div>
+        </section>
+    </div>
+</div>
+
+@if (estaActivo)
+{
+    <partial name="_ModalInactivar" model="new InactivarPersonalViewModel { CodigoPersonal = Model.CodigoPersonal, NombreCompleto = Model.NombreCompleto, Codigo = Model.Codigo }" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @if (hayErrorEnModal)
+    {
+        <script>
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-inactivar')).show();
+        </script>
+    }
+}
