@@ -98,6 +98,10 @@
     text-align: center;
 }
 
+.auth-flash {
+    width: min(400px, 100%);
+}
+
 @media (max-width: 767.98px) {
     .auth-card {
         padding: 20px;
