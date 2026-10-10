@@ -102,6 +102,12 @@
             </header>
 
             <main id="main-content" class="flex-grow-1 p-4" tabindex="-1">
+                @if (TempData["Mensaje"] is string mensaje)
+                {
+                    <div class="alert alert-success" role="status">
+                        <div class="alert-body">@mensaje</div>
+                    </div>
+                }
                 @RenderBody()
             </main>
 

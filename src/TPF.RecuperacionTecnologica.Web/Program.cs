@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
-
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
@@ -36,14 +37,14 @@ builder.Services
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Cuenta/Login";
     options.AccessDeniedPath = "/Cuenta/AccesoDenegado";
 });
-
 
 var app = builder.Build();
 
