@@ -61,6 +61,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
+// Crea el primer Administrador y la configuración institucional (solo en desarrollo)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    await DbInitializer.SeedAdminAsync(scope.ServiceProvider);
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
