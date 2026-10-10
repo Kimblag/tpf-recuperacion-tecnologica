@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TPF.RecuperacionTecnologica.Web.ViewModels.Account;
+namespace TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 public class LoginViewModel
 {

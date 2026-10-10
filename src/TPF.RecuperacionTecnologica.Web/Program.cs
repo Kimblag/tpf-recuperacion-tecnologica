@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Email;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +15,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+builder.Services.AddScoped<ICuentaService, CuentaService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services
     .AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -28,19 +36,18 @@ builder.Services
         options.User.RequireUniqueEmail = true;
 
         // Bloqueo temporal tras 5 intentos fallidos
-        options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+    .AddDefaultTokenProviders()
+    .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Cuenta/Login";
     options.AccessDeniedPath = "/Cuenta/AccesoDenegado";
 });
-
 
 var app = builder.Build();
 

@@ -1,124 +1,113 @@
-
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TPF.RecuperacionTecnologica.Web.Data;
-using TPF.RecuperacionTecnologica.Web.Models.Enums;
-using TPF.RecuperacionTecnologica.Web.ViewModels.Account;
+using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
 public class CuentaController : Controller
 {
-private readonly SignInManager<IdentityUser> _signInManager;
-private readonly UserManager<IdentityUser> _userManager;
-private readonly ApplicationDbContext _context;
+    private readonly IUsuarioService _usuarioService;
+    private readonly ICuentaService _cuentaService;
 
-public CuentaController(
-    SignInManager<IdentityUser> signInManager,
-    UserManager<IdentityUser> userManager,
-    ApplicationDbContext context)
-{
-    _signInManager = signInManager;
-    _userManager = userManager;
-    _context = context;
-}
-
-[HttpGet]
-public IActionResult Login()
-{
-    return View();
-}
-
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Login(LoginViewModel model)
-{
-    if (!ModelState.IsValid)
-        return View(model);
-
-    var identityUser = await _userManager.FindByEmailAsync(
-        model.CorreoElectronico);
-
-    if (identityUser == null)
+    public CuentaController(IUsuarioService usuarioService, ICuentaService cuentaService)
     {
-        ModelState.AddModelError(
-            string.Empty,
-            "Correo o contraseña incorrectos.");
-
-        return View(model);
+        _usuarioService = usuarioService;
+        _cuentaService = cuentaService;
     }
 
-    var personal = await _context.PersonalInterno
-        .SingleOrDefaultAsync(p =>
-            p.IdentityUserId == identityUser.Id);
-
-    var usuario = await _context.Usuarios
-        .SingleOrDefaultAsync(u =>
-            u.IdentityUserId == identityUser.Id);
-
-    if (personal != null)
+    [HttpGet]
+    public IActionResult Registrar()
     {
-        if (personal.EstadoPersonal != EstadoPersonal.Activo)
+        return View(new RegistroUsuarioViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Registrar(RegistroUsuarioViewModel modelo)
+    {
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError(
-                string.Empty,
-                "La cuenta está inactiva.");
-
-            return View(model);
+            return View(modelo);
         }
+
+        var resultado = await _usuarioService.RegistrarAsync(modelo);
+
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(modelo);
+        }
+
+        TempData["Mensaje"] = "Registro exitoso.";
+        return RedirectToAction("Index", "Home");
     }
-    else if (usuario == null ||
-             usuario.EstadoUsuario != EstadoUsuario.Activo)
+
+    [HttpGet]
+    public IActionResult Login(string? returnUrl = null)
     {
-        ModelState.AddModelError(
-            string.Empty,
-            "La cuenta está inactiva o no está habilitada.");
-
-        return View(model);
+        ViewData["ReturnUrl"] = returnUrl;
+        return View(new LoginViewModel());
     }
 
-    var resultado = await _signInManager.PasswordSignInAsync(
-        identityUser.UserName!,
-        model.Password,
-        model.RecordarSesion,
-        lockoutOnFailure: true);
-
-    if (resultado.IsLockedOut)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginViewModel modelo, string? returnUrl = null)
     {
-        ModelState.AddModelError(
-            string.Empty,
-            "La cuenta está temporalmente bloqueada.");
+        ViewData["ReturnUrl"] = returnUrl;
 
-        return View(model);
+        if (!ModelState.IsValid)
+        {
+            return View(modelo);
+        }
+
+        var resultado = await _cuentaService.IniciarSesionAsync(
+            modelo.CorreoElectronico, modelo.Password, modelo.RecordarSesion);
+
+        switch (resultado)
+        {
+            case ResultadoInicioSesion.Exitoso:
+                // pendiente: redirigir al panel de cada rol cuando estén definidos
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
+                }
+
+                return RedirectToAction("Index", "Home");
+
+            case ResultadoInicioSesion.CuentaBloqueada:
+                ModelState.AddModelError(string.Empty,
+                    "La cuenta está bloqueada temporalmente por varios intentos fallidos. Intente nuevamente más tarde.");
+                break;
+
+            case ResultadoInicioSesion.CuentaInactiva:
+                ModelState.AddModelError(string.Empty,
+                    "Su cuenta no está habilitada para ingresar. Comuníquese con la organización.");
+                break;
+
+            default:
+                ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos.");
+                break;
+        }
+
+        return View(modelo);
     }
 
-    if (!resultado.Succeeded)
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
     {
-        ModelState.AddModelError(
-            string.Empty,
-            "Correo o contraseña incorrectos.");
-
-        return View(model);
+        await _cuentaService.CerrarSesionAsync();
+        return RedirectToAction("Index", "Home");
     }
 
-    // Pendiente de reemplazar cuando estén definidos los paneles.
-    return RedirectToAction("Index", "Home");
-}
-
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Logout()
-{
-    await _signInManager.SignOutAsync();
-
-    return RedirectToAction("Index", "Home");
-}
-
-[HttpGet]
-public IActionResult AccesoDenegado()
-{
-    return View();
-}
-
+    [HttpGet]
+    public IActionResult AccesoDenegado()
+    {
+        return View();
+    }
 }

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Recuperación Tecnológica</title>
+    <script>
+            (function () {
+                var html = document.documentElement;
+                try {
+                    var theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                    html.setAttribute('data-bs-theme', theme);
+                } catch (e) { }
+                try {
+                    var saved = JSON.parse(localStorage.getItem('a11y') || 'null');
+                    if (saved) {
+                        html.style.setProperty('--fs', saved.fs || '1');
+                        html.setAttribute('data-contrast', saved.contrast || 'normal');
+                        html.setAttribute('data-motion', saved.motion || 'normal');
+                    } else if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                        html.setAttribute('data-motion', 'reduce');
+                    }
+                } catch (e) { }
+            })();
+    </script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/a11y.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/TPF.RecuperacionTecnologica.Web.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="auth">
+        <div class="auth-theme">
+            <partial name="_ThemeToggle" />
+        </div>
+        <div class="auth-brand">
+            <span class="brand-mark" aria-hidden="true">R</span>
+            <span class="brand-name">Recuperación Tecnológica</span>
+        </div>
+        <main id="main" class="auth-main" tabindex="-1">
+            @RenderBody()
+        </main>
+        <p class="auth-foot">Plataforma para la Recuperación y Redistribución de Equipos Tecnológicos</p>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
