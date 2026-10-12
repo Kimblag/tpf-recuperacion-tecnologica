@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
+using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
@@ -49,6 +50,16 @@ builder.Services
 // el enlace de recuperación de pass vence en 1 hora
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
+
+// las políticas se basan en los roles de Identity, que coinciden con RolPersonal
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("SoloAdministrador", policy =>
+        policy.RequireRole(nameof(RolPersonal.Administrador)))
+    .AddPolicy("PersonalInterno", policy =>
+        policy.RequireRole(
+            nameof(RolPersonal.Tecnico),
+            nameof(RolPersonal.Coordinador),
+            nameof(RolPersonal.Administrador)));
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

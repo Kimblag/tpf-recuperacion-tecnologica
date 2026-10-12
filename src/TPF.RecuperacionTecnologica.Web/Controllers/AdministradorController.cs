@@ -6,7 +6,7 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = "SoloAdministrador")]
 public class AdministradorController : Controller
 {
     [HttpGet]

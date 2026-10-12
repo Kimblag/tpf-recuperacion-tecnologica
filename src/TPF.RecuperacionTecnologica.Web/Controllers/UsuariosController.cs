@@ -5,7 +5,7 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-[Authorize]
+[Authorize(Policy = "SoloAdministrador")]
 public class UsuariosController : Controller
 {
     private static readonly IReadOnlyList<UsuarioDetalleViewModel> DatosDeEjemplo =

@@ -7,8 +7,7 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-// TODO: restringir a la política SoloAdministrador
-[Authorize]
+[Authorize(Policy = "SoloAdministrador")]
 public class PersonalController : Controller
 {
     private readonly IPersonalService _personalService;

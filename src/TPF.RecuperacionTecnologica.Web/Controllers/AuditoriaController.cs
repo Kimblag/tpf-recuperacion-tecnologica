@@ -5,8 +5,7 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-// TODO: restringir a la política SoloAdministrador
-[Authorize]
+[Authorize(Policy = "SoloAdministrador")]
 public class AuditoriaController : Controller
 {
     [HttpGet]
