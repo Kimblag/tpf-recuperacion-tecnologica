@@ -12,20 +12,17 @@ public class PersonalService : IPersonalService
 {
     private readonly ApplicationDbContext _context;
     private readonly UserManager<IdentityUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IAuditoriaService _auditoriaService;
     private readonly ILogger<PersonalService> _logger;
 
     public PersonalService(
         ApplicationDbContext context,
         UserManager<IdentityUser> userManager,
-        RoleManager<IdentityRole> roleManager,
         IAuditoriaService auditoriaService,
         ILogger<PersonalService> logger)
     {
         _context = context;
         _userManager = userManager;
-        _roleManager = roleManager;
         _auditoriaService = auditoriaService;
         _logger = logger;
     }
@@ -78,18 +75,6 @@ public class PersonalService : IPersonalService
 
         try
         {
-            if (!await _roleManager.RoleExistsAsync(nombreRol))
-            {
-                var rolCreado = await _roleManager.CreateAsync(new IdentityRole(nombreRol));
-
-                // otra solicitud pudo crearlo en el medio; se confirma antes de dar error
-                if (!rolCreado.Succeeded && !await _roleManager.RoleExistsAsync(nombreRol))
-                {
-                    await EliminarCuentaAsync(identityUser);
-                    return Error("RolNoAsignado", "No se pudo asignar el rol a la cuenta. Intente nuevamente.");
-                }
-            }
-
             var rolAsignado = await _userManager.AddToRoleAsync(identityUser, nombreRol);
 
             if (!rolAsignado.Succeeded)
