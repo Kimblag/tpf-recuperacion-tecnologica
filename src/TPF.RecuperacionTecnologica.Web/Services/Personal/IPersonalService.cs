@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -16,6 +17,14 @@ public interface IPersonalService
     /// sin que haya quedado ninguna cuenta ni registro creado.
     /// </returns>
     Task<IdentityResult> AltaAsync(AltaPersonalViewModel modelo, int codigoAdministrador);
+
+    /// <summary>
+    /// Lista el Personal registrado, ordenado por código, con filtros opcionales.
+    /// </summary>
+    /// <param name="busqueda">Texto a buscar en nombre y apellido, DNI o código (por ejemplo "PER-0002" o "2").</param>
+    /// <param name="rol">Si se indica, solo el Personal con ese rol.</param>
+    /// <param name="estado">Si se indica, solo el Personal en ese estado.</param>
+    Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado);
 
     /// <summary>
     /// Devuelve el código de Personal asociado a una cuenta de Identity, o null si no corresponde a Personal.

@@ -30,6 +30,62 @@ public class PersonalService : IPersonalService
     private static IdentityResult Error(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
+    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado)
+    {
+        var consulta = _context.PersonalInterno.AsNoTracking();
+
+        if (rol.HasValue)
+        {
+            consulta = consulta.Where(p => p.RolAsignado == rol.Value);
+        }
+
+        if (estado.HasValue)
+        {
+            consulta = consulta.Where(p => p.EstadoPersonal == estado.Value);
+        }
+
+        var termino = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(termino))
+        {
+            // el DNI se muestra con puntos (27.884.310), así que se acepta escrito así
+            var dni = termino.Replace(".", "");
+            var buscaDni = dni.Length > 0;
+
+            // el código se muestra como PER-0002, y también se acepta solo el número
+            var textoCodigo = termino.StartsWith("PER-", StringComparison.OrdinalIgnoreCase) ? termino[4..] : termino;
+            int? codigo = int.TryParse(textoCodigo, out var numero) ? numero : null;
+
+            consulta = consulta.Where(p =>
+                (p.Nombre + " " + p.Apellido).Contains(termino)
+                || (buscaDni && p.Dni.Contains(dni))
+                || (codigo != null && p.CodigoPersonal == codigo));
+        }
+
+        var filas = await consulta
+            .OrderBy(p => p.CodigoPersonal)
+            .Select(p => new PersonalFilaViewModel
+            {
+                CodigoPersonal = p.CodigoPersonal,
+                Dni = p.Dni,
+                Nombre = p.Nombre,
+                Apellido = p.Apellido,
+                CorreoElectronico = p.CorreoElectronico,
+                RolAsignado = p.RolAsignado,
+                EstadoPersonal = p.EstadoPersonal
+            })
+            .ToListAsync();
+
+        return new PersonalListadoViewModel
+        {
+            Busqueda = busqueda,
+            Rol = rol,
+            Estado = estado,
+            Filas = filas,
+            Total = filas.Count
+        };
+    }
+
     public async Task<int?> ObtenerCodigoPersonalAsync(string identityUserId)
     {
         return await _context.PersonalInterno

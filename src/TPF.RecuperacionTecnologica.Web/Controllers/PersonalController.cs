@@ -30,13 +30,9 @@ public class PersonalController : Controller
     ];
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(string? busqueda, RolPersonal? rol, EstadoPersonal? estado)
     {
-        return View(new PersonalListadoViewModel
-        {
-            Filas = DatosDeEjemplo,
-            Total = DatosDeEjemplo.Count
-        });
+        return View(await _personalService.ListarAsync(busqueda, rol, estado));
     }
 
     [HttpGet]
