@@ -138,7 +138,7 @@ public class PersonalService : IPersonalService
         try
         {
             await _auditoriaService.RegistrarEventoAsync(
-                TipoOperacionAuditoria.AltaPersonal, codigoAdministrador, nameof(PersonalEntidad), personal.CodigoPersonal,
+                TipoOperacionAuditoria.AltaPersonal, codigoAdministrador, nameof(Models.Personal), personal.CodigoPersonal,
                 $"Alta de personal ({personal.RolAsignado})");
         }
         catch (Exception ex)
