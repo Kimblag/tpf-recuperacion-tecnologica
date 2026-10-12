@@ -63,11 +63,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Crea el primer Administrador y la configuración institucional (solo en desarrollo)
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    await DbInitializer.SeedAdminAsync(scope.ServiceProvider);
+    // los roles son datos de referencia: se aseguran siempre
+    await DbInitializer.SeedRolesAsync(scope.ServiceProvider);
+
+    // el primer Administrador y la configuración institucional se crean solo en desarrollo
+    if (app.Environment.IsDevelopment())
+    {
+        await DbInitializer.SeedAdminAsync(scope.ServiceProvider);
+    }
 }
 
 // Configure the HTTP request pipeline.
