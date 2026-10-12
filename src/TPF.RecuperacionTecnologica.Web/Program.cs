@@ -52,17 +52,14 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
 
 // las políticas se basan en los roles de Identity, que coinciden con RolPersonal
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("SoloAdministrador", policy =>
-        policy.RequireRole(nameof(RolPersonal.Administrador)));
-
-    options.AddPolicy("PersonalInterno", policy =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("SoloAdministrador", policy =>
+        policy.RequireRole(nameof(RolPersonal.Administrador)))
+    .AddPolicy("PersonalInterno", policy =>
         policy.RequireRole(
             nameof(RolPersonal.Tecnico),
             nameof(RolPersonal.Coordinador),
             nameof(RolPersonal.Administrador)));
-});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
