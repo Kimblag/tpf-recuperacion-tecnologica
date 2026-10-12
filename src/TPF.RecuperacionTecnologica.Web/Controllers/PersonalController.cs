@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 
@@ -9,6 +11,13 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 [Authorize]
 public class PersonalController : Controller
 {
+    private readonly IPersonalService _personalService;
+
+    public PersonalController(IPersonalService personalService)
+    {
+        _personalService = personalService;
+    }
+
     // TODO: reemplazar estos datos de ejemplo por los reales del servicio de personal interno
     private static readonly IReadOnlyList<PersonalDetalleViewModel> DatosDeEjemplo =
     [
@@ -21,13 +30,9 @@ public class PersonalController : Controller
     ];
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(string? busqueda, RolPersonal? rol, EstadoPersonal? estado)
     {
-        return View(new PersonalListadoViewModel
-        {
-            Filas = DatosDeEjemplo,
-            Total = DatosDeEjemplo.Count
-        });
+        return View(await _personalService.ListarAsync(busqueda, rol, estado));
     }
 
     [HttpGet]
@@ -38,16 +43,37 @@ public class PersonalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Alta(AltaPersonalViewModel modelo)
+    public async Task<IActionResult> Alta(AltaPersonalViewModel modelo)
     {
         if (!ModelState.IsValid)
         {
             return View(modelo);
         }
 
-        // TODO: AltaAsync 
-        ModelState.AddModelError(string.Empty, "El alta de personal todavía no está implementada.");
-        return View(modelo);
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var codigoAdministrador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoAdministrador is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _personalService.AltaAsync(modelo, codigoAdministrador.Value);
+
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(modelo);
+        }
+
+        TempData["Mensaje"] = "El personal se dio de alta correctamente.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]

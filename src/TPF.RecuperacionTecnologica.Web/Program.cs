@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICuentaService, CuentaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IPersonalService, PersonalService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services
@@ -61,11 +63,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 var app = builder.Build();
 
-// Crea el primer Administrador y la configuración institucional (solo en desarrollo)
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-    await DbInitializer.SeedAdminAsync(scope.ServiceProvider);
+    // los roles son datos de referencia: se aseguran siempre
+    await DbInitializer.SeedRolesAsync(scope.ServiceProvider);
+
+    // el primer Administrador y la configuración institucional se crean solo en desarrollo
+    if (app.Environment.IsDevelopment())
+    {
+        await DbInitializer.SeedAdminAsync(scope.ServiceProvider);
+    }
 }
 
 // Configure the HTTP request pipeline.

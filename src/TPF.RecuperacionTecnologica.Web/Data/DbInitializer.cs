@@ -13,6 +13,36 @@ public static class DbInitializer
     private const string NombreInicial = "Administrador";
     private const string ApellidoInicial = "Inicial";
 
+    // crea los roles de Identity, uno por cada RolPersonal; el nombre del rol es el nombre del enum
+    public static async Task SeedRolesAsync(IServiceProvider services)
+    {
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DbInitializer));
+
+        try
+        {
+            foreach (var rol in Enum.GetNames<RolPersonal>())
+            {
+                if (await roleManager.RoleExistsAsync(rol))
+                {
+                    continue;
+                }
+
+                var resultado = await roleManager.CreateAsync(new IdentityRole(rol));
+
+                if (!resultado.Succeeded)
+                {
+                    logger.LogError("No se pudo crear el rol {Rol}: {Errores}",
+                        rol, string.Join(", ", resultado.Errors.Select(e => e.Description)));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "No se pudieron crear los roles. ¿Está la base migrada? (dotnet ef database update)");
+        }
+    }
+
     public static async Task SeedAdminAsync(IServiceProvider services)
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
@@ -76,6 +106,15 @@ public static class DbInitializer
         {
             var errores = string.Join(", ", resultado.Errors.Select(e => e.Description));
             throw new InvalidOperationException($"No se pudo crear el Administrador: {errores}");
+        }
+
+        // el rol se asigna dentro de la transacción: si falla, no queda un Administrador sin rol
+        var rolAsignado = await userManager.AddToRoleAsync(user, nameof(RolPersonal.Administrador));
+
+        if (!rolAsignado.Succeeded)
+        {
+            var errores = string.Join(", ", rolAsignado.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"No se pudo asignar el rol al Administrador: {errores}");
         }
 
         var administrador = new Personal
