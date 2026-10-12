@@ -73,21 +73,6 @@ public static class DbInitializer
                 logger.LogInformation("Se creó el primer Administrador ({Correo}).", correo);
             }
 
-            // el Administrador puede haberse creado antes de que existieran los roles
-            var cuenta = await userManager.FindByIdAsync(administrador.IdentityUserId);
-            var rolAdministrador = nameof(RolPersonal.Administrador);
-
-            if (cuenta is not null && !await userManager.IsInRoleAsync(cuenta, rolAdministrador))
-            {
-                var rolAsignado = await userManager.AddToRoleAsync(cuenta, rolAdministrador);
-
-                if (!rolAsignado.Succeeded)
-                {
-                    logger.LogError("No se pudo asignar el rol {Rol} al Administrador: {Errores}",
-                        rolAdministrador, string.Join(", ", rolAsignado.Errors.Select(e => e.Description)));
-                }
-            }
-
             if (!await context.ConfiguracionInstitucional.AnyAsync())
             {
                 context.ConfiguracionInstitucional.Add(new ConfiguracionInstitucional
@@ -121,6 +106,15 @@ public static class DbInitializer
         {
             var errores = string.Join(", ", resultado.Errors.Select(e => e.Description));
             throw new InvalidOperationException($"No se pudo crear el Administrador: {errores}");
+        }
+
+        // el rol se asigna dentro de la transacción: si falla, no queda un Administrador sin rol
+        var rolAsignado = await userManager.AddToRoleAsync(user, nameof(RolPersonal.Administrador));
+
+        if (!rolAsignado.Succeeded)
+        {
+            var errores = string.Join(", ", rolAsignado.Errors.Select(e => e.Description));
+            throw new InvalidOperationException($"No se pudo asignar el rol al Administrador: {errores}");
         }
 
         var administrador = new Personal
