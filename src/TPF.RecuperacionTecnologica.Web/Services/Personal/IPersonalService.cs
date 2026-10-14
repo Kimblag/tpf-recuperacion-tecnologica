@@ -30,4 +30,7 @@ public interface IPersonalService
     /// Devuelve el código de Personal asociado a una cuenta de Identity, o null si no corresponde a Personal.
     /// </summary>
     Task<int?> ObtenerCodigoPersonalAsync(string identityUserId);
+
+    Task<PersonalDetalleViewModel?> ObtenerDetalleAsync(int codigoPersonal);
+    Task<IdentityResult> EditarAsync(EdicionPersonalViewModel modelo, int codigoAdministrador);
 }

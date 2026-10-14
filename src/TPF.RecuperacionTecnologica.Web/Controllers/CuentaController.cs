@@ -3,6 +3,7 @@ using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
+using Microsoft.AspNetCore.Identity;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
@@ -10,11 +11,13 @@ public class CuentaController : Controller
 {
     private readonly IUsuarioService _usuarioService;
     private readonly ICuentaService _cuentaService;
+    private readonly UserManager<IdentityUser> _userManager;
 
-    public CuentaController(IUsuarioService usuarioService, ICuentaService cuentaService)
+    public CuentaController(IUsuarioService usuarioService, ICuentaService cuentaService, UserManager<IdentityUser> userManager)
     {
         _usuarioService = usuarioService;
         _cuentaService = cuentaService;
+        _userManager = userManager;
     }
 
     [HttpGet]
@@ -81,14 +84,28 @@ public class CuentaController : Controller
 
         switch (resultado)
         {
+
             case ResultadoInicioSesion.Exitoso:
-                // pendiente: redirigir al panel de cada rol cuando estén definidos
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
                     return LocalRedirect(returnUrl);
                 }
 
+                var identityUser = await _userManager.FindByEmailAsync(
+                    modelo.CorreoElectronico.Trim());
+
+                if (identityUser is not null)
+                {
+                    var roles = await _userManager.GetRolesAsync(identityUser);
+
+                    if (roles.Contains("Administrador"))
+                    {
+                        return RedirectToAction("Inicio", "Administrador");
+                    }
+                }
+
                 return RedirectToAction("Index", "Home");
+
 
             case ResultadoInicioSesion.CuentaInactiva:
                 ModelState.AddModelError(string.Empty,

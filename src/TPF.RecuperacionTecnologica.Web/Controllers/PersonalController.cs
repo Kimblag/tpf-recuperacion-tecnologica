@@ -76,17 +76,17 @@ public class PersonalController : Controller
     }
 
     [HttpGet]
-    public IActionResult Detalle(int id)
+    public async Task<IActionResult> Detalle(int id)
     {
-        var personal = DatosDeEjemplo.FirstOrDefault(p => p.CodigoPersonal == id);
+        var personal = await _personalService.ObtenerDetalleAsync(id);
 
         return personal is null ? NotFound() : View(personal);
     }
 
     [HttpGet]
-    public IActionResult Editar(int id)
+    public async Task<IActionResult> Editar(int id)
     {
-        var personal = DatosDeEjemplo.FirstOrDefault(p => p.CodigoPersonal == id);
+        var personal = await _personalService.ObtenerDetalleAsync(id);
 
         if (personal is null)
         {
@@ -108,16 +108,32 @@ public class PersonalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Editar(EdicionPersonalViewModel modelo)
+    public async Task<IActionResult> Editar(EdicionPersonalViewModel modelo)
     {
         if (!ModelState.IsValid)
         {
             return View(modelo);
         }
 
-        // TODO: EditarAsync
-        ModelState.AddModelError(string.Empty, "La edición de personal todavía no está implementada.");
-        return View(modelo);
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var codigoAdministrador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+        if (codigoAdministrador is null)
+        {
+            return Forbid();
+        }
+        var resultado = await _personalService.EditarAsync(modelo, codigoAdministrador.Value);
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(modelo);
+        }
+        TempData["Mensaje"] = "El personal se editó correctamente.";
+        return RedirectToAction(nameof(Detalle), new { id = modelo.CodigoPersonal });
     }
 
     [HttpPost]
