@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
@@ -114,5 +115,69 @@ public class UsuarioService : IUsuarioService
             _logger.LogError(ex, "No se pudo auditar el alta del Usuario {NroUsuario}", usuario.NroUsuario);
         }
         return IdentityResult.Success;
+    }
+
+    public async Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado)
+    {
+        var consulta = _context.Usuarios.AsNoTracking();
+
+        if (tipo.HasValue)
+        {
+            consulta = consulta.Where(u => u.TipoUsuario == tipo.Value);
+        }
+
+        if (estado.HasValue)
+        {
+            consulta = consulta.Where(u => u.EstadoUsuario == estado.Value);
+        }
+
+        var filas = await consulta
+            .OrderBy(u => u.NroUsuario)
+            .Select(u => new UsuarioFilaViewModel
+            {
+                NroUsuario = u.NroUsuario,
+                TipoUsuario = u.TipoUsuario,
+                Nombre = u.Nombre,
+                Apellido = u.Apellido,
+                RazonSocial = u.RazonSocial,
+                TipoDocumento = u.TipoDocumento,
+                NroDocumento = u.NroDocumento,
+                CorreoElectronico = u.CorreoElectronico,
+                Telefono = u.Telefono,
+                FechaAlta = u.FechaAlta,
+                EstadoUsuario = u.EstadoUsuario
+            })
+            .ToListAsync();
+
+        return new UsuarioListadoViewModel
+        {
+            Tipo = tipo,
+            Estado = estado,
+            Filas = filas,
+            Total = filas.Count
+        };
+    }
+
+    public async Task<UsuarioDetalleViewModel?> ObtenerDetalleAsync(int nroUsuario)
+    {
+        return await _context.Usuarios
+            .AsNoTracking()
+            .Where(u => u.NroUsuario == nroUsuario)
+            .Select(u => new UsuarioDetalleViewModel
+            {
+                NroUsuario = u.NroUsuario,
+                TipoUsuario = u.TipoUsuario,
+                Nombre = u.Nombre,
+                Apellido = u.Apellido,
+                RazonSocial = u.RazonSocial,
+                TipoDocumento = u.TipoDocumento,
+                NroDocumento = u.NroDocumento,
+                CorreoElectronico = u.CorreoElectronico,
+                Telefono = u.Telefono,
+                Direccion = u.Direccion,
+                FechaAlta = u.FechaAlta,
+                EstadoUsuario = u.EstadoUsuario
+            })
+            .FirstOrDefaultAsync();
     }
 }
