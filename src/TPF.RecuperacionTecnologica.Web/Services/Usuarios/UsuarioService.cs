@@ -180,4 +180,101 @@ public class UsuarioService : IUsuarioService
             })
             .FirstOrDefaultAsync();
     }
+
+    public async Task<EdicionUsuarioViewModel?> ObtenerEdicionAsync(string identityUserId)
+    {
+        return await _context.Usuarios
+            .AsNoTracking()
+            .Where(u => u.IdentityUserId == identityUserId)
+            .Select(u => new EdicionUsuarioViewModel
+            {
+                TipoUsuario = u.TipoUsuario,
+                Nombre = u.Nombre,
+                Apellido = u.Apellido,
+                RazonSocial = u.RazonSocial,
+                TipoDocumento = u.TipoDocumento,
+                NroDocumento = u.NroDocumento,
+                Direccion = u.Direccion,
+                Telefono = u.Telefono,
+                CorreoElectronico = u.CorreoElectronico
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<(IdentityResult Resultado, bool CorreoCambiado)> EditarAsync(string identityUserId, EdicionUsuarioViewModel modelo)
+    {
+        var edicionFallida = IdentityResult.Failed(new IdentityError
+        {
+            Code = "EdicionFallida",
+            Description = "No se pudieron guardar los cambios. Intente nuevamente."
+        });
+
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.IdentityUserId == identityUserId);
+
+        // un Usuario inactivo no llega hasta acá porque el login lo bloquea, pero se valida igual
+        if (usuario is null || usuario.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return (edicionFallida, false);
+        }
+
+        var correo = modelo.CorreoElectronico.Trim();
+        var correoCambiado = correo != usuario.CorreoElectronico;
+
+        // la cuenta y la ficha se guardan juntas, es todo o nada para que el correo no quede distinto en cada una
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            if (correoCambiado)
+            {
+                var identityUser = await _userManager.FindByIdAsync(identityUserId);
+
+                if (identityUser is null)
+                {
+                    return (edicionFallida, false);
+                }
+
+                // el user name es el correo, así que se actualizan los dos
+                var resultado = await _userManager.SetEmailAsync(identityUser, correo);
+
+                if (resultado.Succeeded)
+                {
+                    resultado = await _userManager.SetUserNameAsync(identityUser, correo);
+                }
+
+                if (!resultado.Succeeded)
+                {
+                    // igual que en el registro, no se confirma que el correo pertenece a otra cuenta
+                    var correoDuplicado = resultado.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail");
+
+                    var error = correoDuplicado
+                        ? IdentityResult.Failed(new IdentityError
+                        {
+                            Code = "CorreoNoDisponible",
+                            Description = "No se pudo usar ese correo electrónico. Ingrese otro."
+                        })
+                        : resultado;
+
+                    // sale sin commitear la transaccion, no se guarda nada
+                    return (error, false);
+                }
+            }
+
+            usuario.Direccion = string.IsNullOrWhiteSpace(modelo.Direccion) ? null : modelo.Direccion.Trim();
+            usuario.Telefono = string.IsNullOrWhiteSpace(modelo.Telefono) ? null : modelo.Telefono.Trim();
+            usuario.CorreoElectronico = correo;
+            usuario.FechaUltimaModificacion = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la edición del Usuario {NroUsuario}; se revirtió la transacción", usuario.NroUsuario);
+
+            return (edicionFallida, false);
+        }
+
+        return (IdentityResult.Success, correoCambiado);
+    }
 }
