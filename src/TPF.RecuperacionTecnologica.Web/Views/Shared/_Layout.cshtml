@@ -59,41 +59,16 @@
                     var isHome = currentController == "Home" && currentAction == "Index";
                     var isPrivacy = currentController == "Home" && currentAction == "Privacy";
                 }
-               ```cshtml
-<nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
-    <a class="nav-link d-flex align-items-center gap-2@(isHome ? " active" : "")"
-       asp-area=""
-       asp-controller="Home"
-       asp-action="Index"
-       aria-current="@(isHome ? "page" : null)">
-        <span class="nav-dot"></span>
-        <partial name="_Icon" model="@("grid")" />
-        Inicio
-    </a>
-
-    <a class="nav-link d-flex align-items-center gap-2@(isPrivacy ? " active" : "")"
-       asp-area=""
-       asp-controller="Home"
-       asp-action="Privacy"
-       aria-current="@(isPrivacy ? "page" : null)">
-        <span class="nav-dot"></span>
-        <partial name="_Icon" model="@("file")" />
-        Privacidad
-    </a>
-
-    @if (User.IsInRole("Administrador"))
-    {
-        <a class="nav-link d-flex align-items-center gap-2"
-           asp-area=""
-           asp-controller="Personal"
-           asp-action="Index">
-            <span class="nav-dot"></span>
-            <partial name="_Icon" model="@("user")" />
-            Personal
-        </a>
-    }
-</nav>
-```
+                <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
+                    <a class="nav-link d-flex align-items-center gap-2@(isHome ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(isHome ? "page" : null)">
+                        <span class="nav-dot"></span>
+                        <partial name="_Icon" model="@("grid")" />Inicio
+                    </a>
+                    <a class="nav-link d-flex align-items-center gap-2@(isPrivacy ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy" aria-current="@(isPrivacy ? "page" : null)">
+                        <span class="nav-dot"></span>
+                        <partial name="_Icon" model="@("file")" />Privacidad
+                    </a>
+                </nav>
                
                 @{
                     var estaAutenticado = User.Identity?.IsAuthenticated == true;

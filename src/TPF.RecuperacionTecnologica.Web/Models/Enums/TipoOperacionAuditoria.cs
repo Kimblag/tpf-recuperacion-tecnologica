@@ -49,5 +49,4 @@ public enum TipoOperacionAuditoria
 
     [Display(Name = "Edicion de personal")]
     EdicionPersonal
-
 }

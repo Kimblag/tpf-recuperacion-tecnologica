@@ -142,6 +142,21 @@ public class PersonalService : IPersonalService
                 "Ya existe un integrante del Personal con ese correo electrónico.");
         }
 
+        var rolAnterior = personal.RolAsignado;
+
+        // no se puede dejar al sistema sin ningún Administrador activo
+        if (rolAnterior == RolPersonal.Administrador
+            && modelo.RolAsignado != RolPersonal.Administrador
+            && personal.EstadoPersonal == EstadoPersonal.Activo
+            && !await _context.PersonalInterno.AnyAsync(p =>
+                p.CodigoPersonal != personal.CodigoPersonal
+                && p.RolAsignado == RolPersonal.Administrador
+                && p.EstadoPersonal == EstadoPersonal.Activo))
+        {
+            return Error("UltimoAdministrador",
+                "No se puede cambiar el rol del último Administrador activo.");
+        }
+
         var identityUser = await _userManager.FindByIdAsync(personal.IdentityUserId);
 
         if (identityUser is null)
@@ -244,7 +259,9 @@ public class PersonalService : IPersonalService
                 codigoAdministrador,
                 nameof(Models.Personal),
                 personal.CodigoPersonal,
-                $"Edición de personal ({personal.RolAsignado})");
+                rolAnterior == personal.RolAsignado
+                    ? $"Edición de personal ({personal.RolAsignado})"
+                    : $"Edición de personal (cambio de rol: {rolAnterior} -> {personal.RolAsignado})");
         }
         catch (Exception ex)
         {

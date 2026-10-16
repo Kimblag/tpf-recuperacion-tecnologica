@@ -31,6 +31,16 @@ public interface IPersonalService
     /// </summary>
     Task<int?> ObtenerCodigoPersonalAsync(string identityUserId);
 
+
+    /// <summary>
+    /// Devuelve el detalle de un integrante del Personal, o null si no existe.
+    /// </summary>
     Task<PersonalDetalleViewModel?> ObtenerDetalleAsync(int codigoPersonal);
+
+    /// <summary>
+    /// Edita nombre, apellido, teléfono, correo y rol del Personal, y sincroniza la cuenta de Identity.
+    /// No permite quitarle el rol al último Administrador activo.
+    /// </summary>
+    /// <param name="codigoAdministrador">Código del Administrador que realiza la edición, para la auditoría.</param>
     Task<IdentityResult> EditarAsync(EdicionPersonalViewModel modelo, int codigoAdministrador);
 }
