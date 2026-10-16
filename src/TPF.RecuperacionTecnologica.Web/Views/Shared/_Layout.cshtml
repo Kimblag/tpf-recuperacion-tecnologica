@@ -1,4 +1,5 @@
 ﻿@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.Services.Cuenta
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -61,10 +62,7 @@
                     var isPrivacy = currentController == "Home" && currentAction == "Privacy";
                     var isDonaciones = currentController == "Donaciones";
                     // los Usuarios no tienen rol de Identity; el Personal sí
-                    var esUsuario = User.Identity?.IsAuthenticated == true
-                        && !User.IsInRole(nameof(RolPersonal.Tecnico))
-                        && !User.IsInRole(nameof(RolPersonal.Coordinador))
-                        && !User.IsInRole(nameof(RolPersonal.Administrador));
+                    var esUsuario = User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario);
                 }
                 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
                     <a class="nav-link d-flex align-items-center gap-2@(isHome ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(isHome ? "page" : null)">
@@ -86,10 +84,10 @@
                
                 @{
                     var estaAutenticado = User.Identity?.IsAuthenticated == true;
-                    var nombreSesion = User.FindFirst("nombre")?.Value ?? User.Identity?.Name ?? string.Empty;
-                    var iniciales = User.FindFirst("iniciales")?.Value
+                    var nombreSesion = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? User.Identity?.Name ?? string.Empty;
+                    var iniciales = User.FindFirst(ClaimsSesion.Iniciales)?.Value
                         ?? (nombreSesion.Length >= 2 ? nombreSesion[..2] : nombreSesion).ToUpperInvariant();
-                    var rolSesion = User.FindFirst("rol")?.Value;
+                    var rolSesion = User.FindFirst(ClaimsSesion.Rol)?.Value;
                 }
                 <div class="sidebar-foot dropdown dropup">
                     @if (estaAutenticado)

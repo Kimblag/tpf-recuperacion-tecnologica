@@ -252,6 +252,11 @@ public class PersonalService : IPersonalService
                 "No se pudo completar la edición. Intente nuevamente.");
         }
 
+        if (rolAnterior != personal.RolAsignado)
+        {
+            await _userManager.UpdateSecurityStampAsync(identityUser);
+        }
+
         try
         {
             await _auditoriaService.RegistrarEventoAsync(

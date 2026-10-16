@@ -16,6 +16,8 @@ public static class DbInitializer
     // crea los roles de Identity, uno por cada RolPersonal; el nombre del rol es el nombre del enum
     public static async Task SeedRolesAsync(IServiceProvider services)
     {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DbInitializer));
 
@@ -34,6 +36,21 @@ public static class DbInitializer
                 {
                     logger.LogError("No se pudo crear el rol {Rol}: {Errores}",
                         rol, string.Join(", ", resultado.Errors.Select(e => e.Description)));
+                }
+            }
+
+            var personal = await context.PersonalInterno
+                .Select(p => new { p.IdentityUserId, p.RolAsignado })
+                .ToListAsync();
+
+            foreach (var item in personal)
+            {
+                var cuenta = await userManager.FindByIdAsync(item.IdentityUserId);
+                var nombreRol = item.RolAsignado.ToString();
+
+                if (cuenta is not null && !await userManager.IsInRoleAsync(cuenta, nombreRol))
+                {
+                    await userManager.AddToRoleAsync(cuenta, nombreRol);
                 }
             }
         }
