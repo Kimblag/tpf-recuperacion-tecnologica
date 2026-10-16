@@ -1,0 +1,113 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.RegistroDonacionViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Donar un equipo";
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <h1 tabindex="-1">Donar un equipo</h1>
+            <p class="page-sub">Cuéntenos qué equipo quiere donar. Al terminar le daremos un número para seguir su donación.</p>
+        </div>
+    </div>
+
+    <form class="card" asp-action="Create" method="post" id="f-donacion" novalidate aria-labelledby="f-donacion-titulo">
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-donacion-titulo">Datos de la donación</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <h3 class="span-2 sec-title">Datos del equipo</h3>
+
+                    <div class="field">
+                        <label class="form-label" for="TipoEquipo">Tipo de equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <div class="select">
+                            <select asp-for="TipoEquipo" class="form-select" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
+                                <option value="">Seleccione…</option>
+                            </select>
+                            <partial name="_Icon" model="@("chevron-down")" />
+                        </div>
+                        <span asp-validation-for="TipoEquipo"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="EstadoInicialDeclarado">Estado del equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <div class="select">
+                            <select asp-for="EstadoInicialDeclarado" class="form-select" asp-items="Html.GetEnumSelectList<EstadoInicialDeclarado>()">
+                                <option value="">Seleccione…</option>
+                            </select>
+                            <partial name="_Icon" model="@("chevron-down")" />
+                        </div>
+                        <span asp-validation-for="EstadoInicialDeclarado"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Marca">Marca<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Marca" class="form-control" placeholder="Ej.: Lenovo" />
+                        <span asp-validation-for="Marca"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Modelo">Modelo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Modelo" class="form-control" placeholder="Ej.: ThinkPad T440" />
+                        <span asp-validation-for="Modelo"></span>
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="Observaciones">Observaciones</label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="3" maxlength="500" aria-describedby="Observaciones-hint"></textarea>
+                        <div class="form-text" id="Observaciones-hint">Por ejemplo: si tiene alguna falla, si incluye cargador.</div>
+                        <span asp-validation-for="Observaciones"></span>
+                    </div>
+
+                    <h3 class="span-2 sec-title">Especificaciones (opcional)</h3>
+
+                    <div class="field">
+                        <label class="form-label" for="Procesador">Procesador</label>
+                        <input asp-for="Procesador" class="form-control" placeholder="Ej.: Intel Core i5" />
+                        <span asp-validation-for="Procesador"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="MemoriaRam">Memoria RAM</label>
+                        <input asp-for="MemoriaRam" class="form-control" placeholder="Ej.: 8 GB" />
+                        <span asp-validation-for="MemoriaRam"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Almacenamiento">Almacenamiento</label>
+                        <input asp-for="Almacenamiento" class="form-control" placeholder="Ej.: 256 GB SSD" />
+                        <span asp-validation-for="Almacenamiento"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="TamanoPantalla">Tamaño de pantalla</label>
+                        <input asp-for="TamanoPantalla" class="form-control" placeholder="Ej.: 14 pulgadas" />
+                        <span asp-validation-for="TamanoPantalla"></span>
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="EstadoBateria">Estado de la batería</label>
+                        <input asp-for="EstadoBateria" class="form-control" placeholder="Ej.: dura 2 horas" />
+                        <span asp-validation-for="EstadoBateria"></span>
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="Otros">Otros datos</label>
+                        <textarea asp-for="Otros" class="form-control" rows="2" maxlength="300"></textarea>
+                        <span asp-validation-for="Otros"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-controller="Home" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Registrar donación</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}
