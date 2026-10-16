@@ -42,4 +42,12 @@ public interface IUsuarioService
     /// El resultado de la edición y si el correo cambió (en ese caso la sesión deja de ser válida).
     /// </returns>
     Task<(IdentityResult Resultado, bool CorreoCambiado)> EditarAsync(string identityUserId, EdicionUsuarioViewModel modelo);
+
+    /// <summary>
+    /// Da de baja la cuenta del Usuario asociado a la cuenta de Identity: queda Inactivo, con fecha y motivo de baja.
+    /// No se permite si tiene Equipos propios Disponibles, En reparación o Asignados, ni Solicitudes Pendientes o Asignadas;
+    /// los Equipos Pendientes de recepción no bloquean la baja. Invalida las sesiones abiertas de la cuenta.
+    /// </summary>
+    /// <returns>Éxito, o los motivos por los que no se pudo dar de baja.</returns>
+    Task<IdentityResult> DarDeBajaAsync(string identityUserId, BajaUsuarioViewModel modelo);
 }

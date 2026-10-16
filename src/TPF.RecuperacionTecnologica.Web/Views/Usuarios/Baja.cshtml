@@ -1,0 +1,49 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.BajaUsuarioViewModel
+@{
+    ViewData["Title"] = "Dar de baja mi cuenta";
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <h1 tabindex="-1">Dar de baja mi cuenta</h1>
+            <p class="page-sub">Esta acción cierra su cuenta y no podrá volver a iniciar sesión.</p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="note">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body">
+            <div>No podrá darse de baja si tiene equipos donados que la organización ya recibió o tiene comprometidos, ni solicitudes pendientes o asignadas.</div>
+        </div>
+    </div>
+
+    <form class="card" asp-action="Baja" method="post" id="f-usuario-baja" novalidate aria-labelledby="f-baja-titulo">
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-baja-titulo">Confirmar la baja</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <div class="field">
+                    <label class="form-label" for="MotivoBaja">Motivo de la baja<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                    <textarea asp-for="MotivoBaja" class="form-control" rows="3" maxlength="300"></textarea>
+                    <span asp-validation-for="MotivoBaja"></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Editar">Cancelar</a>
+            <button type="submit" class="btn btn-danger btn-lg">Dar de baja mi cuenta</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}
