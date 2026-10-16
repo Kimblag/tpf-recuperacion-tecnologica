@@ -8,6 +8,7 @@ public class RegistroDonacionViewModel
     // los enums son nullable para que el select arranque sin opción elegida y [Required] funcione
     [Display(Name = "Tipo de equipo")]
     [Required(ErrorMessage = "El tipo de equipo es obligatorio.")]
+    [EnumDataType(typeof(TipoEquipo), ErrorMessage = "Seleccione una opción válida.")]
     public TipoEquipo? TipoEquipo { get; set; }
 
     [Required(ErrorMessage = "La marca es obligatoria.")]
@@ -20,6 +21,7 @@ public class RegistroDonacionViewModel
 
     [Display(Name = "Estado del equipo")]
     [Required(ErrorMessage = "El estado del equipo es obligatorio.")]
+    [EnumDataType(typeof(EstadoInicialDeclarado), ErrorMessage = "Seleccione una opción válida.")]
     public EstadoInicialDeclarado? EstadoInicialDeclarado { get; set; }
 
     [StringLength(500, ErrorMessage = "Máximo 500 caracteres.")]

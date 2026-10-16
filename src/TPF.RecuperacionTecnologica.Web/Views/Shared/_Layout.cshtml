@@ -71,7 +71,7 @@
                     </a>
                     @if (esUsuario)
                     {
-                        <a class="nav-link d-flex align-items-center gap-2@(isDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Create" aria-current="@(isDonaciones ? "page" : null)">
+                        <a class="nav-link d-flex align-items-center gap-2@(isDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Registrar" aria-current="@(isDonaciones ? "page" : null)">
                             <span class="nav-dot"></span>
                             <partial name="_Icon" model="@("laptop")" />Donar un equipo
                         </a>

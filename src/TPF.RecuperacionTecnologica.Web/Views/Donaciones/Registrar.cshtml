@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    <form class="card" asp-action="Create" method="post" id="f-donacion" novalidate aria-labelledby="f-donacion-titulo">
+    <form class="card" asp-action="Registrar" method="post" id="f-donacion" novalidate aria-labelledby="f-donacion-titulo">
         <div class="card-header">
             <div><h2 class="card-title" id="f-donacion-titulo">Datos de la donación</h2></div>
         </div>
@@ -106,8 +106,20 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>
+        <script>
         var resumen = document.getElementById('resumen-errores');
         if (resumen) resumen.focus();
+
+        var formulario = document.getElementById('f-donacion');
+        var boton = formulario.querySelector('button[type="submit"]');
+
+        formulario.addEventListener('submit', function (evento) {
+            if (evento.defaultPrevented) return;
+            boton.disabled = true;
+        });
+
+        window.addEventListener('pageshow', function () {
+            boton.disabled = false;
+        });
     </script>
 }
