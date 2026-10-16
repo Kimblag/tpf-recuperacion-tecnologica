@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using System.Globalization;
-using System.Security.Claims;
 using System.Text;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
@@ -92,26 +90,7 @@ public class CuentaService : ICuentaService
 
         // Si todo está ok, generamos la cookie de sesión y guardamos los datos del usuario
         // en los claims para poder mostrarlos
-        var claims = new List<Claim>();
-        var identidad = await ObtenerIdentidadVisibleAsync(identityUser.Id);
-
-        if (identidad is not null && !string.IsNullOrWhiteSpace(identidad.Value.Nombre))
-        {
-            claims.Add(new Claim("nombre", identidad.Value.Nombre));
-
-            if (!string.IsNullOrWhiteSpace(identidad.Value.Iniciales))
-            {
-                claims.Add(new Claim("iniciales", identidad.Value.Iniciales));
-            }
-
-            // etiqueta para mostrar en pantalla, no se usa para autorizar
-            if (!string.IsNullOrWhiteSpace(identidad.Value.Rol))
-            {
-                claims.Add(new Claim("rol", identidad.Value.Rol));
-            }
-        }
-
-        await _signInManager.SignInWithClaimsAsync(identityUser, recordarSesion, claims);
+        await _signInManager.SignInAsync(identityUser, recordarSesion);
 
         await AuditarSesionAsync(TipoOperacionAuditoria.InicioSesion, identityUser.Id, "Inicio de sesión");
 
@@ -311,57 +290,6 @@ public class CuentaService : ICuentaService
         return (null, nameof(Usuario), nroUsuario.Value);
     }
 
-    private async Task<(string Nombre, string Iniciales, string? Rol)?> ObtenerIdentidadVisibleAsync(string identityUserId)
-    {
-        var personal = await _context.PersonalInterno
-            .Where(p => p.IdentityUserId == identityUserId)
-            .Select(p => new { p.Nombre, p.Apellido, p.RolAsignado })
-            .SingleOrDefaultAsync();
-
-        if (personal is not null)
-        {
-            return ($"{personal.Nombre} {personal.Apellido}".Trim(),
-                InicialesPersona(personal.Nombre, personal.Apellido),
-                EtiquetaRol(personal.RolAsignado));
-        }
-
-        var usuario = await _context.Usuarios
-            .Where(u => u.IdentityUserId == identityUserId)
-            .Select(u => new { u.TipoUsuario, u.Nombre, u.Apellido, u.RazonSocial })
-            .SingleOrDefaultAsync();
-
-        if (usuario is null)
-        {
-            return null;
-        }
-
-        // los usuarios externos no muestran etiqueta de rol
-        if (usuario.TipoUsuario == TipoUsuario.Persona)
-        {
-            return ($"{usuario.Nombre} {usuario.Apellido}".Trim(), InicialesPersona(usuario.Nombre, usuario.Apellido), null);
-        }
-
-        // institución muestra una sola letra, la primera de la razón social, tal cual
-        var razonSocial = usuario.RazonSocial?.Trim() ?? string.Empty;
-
-        return (razonSocial, PrimeraLetra(razonSocial), null);
-    }
-
-    private static string EtiquetaRol(RolPersonal rol) => rol switch
-    {
-        RolPersonal.Tecnico => "Técnico",
-        RolPersonal.Coordinador => "Coordinador",
-        RolPersonal.Administrador => "Administrador",
-        _ => rol.ToString()
-    };
-
-    private static string InicialesPersona(string? nombre, string? apellido) =>
-        PrimeraLetra(nombre) + PrimeraLetra(apellido);
-
-    private static string PrimeraLetra(string? texto) =>
-        string.IsNullOrWhiteSpace(texto)
-            ? string.Empty
-            : StringInfo.GetNextTextElement(texto.Trim()).ToUpperInvariant();
 
     // TODO: cuando exista la baja de personal, hay que invalidar las sesiones (la baja de Usuario ya lo hace)
     // abiertas con UserManager.UpdateSecurityStampAsync, porque esta verificación solo corre al iniciar sesión

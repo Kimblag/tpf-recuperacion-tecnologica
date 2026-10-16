@@ -46,12 +46,16 @@ builder.Services
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddClaimsPrincipalFactory<FabricaClaimsUsuario>()
     .AddDefaultTokenProviders()
     .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 // el enlace de recuperación de pass vence en 1 hora
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
+
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+    options.ValidationInterval = TimeSpan.FromMinutes(1));
 
 // las políticas se basan en los roles de Identity, que coinciden con RolPersonal
 builder.Services.AddAuthorizationBuilder()
