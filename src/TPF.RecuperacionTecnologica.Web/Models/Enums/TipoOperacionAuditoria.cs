@@ -47,6 +47,6 @@ public enum TipoOperacionAuditoria
     [Display(Name = "Bloqueo de cuenta")]
     BloqueoCuenta,
 
-    [Display(Name = "Edicion de personal")]
+    [Display(Name = "Edición de personal")]
     EdicionPersonal
 }
