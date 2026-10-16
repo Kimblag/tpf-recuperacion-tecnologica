@@ -50,14 +50,6 @@
         </div>
     }
 
-    @if (TempData["Mensaje"] is string mensaje)
-    {
-        <div class="alert alert-success" role="status">
-            <partial name="_Icon" model="@("check-circle")" />
-            <div class="alert-body">@mensaje</div>
-        </div>
-    }
-
     @if (!estaActivo)
     {
         <div class="alert alert-info" role="status">
