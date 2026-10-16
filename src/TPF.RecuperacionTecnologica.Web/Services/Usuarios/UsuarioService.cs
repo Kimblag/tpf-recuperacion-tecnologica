@@ -277,4 +277,108 @@ public class UsuarioService : IUsuarioService
 
         return (IdentityResult.Success, correoCambiado);
     }
+
+    public async Task<IdentityResult> DarDeBajaAsync(string identityUserId, BajaUsuarioViewModel modelo)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.IdentityUserId == identityUserId);
+
+        if (usuario is null || usuario.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "BajaFallida",
+                Description = "No se pudo dar de baja la cuenta."
+            });
+        }
+
+        // la verificación y la baja van en la misma transacción para que no cambie el estado de las operaciones entre medio
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var errores = new List<IdentityError>();
+
+            // PendienteRecepcion no bloquea: la organización todavía no recibió el equipo
+            var tieneEquiposComprometidos = await _context.Equipos.AnyAsync(e =>
+                e.NroUsuarioDonante == usuario.NroUsuario
+                && (e.EstadoEquipo == EstadoEquipo.Disponible
+                    || e.EstadoEquipo == EstadoEquipo.EnReparacion
+                    || e.EstadoEquipo == EstadoEquipo.Asignado));
+
+            if (tieneEquiposComprometidos)
+            {
+                errores.Add(new IdentityError
+                {
+                    Code = "EquiposComprometidos",
+                    Description = "No puede darse de baja porque tiene equipos donados que la organización ya recibió o tiene comprometidos."
+                });
+            }
+
+            var tieneSolicitudesAbiertas = await _context.Solicitudes.AnyAsync(s =>
+                s.NroUsuario == usuario.NroUsuario
+                && (s.EstadoSolicitud == EstadoSolicitud.Pendiente
+                    || s.EstadoSolicitud == EstadoSolicitud.Asignada));
+
+            if (tieneSolicitudesAbiertas)
+            {
+                errores.Add(new IdentityError
+                {
+                    Code = "SolicitudesAbiertas",
+                    Description = "No puede darse de baja porque tiene solicitudes pendientes o asignadas."
+                });
+            }
+
+            if (errores.Count > 0)
+            {
+                return IdentityResult.Failed(errores.ToArray());
+            }
+
+            usuario.EstadoUsuario = EstadoUsuario.Inactivo;
+            usuario.FechaBaja = DateTime.UtcNow;
+            usuario.MotivoBaja = modelo.MotivoBaja.Trim();
+            usuario.FechaUltimaModificacion = usuario.FechaBaja;
+
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la baja del Usuario {NroUsuario}; se revirtió la transacción", usuario.NroUsuario);
+
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "BajaFallida",
+                Description = "No se pudo dar de baja la cuenta. Intente nuevamente."
+            });
+        }
+
+        // la baja ya está guardada: lo que falle de acá en adelante se registra pero no la deshace
+        try
+        {
+            var identityUser = await _userManager.FindByIdAsync(identityUserId);
+
+            if (identityUser is not null)
+            {
+                // invalida las sesiones abiertas (otros dispositivos) sin esperar a que venzan
+                await _userManager.UpdateSecurityStampAsync(identityUser);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudieron invalidar las sesiones del Usuario {NroUsuario} tras la baja", usuario.NroUsuario);
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.BajaUsuario, null, nameof(Usuario), usuario.NroUsuario,
+                $"Baja de usuario ({usuario.TipoUsuario})");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la baja del Usuario {NroUsuario}", usuario.NroUsuario);
+        }
+
+        return IdentityResult.Success;
+    }
 }

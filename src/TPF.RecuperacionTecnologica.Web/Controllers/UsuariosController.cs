@@ -86,4 +86,49 @@ public class UsuariosController : Controller
         TempData["Mensaje"] = "Sus datos se actualizaron correctamente.";
         return RedirectToAction(nameof(Editar));
     }
+
+    // el Usuario da de baja su propia cuenta: se identifica por la sesión, no por un id en la URL
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Baja()
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var modelo = identityUserId is null ? null : await _usuarioService.ObtenerEdicionAsync(identityUserId);
+
+        return modelo is null ? NotFound() : View(new BajaUsuarioViewModel());
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Baja(BajaUsuarioViewModel modelo)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(modelo);
+        }
+
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        var resultado = await _usuarioService.DarDeBajaAsync(identityUserId, modelo);
+
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(modelo);
+        }
+
+        await _cuentaService.CerrarSesionAsync(identityUserId);
+        TempData["Mensaje"] = "Su cuenta fue dada de baja.";
+        return RedirectToAction("Login", "Cuenta");
+    }
 }

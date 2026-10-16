@@ -363,7 +363,7 @@ public class CuentaService : ICuentaService
             ? string.Empty
             : StringInfo.GetNextTextElement(texto.Trim()).ToUpperInvariant();
 
-    // TODO: cuando exista la baja de usuarios y de personal, hay que invalidar las sesiones
+    // TODO: cuando exista la baja de personal, hay que invalidar las sesiones (la baja de Usuario ya lo hace)
     // abiertas con UserManager.UpdateSecurityStampAsync, porque esta verificación solo corre al iniciar sesión
     private async Task<bool> EstaHabilitadaAsync(string identityUserId)
     {
