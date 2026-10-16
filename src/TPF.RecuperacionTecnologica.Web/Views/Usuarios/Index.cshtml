@@ -19,9 +19,14 @@
 
     <section class="card overflow" aria-label="Usuarios">
         <form class="filters" role="search" method="get" asp-action="Index">
-            <div class="filter grow">
-                <label for="Busqueda">Buscar</label>
-                <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, DNI o correo" />
+            <div class="filter">
+                <label for="Tipo">Tipo</label>
+                <div class="select">
+                    <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoUsuario>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
             </div>
             <div class="filter">
                 <label for="Estado">Estado</label>
@@ -46,7 +51,7 @@
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("users")" /></span>
                     <h3>No se encontraron usuarios</h3>
-                    <p>Pruebe con otro nombre, documento o correo.</p>
+                    <p>Pruebe con otro tipo o estado.</p>
                 </div>
             }
             else

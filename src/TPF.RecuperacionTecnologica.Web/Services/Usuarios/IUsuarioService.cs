@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
@@ -13,4 +15,31 @@ public interface IUsuarioService
     /// Éxito, o los errores de validación o de Identity sin que se haya creado el Usuario.
     /// </returns>
     Task<IdentityResult> RegistrarAsync(RegistroUsuarioViewModel modelo);
+
+    /// <summary>
+    /// Lista los Usuarios registrados, ordenados por número de usuario, con filtros opcionales.
+    /// </summary>
+    /// <param name="tipo">Si se indica, solo los Usuarios de ese tipo.</param>
+    /// <param name="estado">Si se indica, solo los Usuarios en ese estado.</param>
+    Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado);
+
+    /// <summary>
+    /// Devuelve el detalle de un Usuario, o null si no existe.
+    /// </summary>
+    Task<UsuarioDetalleViewModel?> ObtenerDetalleAsync(int nroUsuario);
+
+    /// <summary>
+    /// Devuelve los datos del Usuario asociado a una cuenta de Identity para editarlos,
+    /// o null si la cuenta no corresponde a un Usuario.
+    /// </summary>
+    Task<EdicionUsuarioViewModel?> ObtenerEdicionAsync(string identityUserId);
+
+    /// <summary>
+    /// Actualiza la dirección, el teléfono y el correo del Usuario asociado a la cuenta de Identity.
+    /// Si cambia el correo, también se actualiza en la cuenta de Identity.
+    /// </summary>
+    /// <returns>
+    /// El resultado de la edición y si el correo cambió (en ese caso la sesión deja de ser válida).
+    /// </returns>
+    Task<(IdentityResult Resultado, bool CorreoCambiado)> EditarAsync(string identityUserId, EdicionUsuarioViewModel modelo);
 }
