@@ -94,6 +94,189 @@ public class PersonalService : IPersonalService
             .FirstOrDefaultAsync();
     }
 
+    public async Task<PersonalDetalleViewModel?> ObtenerDetalleAsync(int codigoPersonal)
+    {
+        return await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.CodigoPersonal == codigoPersonal)
+            .Select(p => new PersonalDetalleViewModel
+            {
+                CodigoPersonal = p.CodigoPersonal,
+                Dni = p.Dni,
+                Nombre = p.Nombre,
+                Apellido = p.Apellido,
+                Telefono = p.Telefono,
+                CorreoElectronico = p.CorreoElectronico,
+                RolAsignado = p.RolAsignado,
+                EstadoPersonal = p.EstadoPersonal
+            })
+            .FirstOrDefaultAsync();
+    }
+
+
+    public async Task<IdentityResult> EditarAsync(
+        EdicionPersonalViewModel modelo,
+        int codigoAdministrador)
+    {
+        if (!Enum.IsDefined(typeof(RolPersonal), modelo.RolAsignado))
+        {
+            return Error("RolInvalido", "El rol asignado no es válido.");
+        }
+
+        var personal = await _context.PersonalInterno
+            .FirstOrDefaultAsync(p => p.CodigoPersonal == modelo.CodigoPersonal);
+
+        if (personal is null)
+        {
+            return Error("PersonalNoEncontrado",
+                "No se encontró el personal especificado.");
+        }
+
+        var correo = modelo.CorreoElectronico.Trim();
+
+        if (await _context.PersonalInterno.AnyAsync(p =>
+            p.CodigoPersonal != modelo.CodigoPersonal &&
+            p.CorreoElectronico == correo))
+        {
+            return Error("CorreoDuplicado",
+                "Ya existe un integrante del Personal con ese correo electrónico.");
+        }
+
+        var rolAnterior = personal.RolAsignado;
+
+        // no se puede dejar al sistema sin ningún Administrador activo
+        if (rolAnterior == RolPersonal.Administrador
+            && modelo.RolAsignado != RolPersonal.Administrador
+            && personal.EstadoPersonal == EstadoPersonal.Activo
+            && !await _context.PersonalInterno.AnyAsync(p =>
+                p.CodigoPersonal != personal.CodigoPersonal
+                && p.RolAsignado == RolPersonal.Administrador
+                && p.EstadoPersonal == EstadoPersonal.Activo))
+        {
+            return Error("UltimoAdministrador",
+                "No se puede cambiar el rol del último Administrador activo.");
+        }
+
+        var identityUser = await _userManager.FindByIdAsync(personal.IdentityUserId);
+
+        if (identityUser is null)
+        {
+            return Error("CuentaNoEncontrada",
+                "No se encontró la cuenta de acceso asociada al personal.");
+        }
+
+        var nuevoRol = modelo.RolAsignado.ToString();
+
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            if (!string.Equals(identityUser.Email, correo,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                var resultadoCorreo =
+                    await _userManager.SetEmailAsync(identityUser, correo);
+
+                if (!resultadoCorreo.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    return resultadoCorreo;
+                }
+            }
+
+            if (!string.Equals(identityUser.UserName, correo,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                var resultadoUsuario =
+                    await _userManager.SetUserNameAsync(identityUser, correo);
+
+                if (!resultadoUsuario.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    return resultadoUsuario;
+                }
+            }
+
+            var rolesActuales = await _userManager.GetRolesAsync(identityUser);
+
+            var rolesARemover = rolesActuales
+                .Where(r => !string.Equals(r, nuevoRol, StringComparison.Ordinal))
+                .ToArray();
+
+            if (rolesARemover.Length > 0)
+            {
+                var resultadoRemover =
+                    await _userManager.RemoveFromRolesAsync(identityUser, rolesARemover);
+
+                if (!resultadoRemover.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    return resultadoRemover;
+                }
+            }
+
+            if (!rolesActuales.Contains(nuevoRol))
+            {
+                var resultadoAgregar =
+                    await _userManager.AddToRoleAsync(identityUser, nuevoRol);
+
+                if (!resultadoAgregar.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    return resultadoAgregar;
+                }
+            }
+
+            personal.Nombre = modelo.Nombre.Trim();
+            personal.Apellido = modelo.Apellido.Trim();
+            personal.Telefono = string.IsNullOrWhiteSpace(modelo.Telefono)
+                ? null
+                : modelo.Telefono.Trim();
+            personal.CorreoElectronico = correo;
+            personal.RolAsignado = modelo.RolAsignado;
+            personal.FechaUltimaModificacion = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            _logger.LogError(ex,
+                "Error al editar el personal con código {CodigoPersonal}",
+                modelo.CodigoPersonal);
+
+            return Error("EdicionFallida",
+                "No se pudo completar la edición. Intente nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.EdicionPersonal,
+                codigoAdministrador,
+                nameof(Models.Personal),
+                personal.CodigoPersonal,
+                rolAnterior == personal.RolAsignado
+                    ? $"Edición de personal ({personal.RolAsignado})"
+                    : $"Edición de personal (cambio de rol: {rolAnterior} -> {personal.RolAsignado})");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "No se pudo auditar la edición del Personal {CodigoPersonal}",
+                personal.CodigoPersonal);
+        }
+
+        return IdentityResult.Success;
+    }
+
+
+
+
+
     public async Task<IdentityResult> AltaAsync(AltaPersonalViewModel modelo, int codigoAdministrador)
     {
         var dni = modelo.Dni.Trim();
