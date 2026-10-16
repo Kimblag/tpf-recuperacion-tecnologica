@@ -4,7 +4,7 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
 public class UsuarioListadoViewModel
 {
-    public string? Busqueda { get; set; }
+    public TipoUsuario? Tipo { get; set; }
 
     public EstadoUsuario? Estado { get; set; }
 

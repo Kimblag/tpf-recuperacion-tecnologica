@@ -1,0 +1,90 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.EdicionUsuarioViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Mis datos";
+
+    var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <h1 tabindex="-1">Mis datos</h1>
+            <p class="page-sub">Actualice sus datos de contacto.</p>
+        </div>
+    </div>
+
+    <form class="card" asp-action="Editar" method="post" id="f-usuario-editar" novalidate aria-labelledby="f-usuario-titulo">
+        @* datos que no se editan: viajan solo para volver a mostrarlos si hay errores *@
+        <input type="hidden" asp-for="TipoUsuario" />
+        <input type="hidden" asp-for="TipoDocumento" />
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-usuario-titulo">Datos de la cuenta</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <h3 class="span-2 sec-title">@(esPersona ? "Datos personales" : "Datos de la institución")</h3>
+
+                    @if (esPersona)
+                    {
+                        <div class="field">
+                            <label class="form-label" for="Nombre">Nombre <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
+                            <input asp-for="Nombre" class="form-control" readonly />
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="Apellido">Apellido <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
+                            <input asp-for="Apellido" class="form-control" readonly />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="field span-2">
+                            <label class="form-label" for="RazonSocial">Razón social <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
+                            <input asp-for="RazonSocial" class="form-control" readonly />
+                        </div>
+                    }
+                    <div class="field">
+                        <label class="form-label" for="NroDocumento">@(esPersona ? "DNI" : "CUIT") <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
+                        <input asp-for="NroDocumento" class="form-control" readonly />
+                    </div>
+
+                    <h3 class="span-2 sec-title">Datos de contacto</h3>
+
+                    <div class="field span-2">
+                        <label class="form-label" for="Direccion">Dirección</label>
+                        <input asp-for="Direccion" class="form-control" autocomplete="street-address" />
+                        <span asp-validation-for="Direccion"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Telefono">Teléfono</label>
+                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="11 5555-0000" />
+                        <span asp-validation-for="Telefono"></span>
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="CorreoElectronico" class="form-control" autocomplete="email" aria-describedby="CorreoElectronico-hint" />
+                        <div class="form-text" id="CorreoElectronico-hint">Si cambia el correo, deberá iniciar sesión de nuevo.</div>
+                        <span asp-validation-for="CorreoElectronico"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-controller="Home" asp-action="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}
