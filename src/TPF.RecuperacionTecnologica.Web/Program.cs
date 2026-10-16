@@ -65,7 +65,9 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireRole(
             nameof(RolPersonal.Tecnico),
             nameof(RolPersonal.Coordinador),
-            nameof(RolPersonal.Administrador)));
+            nameof(RolPersonal.Administrador)))
+    .AddPolicy("UsuarioExterno", policy =>
+        policy.RequireClaim(ClaimsSesion.TipoUsuario)); ;
 
 builder.Services.ConfigureApplicationCookie(options =>
 {

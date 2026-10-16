@@ -16,8 +16,8 @@ public class DonacionesController : Controller
     }
 
     [HttpGet]
-    [Authorize]
-    public IActionResult Create()
+    [Authorize(Policy = "UsuarioExterno")]
+    public IActionResult Registrar()
     {
         return View(new RegistroDonacionViewModel());
     }
@@ -25,9 +25,9 @@ public class DonacionesController : Controller
     // el donante se identifica por la sesión, no por un dato del formulario.
     // el parámetro no se llama "modelo" porque el ViewModel tiene la propiedad Modelo y confundiría al model binding
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "UsuarioExterno")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(RegistroDonacionViewModel donacion)
+    public async Task<IActionResult> Registrar(RegistroDonacionViewModel donacion)
     {
         if (!ModelState.IsValid)
         {
@@ -43,7 +43,7 @@ public class DonacionesController : Controller
     }
 
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "UsuarioExterno")]
     public IActionResult Confirmacion(int id)
     {
         return View(id);
