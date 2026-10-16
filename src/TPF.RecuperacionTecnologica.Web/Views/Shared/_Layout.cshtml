@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
@@ -58,12 +59,25 @@
                     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
                     var isHome = currentController == "Home" && currentAction == "Index";
                     var isPrivacy = currentController == "Home" && currentAction == "Privacy";
+                    var isDonaciones = currentController == "Donaciones";
+                    // los Usuarios no tienen rol de Identity; el Personal sí
+                    var esUsuario = User.Identity?.IsAuthenticated == true
+                        && !User.IsInRole(nameof(RolPersonal.Tecnico))
+                        && !User.IsInRole(nameof(RolPersonal.Coordinador))
+                        && !User.IsInRole(nameof(RolPersonal.Administrador));
                 }
                 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
                     <a class="nav-link d-flex align-items-center gap-2@(isHome ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(isHome ? "page" : null)">
                         <span class="nav-dot"></span>
                         <partial name="_Icon" model="@("grid")" />Inicio
                     </a>
+                    @if (esUsuario)
+                    {
+                        <a class="nav-link d-flex align-items-center gap-2@(isDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Create" aria-current="@(isDonaciones ? "page" : null)">
+                            <span class="nav-dot"></span>
+                            <partial name="_Icon" model="@("laptop")" />Donar un equipo
+                        </a>
+                    }
                     <a class="nav-link d-flex align-items-center gap-2@(isPrivacy ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy" aria-current="@(isPrivacy ? "page" : null)">
                         <span class="nav-dot"></span>
                         <partial name="_Icon" model="@("file")" />Privacidad

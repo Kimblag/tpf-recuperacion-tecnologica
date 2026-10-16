@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICuentaService, CuentaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPersonalService, PersonalService>();
+builder.Services.AddScoped<IDonacionService, DonacionService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services

@@ -1,0 +1,29 @@
+@model int
+@{
+    ViewData["Title"] = "Donación registrada";
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <h1 tabindex="-1">Su donación fue registrada</h1>
+            <p class="page-sub">¡Gracias! La organización se va a comunicar con usted para recibir el equipo.</p>
+        </div>
+    </div>
+
+    <section class="card" aria-labelledby="nro-equipo-titulo">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="nro-equipo-titulo">Número de Equipo</h2>
+                <p class="card-sub">Guarde este número para consultar el estado de su donación.</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="fw-semibold" style="font-size:2rem;margin:0">@Model</p>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Create">Donar otro equipo</a>
+            <a class="btn btn-primary btn-lg" asp-controller="Home" asp-action="Index">Volver al inicio</a>
+        </div>
+    </section>
+</div>
