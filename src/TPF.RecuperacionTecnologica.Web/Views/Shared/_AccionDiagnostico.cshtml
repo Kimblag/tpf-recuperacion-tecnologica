@@ -1,0 +1,12 @@
+@model (string Texto, string Icono, string? Url, bool Principal)
+@{
+    var clase = Model.Principal ? "btn btn-primary" : "btn btn-secondary";
+}
+@if (Model.Url is not null)
+{
+    <a class="@clase" href="@Model.Url"><partial name="_Icon" model="@Model.Icono" /><span>@Model.Texto</span></a>
+}
+else
+{
+    <button type="button" class="@clase" disabled><partial name="_Icon" model="@Model.Icono" /><span>@Model.Texto</span></button>
+}

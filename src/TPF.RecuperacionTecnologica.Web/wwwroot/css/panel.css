@@ -678,6 +678,23 @@
             color: var(--bs-body-color);
         }
 
+.card-destacada {
+    background-color: var(--app-accent-soft);
+    border-color: color-mix(in srgb, var(--bs-primary) 30%, transparent);
+}
+
+    .card-destacada .card-sub {
+        color: var(--bs-secondary-color);
+    }
+
+.fila-vigente td {
+    background-color: color-mix(in srgb, var(--app-accent-soft) 60%, transparent);
+}
+
+.fila-historica td {
+    color: var(--bs-secondary-color);
+}
+
 a.page-btn {
     text-decoration: none;
     color: inherit;

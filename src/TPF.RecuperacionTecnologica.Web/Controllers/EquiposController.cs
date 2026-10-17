@@ -51,6 +51,42 @@ public class EquiposController : Controller
         return View(filtros);
     }
 
+    [HttpGet]
+    [Authorize(Policy = "PersonalInterno")]
+    public IActionResult Detalle(int id)
+    {
+        // TODO: reemplazar por la consulta real del servicio de equipos
+        var equipo = DatosDeEjemplo.FirstOrDefault(e => e.NroEquipo == id);
+
+        return equipo is null ? NotFound() : View(DetalleDeEjemplo(equipo));
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "PersonalInterno")]
+    public IActionResult Historial(int id)
+    {
+        // TODO: reemplazar por la consulta real del historial de diagnósticos
+        var equipo = DatosDeEjemplo.FirstOrDefault(e => e.NroEquipo == id);
+
+        if (equipo is null)
+        {
+            return NotFound();
+        }
+
+        var diagnosticos = DiagnosticosDeEjemplo(equipo);
+
+        return View(new HistorialDiagnosticosViewModel
+        {
+            NroEquipo = equipo.NroEquipo,
+            TipoEquipo = equipo.TipoEquipo,
+            Marca = equipo.Marca,
+            Modelo = equipo.Modelo,
+            EstadoEquipo = equipo.EstadoEquipo,
+            Vigente = VigenteDeEjemplo(diagnosticos),
+            Diagnosticos = diagnosticos
+        });
+    }
+
     private static bool Coincide(EquipoFilaViewModel equipo, EquipoListadoViewModel filtros)
     {
         var texto = filtros.Busqueda?.Trim();
@@ -73,5 +109,92 @@ public class EquiposController : Controller
             EstadoInicialDeclarado = condicion,
             FechaRegistro = fecha,
             EstadoEquipo = estado
+        };
+
+    private static EquipoDetalleTecnicoViewModel DetalleDeEjemplo(EquipoFilaViewModel equipo) => new()
+    {
+        NroEquipo = equipo.NroEquipo,
+        TipoEquipo = equipo.TipoEquipo,
+        Marca = equipo.Marca,
+        Modelo = equipo.Modelo,
+        EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
+        Observaciones = "Observaciones de ejemplo del donante.",
+        EstadoEquipo = equipo.EstadoEquipo,
+        FechaRegistro = equipo.FechaRegistro,
+        FechaDisponibilidad = equipo.EstadoEquipo is EstadoEquipo.Disponible or EstadoEquipo.Asignado or EstadoEquipo.Entregado
+            ? equipo.FechaRegistro.AddDays(3)
+            : null,
+        FechaCancelacion = equipo.EstadoEquipo == EstadoEquipo.Cancelado ? equipo.FechaRegistro.AddDays(1) : null,
+        MotivoCancelacion = equipo.EstadoEquipo == EstadoEquipo.Cancelado ? "Cancelada por el donante" : null,
+        Donante = "Valeria Acosta",
+        Procesador = "Intel Core i5",
+        MemoriaRam = "8 GB",
+        Almacenamiento = "256 GB SSD",
+        DiagnosticoVigente = VigenteDeEjemplo(DiagnosticosDeEjemplo(equipo))
+    };
+
+    private static List<DiagnosticoFilaViewModel> DiagnosticosDeEjemplo(EquipoFilaViewModel equipo)
+    {
+        var fecha = equipo.FechaRegistro.AddDays(2);
+        var nro = equipo.NroEquipo * 10;
+
+        return equipo.EstadoEquipo switch
+        {
+            EstadoEquipo.EnReparacion =>
+            [
+                Diagnostico(nro + 1, TipoDiagnostico.Inicial, fecha, DictamenTecnico.NecesitaReparacion, true)
+            ],
+            EstadoEquipo.Disponible =>
+            [
+                Diagnostico(nro + 1, TipoDiagnostico.Inicial, fecha, DictamenTecnico.NecesitaReparacion, false, reemplazadoPor: nro + 2),
+                Diagnostico(nro + 2, TipoDiagnostico.Segundo, fecha.AddDays(5), DictamenTecnico.Funcional, true)
+            ],
+            EstadoEquipo.Asignado or EstadoEquipo.Entregado =>
+            [
+                Diagnostico(nro + 1, TipoDiagnostico.Inicial, fecha, DictamenTecnico.Funcional, true)
+            ],
+            EstadoEquipo.Baja =>
+            [
+                Diagnostico(nro + 1, TipoDiagnostico.Inicial, fecha, DictamenTecnico.NecesitaReparacion, false, reemplazadoPor: nro + 2),
+                Diagnostico(nro + 2, TipoDiagnostico.Rectificacion, fecha.AddDays(1), DictamenTecnico.NoRecuperable, true, rectifica: nro + 1)
+            ],
+            _ => []
+        };
+    }
+
+    private static DiagnosticoVigenteViewModel? VigenteDeEjemplo(List<DiagnosticoFilaViewModel> diagnosticos)
+    {
+        var vigente = diagnosticos.FirstOrDefault(d => d.EsVigente);
+
+        return vigente is null
+            ? null
+            : new DiagnosticoVigenteViewModel
+            {
+                NroDiagnostico = vigente.NroDiagnostico,
+                TipoDiagnostico = vigente.TipoDiagnostico,
+                FechaDiagnostico = vigente.FechaDiagnostico,
+                Tecnico = "Tomás Ibáñez",
+                DictamenTecnico = vigente.DictamenTecnico,
+                DetalleFallas = "Falla de ejemplo detectada en la evaluación.",
+                DetalleReparacionesRealizadas = vigente.TipoDiagnostico == TipoDiagnostico.Inicial ? null : "Reparación de ejemplo realizada.",
+                Observaciones = "Observación de ejemplo.",
+                Procesador = "Intel Core i5",
+                MemoriaRam = "8 GB",
+                Almacenamiento = "256 GB SSD"
+            };
+    }
+
+    private static DiagnosticoFilaViewModel Diagnostico(
+        int nroDiagnostico, TipoDiagnostico tipo, DateTime fecha, DictamenTecnico dictamen, bool vigente,
+        int? rectifica = null, int? reemplazadoPor = null) => new()
+        {
+            NroDiagnostico = nroDiagnostico,
+            TipoDiagnostico = tipo,
+            FechaDiagnostico = fecha,
+            CodigoTecnico = 12,
+            DictamenTecnico = dictamen,
+            EsVigente = vigente,
+            NroDiagnosticoRectificado = rectifica,
+            NroDiagnosticoReemplazante = reemplazadoPor
         };
 }

@@ -1,0 +1,129 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.HistorialDiagnosticosViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Historial de diagnósticos";
+
+    string Icono(TipoDiagnostico tipo) => tipo switch
+    {
+        TipoDiagnostico.Rectificacion => "edit",
+        TipoDiagnostico.Segundo => "clipboard",
+        _ => "wrench"
+    };
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Equipos</a></li>
+    <li><a asp-action="Detalle" asp-route-id="@Model.NroEquipo">Detalle</a></li>
+    <li aria-current="page">Historial de diagnósticos</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Historial de diagnósticos</h1>
+                <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
+            </div>
+            <p class="page-sub">Equipo @Model.CodigoEquipo · @Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al equipo</span></a>
+        </div>
+    </div>
+
+    @if (Model.Vigente is { } vigente)
+    {
+        <section class="card card-destacada">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Evaluación vigente</h2>
+                    <p class="card-sub">@Html.DisplayFor(m => vigente.TipoDiagnostico) · @vigente.CodigoDiagnostico · @vigente.FechaDiagnostico.ToString("dd/MM/yyyy")</p>
+                </div>
+                <partial name="_DictamenBadge" model="vigente.DictamenTecnico" />
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Fallas detectadas</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(vigente.DetalleFallas) ? "—" : vigente.DetalleFallas)</dd>
+                    <dt>Detalle de reparación</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(vigente.DetalleReparacionesRealizadas) ? "—" : vigente.DetalleReparacionesRealizadas)</dd>
+                    <dt>Observaciones</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(vigente.Observaciones) ? "—" : vigente.Observaciones)</dd>
+                    <dt>Técnico</dt>
+                    <dd>@vigente.Tecnico</dd>
+                </dl>
+            </div>
+        </section>
+    }
+
+    <section class="card overflow">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Historial completo</h2>
+                <p class="card-sub">Los diagnósticos anteriores se conservan; una rectificación reemplaza la evaluación vigente</p>
+            </div>
+        </div>
+        <div class="card-body flush">
+            @if (Model.Diagnosticos.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("wrench")" /></span>
+                    <h3>Sin diagnósticos</h3>
+                    <p>Este equipo todavía no fue evaluado.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Historial de diagnósticos del equipo</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Diagnóstico</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Técnico</th>
+                                <th scope="col">Dictamen</th>
+                                <th scope="col">Evaluación</th>
+                                <th scope="col">Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Diagnosticos)
+                            {
+                                <tr class="@(fila.EsVigente ? "fila-vigente" : "fila-historica")">
+                                    <td data-label="Diagnóstico"><span class="mono">@fila.CodigoDiagnostico</span></td>
+                                    <td data-label="Tipo"><span class="nowrap"><partial name="_Icon" model="@Icono(fila.TipoDiagnostico)" /> @Html.DisplayFor(m => fila.TipoDiagnostico)</span></td>
+                                    <td data-label="Fecha">@fila.FechaDiagnostico.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Técnico"><span class="mono">@fila.CodigoPersonal</span></td>
+                                    <td data-label="Dictamen"><partial name="_DictamenBadge" model="fila.DictamenTecnico" /></td>
+                                    <td data-label="Evaluación">
+                                        @if (fila.EsVigente)
+                                        {
+                                            <partial name="_Badge" model="@(("Vigente", "ok"))" />
+                                        }
+                                        else
+                                        {
+                                            <span class="tag">Histórico</span>
+                                        }
+                                    </td>
+                                    <td data-label="Detalle">
+                                        @if (fila.NroDiagnosticoRectificado is not null)
+                                        {
+                                            <span class="muted">Rectifica DIA-@fila.NroDiagnosticoRectificado.Value.ToString("D6")</span>
+                                        }
+                                        else if (!fila.EsVigente)
+                                        {
+                                            <span class="muted">Reemplazado por @(fila.NroDiagnosticoReemplazante is null ? "una evaluación posterior" : $"DIA-{fila.NroDiagnosticoReemplazante.Value:D6}")</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+</div>
