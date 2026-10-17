@@ -1,0 +1,15 @@
+﻿@model TPF.RecuperacionTecnologica.Web.Models.Enums.EstadoSolicitud
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var texto = Html.GetEnumSelectList<EstadoSolicitud>().First(i => i.Value == ((int)Model).ToString()).Text;
+
+    var variante = Model switch
+    {
+        EstadoSolicitud.Pendiente => "warn",
+        EstadoSolicitud.Asignada => "info",
+        EstadoSolicitud.Completada => "ok",
+        EstadoSolicitud.Cancelada => "danger",
+        _ => "muted"
+    };
+}
+<partial name="_Badge" model="@((texto, variante))" />
