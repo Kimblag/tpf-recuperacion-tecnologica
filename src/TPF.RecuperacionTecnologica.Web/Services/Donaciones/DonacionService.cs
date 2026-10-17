@@ -32,6 +32,24 @@ public class DonacionService : IDonacionService
     private static IdentityResult Fallo(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
+    private static EspecificacionesTecnicas EspecificacionesDelTipo(TipoEquipo tipo, RegistroDonacionViewModel modelo)
+    {
+        var aplicaProcesador = tipo is TipoEquipo.Notebook or TipoEquipo.PcEscritorio;
+        var aplicaMemoriaYAlmacenamiento = tipo is TipoEquipo.Notebook or TipoEquipo.PcEscritorio or TipoEquipo.Celular;
+        var aplicaPantalla = tipo is TipoEquipo.Notebook or TipoEquipo.Monitor;
+        var aplicaBateria = tipo is TipoEquipo.Notebook or TipoEquipo.Celular;
+
+        return new EspecificacionesTecnicas
+        {
+            Procesador = aplicaProcesador ? TextoOpcional(modelo.Procesador) : null,
+            MemoriaRam = aplicaMemoriaYAlmacenamiento ? TextoOpcional(modelo.MemoriaRam) : null,
+            Almacenamiento = aplicaMemoriaYAlmacenamiento ? TextoOpcional(modelo.Almacenamiento) : null,
+            TamanoPantalla = aplicaPantalla ? TextoOpcional(modelo.TamanoPantalla) : null,
+            EstadoBateria = aplicaBateria ? TextoOpcional(modelo.EstadoBateria) : null,
+            Otros = TextoOpcional(modelo.Otros)
+        };
+    }
+
     public async Task<int?> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo)
     {
         // solo dona un Usuario activo; el Personal no tiene ficha de Usuario
@@ -53,15 +71,7 @@ public class DonacionService : IDonacionService
             Modelo = modelo.Modelo.Trim(),
             EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value,
             Observaciones = TextoOpcional(modelo.Observaciones),
-            EspecificacionesDeclaradas = new EspecificacionesTecnicas
-            {
-                Procesador = TextoOpcional(modelo.Procesador),
-                MemoriaRam = TextoOpcional(modelo.MemoriaRam),
-                Almacenamiento = TextoOpcional(modelo.Almacenamiento),
-                TamanoPantalla = TextoOpcional(modelo.TamanoPantalla),
-                EstadoBateria = TextoOpcional(modelo.EstadoBateria),
-                Otros = TextoOpcional(modelo.Otros)
-            },
+            EspecificacionesDeclaradas = EspecificacionesDelTipo(modelo.TipoEquipo!.Value, modelo),
             EstadoEquipo = EstadoEquipo.PendienteRecepcion,
             FechaRegistro = DateTime.UtcNow
         };
@@ -168,12 +178,7 @@ public class DonacionService : IDonacionService
         equipo.Modelo = modelo.Modelo.Trim();
         equipo.EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value;
         equipo.Observaciones = TextoOpcional(modelo.Observaciones);
-        equipo.EspecificacionesDeclaradas.Procesador = TextoOpcional(modelo.Procesador);
-        equipo.EspecificacionesDeclaradas.MemoriaRam = TextoOpcional(modelo.MemoriaRam);
-        equipo.EspecificacionesDeclaradas.Almacenamiento = TextoOpcional(modelo.Almacenamiento);
-        equipo.EspecificacionesDeclaradas.TamanoPantalla = TextoOpcional(modelo.TamanoPantalla);
-        equipo.EspecificacionesDeclaradas.EstadoBateria = TextoOpcional(modelo.EstadoBateria);
-        equipo.EspecificacionesDeclaradas.Otros = TextoOpcional(modelo.Otros);
+        equipo.EspecificacionesDeclaradas = EspecificacionesDelTipo(equipo.TipoEquipo, modelo);
         equipo.FechaUltimaModificacion = DateTime.UtcNow;
 
         try
