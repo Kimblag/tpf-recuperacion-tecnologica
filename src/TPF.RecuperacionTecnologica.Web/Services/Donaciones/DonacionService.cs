@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Donaciones;
@@ -26,6 +28,9 @@ public class DonacionService : IDonacionService
     // los opcionales vacíos se guardan como null para no llenar la base de textos en blanco
     private static string? TextoOpcional(string? texto) =>
         string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
+
+    private static IdentityResult Fallo(string codigo, string descripcion) =>
+        IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
     public async Task<int?> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo)
     {
@@ -78,4 +83,341 @@ public class DonacionService : IDonacionService
 
         return equipo.NroEquipo;
     }
+
+    public async Task<EdicionDonacionViewModel?> ObtenerParaEdicionAsync(string identityUserId, int nroEquipo)
+    {
+        // la consulta filtra por la cuenta: una donación ajena es igual que una inexistente
+        var datos = await _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo
+                && e.UsuarioDonante.IdentityUserId == identityUserId
+                && e.UsuarioDonante.EstadoUsuario == EstadoUsuario.Activo)
+            .Select(e => new
+            {
+                e.NroEquipo,
+                e.TipoEquipo,
+                e.Marca,
+                e.Modelo,
+                e.EstadoInicialDeclarado,
+                e.Observaciones,
+                e.EstadoEquipo,
+                e.FechaRegistro,
+                e.EspecificacionesDeclaradas.Procesador,
+                e.EspecificacionesDeclaradas.MemoriaRam,
+                e.EspecificacionesDeclaradas.Almacenamiento,
+                e.EspecificacionesDeclaradas.TamanoPantalla,
+                e.EspecificacionesDeclaradas.EstadoBateria,
+                e.EspecificacionesDeclaradas.Otros,
+                e.UsuarioDonante.TipoUsuario,
+                e.UsuarioDonante.Nombre,
+                e.UsuarioDonante.Apellido,
+                e.UsuarioDonante.RazonSocial
+            })
+            .FirstOrDefaultAsync();
+
+        if (datos is null)
+        {
+            return null;
+        }
+
+        var donante = datos.TipoUsuario == TipoUsuario.Persona
+            ? $"{datos.Nombre} {datos.Apellido}".Trim()
+            : datos.RazonSocial ?? string.Empty;
+
+        return new EdicionDonacionViewModel
+        {
+            NroEquipo = datos.NroEquipo,
+            Donante = donante,
+            FechaRegistro = datos.FechaRegistro,
+            EstadoEquipo = datos.EstadoEquipo,
+            TipoEquipo = datos.TipoEquipo,
+            Marca = datos.Marca,
+            Modelo = datos.Modelo,
+            EstadoInicialDeclarado = datos.EstadoInicialDeclarado,
+            Observaciones = datos.Observaciones,
+            Procesador = datos.Procesador,
+            MemoriaRam = datos.MemoriaRam,
+            Almacenamiento = datos.Almacenamiento,
+            TamanoPantalla = datos.TamanoPantalla,
+            EstadoBateria = datos.EstadoBateria,
+            Otros = datos.Otros
+        };
+    }
+
+    public async Task<IdentityResult> EditarAsync(string identityUserId, EdicionDonacionViewModel modelo)
+    {
+        var equipo = await _context.Equipos
+            .FirstOrDefaultAsync(e => e.NroEquipo == modelo.NroEquipo
+                && e.UsuarioDonante.IdentityUserId == identityUserId
+                && e.UsuarioDonante.EstadoUsuario == EstadoUsuario.Activo);
+
+        // no se distingue entre una donación inexistente y una de otro Usuario
+        if (equipo is null)
+        {
+            return Fallo("DonacionNoEncontrada", "No se encontró la donación.");
+        }
+
+        if (equipo.EstadoEquipo != EstadoEquipo.PendienteRecepcion)
+        {
+            return Fallo("DonacionNoEditable",
+                "La donación ya no puede modificarse porque el equipo fue recibido o su estado cambió.");
+        }
+
+        // el tipo de equipo no se toca: si el donante se equivocó, cancela y registra una nueva
+        equipo.Marca = modelo.Marca.Trim();
+        equipo.Modelo = modelo.Modelo.Trim();
+        equipo.EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value;
+        equipo.Observaciones = TextoOpcional(modelo.Observaciones);
+        equipo.EspecificacionesDeclaradas.Procesador = TextoOpcional(modelo.Procesador);
+        equipo.EspecificacionesDeclaradas.MemoriaRam = TextoOpcional(modelo.MemoriaRam);
+        equipo.EspecificacionesDeclaradas.Almacenamiento = TextoOpcional(modelo.Almacenamiento);
+        equipo.EspecificacionesDeclaradas.TamanoPantalla = TextoOpcional(modelo.TamanoPantalla);
+        equipo.EspecificacionesDeclaradas.EstadoBateria = TextoOpcional(modelo.EstadoBateria);
+        equipo.EspecificacionesDeclaradas.Otros = TextoOpcional(modelo.Otros);
+        equipo.FechaUltimaModificacion = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // el RowVersion cambió entre la lectura y el guardado
+            return Fallo("DonacionModificada",
+                "La donación cambió mientras se guardaba. Vuelva a abrirla e intente nuevamente.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la edición de la donación del Equipo {NroEquipo}", equipo.NroEquipo);
+            return Fallo("EdicionFallida", "No se pudieron guardar los cambios. Intente nuevamente.");
+        }
+
+        // la edición ya está guardada: si falla la auditoría se registra pero no la deshace
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.Donacion, null, nameof(Equipo), equipo.NroEquipo,
+                "Edición de donación");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la edición de la donación del Equipo {NroEquipo}", equipo.NroEquipo);
+        }
+
+        return IdentityResult.Success;
+    }
+
+    public async Task<IReadOnlyList<DonacionFilaViewModel>> ListarAsync(
+        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo, EstadoInicialDeclarado? condicion)
+    {
+        var consulta = _context.Equipos
+            .AsNoTracking() // no se van a modificar los objetos, solo leerlos
+            .Where(e => e.UsuarioDonante.IdentityUserId == identityUserId);
+
+        if (estado is not null)
+        {
+            consulta = consulta.Where(e => e.EstadoEquipo == estado);
+        }
+
+        if (tipo is not null)
+        {
+            consulta = consulta.Where(e => e.TipoEquipo == tipo);
+        }
+
+        if (condicion is not null)
+        {
+            consulta = consulta.Where(e => e.EstadoInicialDeclarado == condicion);
+        }
+
+        var texto = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(texto))
+        {
+            consulta = int.TryParse(texto, out var nroEquipo)
+                ? consulta.Where(e => e.NroEquipo == nroEquipo)
+                : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
+        }
+
+        return await consulta
+            .OrderByDescending(e => e.FechaRegistro)
+            .ThenByDescending(e => e.NroEquipo)
+            .Select(e => new DonacionFilaViewModel
+            {
+                NroEquipo = e.NroEquipo,
+                TipoEquipo = e.TipoEquipo,
+                Marca = e.Marca,
+                Modelo = e.Modelo,
+                EstadoInicialDeclarado = e.EstadoInicialDeclarado,
+                FechaRegistro = e.FechaRegistro,
+                EstadoEquipo = e.EstadoEquipo
+            })
+            .ToListAsync();
+    }
+
+    public async Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo)
+    {
+        var equipo = await _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo && e.UsuarioDonante.IdentityUserId == identityUserId)
+            .Select(e => new
+            {
+                e.NroEquipo,
+                e.TipoEquipo,
+                e.Marca,
+                e.Modelo,
+                e.EstadoInicialDeclarado,
+                e.Observaciones,
+                e.EstadoEquipo,
+                e.FechaRegistro,
+                e.FechaCancelacion,
+                e.EspecificacionesDeclaradas.Procesador,
+                e.EspecificacionesDeclaradas.MemoriaRam,
+                e.EspecificacionesDeclaradas.Almacenamiento,
+                e.EspecificacionesDeclaradas.TamanoPantalla,
+                e.EspecificacionesDeclaradas.EstadoBateria,
+                e.EspecificacionesDeclaradas.Otros,
+                e.UsuarioDonante.TipoUsuario,
+                e.UsuarioDonante.Nombre,
+                e.UsuarioDonante.Apellido,
+                e.UsuarioDonante.RazonSocial
+            })
+            .FirstOrDefaultAsync();
+
+        if (equipo is null)
+        {
+            return null;
+        }
+
+        var diagnostico = await _context.Diagnosticos
+            .AsNoTracking()
+            .Where(d => d.NroEquipo == nroEquipo && d.EsVigente)
+            .Select(d => new
+            {
+                d.FechaDiagnostico,
+                d.DictamenTecnico,
+                d.EspecificacionesVerificadas.Procesador,
+                d.EspecificacionesVerificadas.MemoriaRam,
+                d.EspecificacionesVerificadas.Almacenamiento,
+                d.EspecificacionesVerificadas.TamanoPantalla,
+                d.EspecificacionesVerificadas.EstadoBateria,
+                d.EspecificacionesVerificadas.Otros
+            })
+            .FirstOrDefaultAsync();
+
+        var fechaAsignacion = await _context.Asignaciones
+            .AsNoTracking()
+            .Where(a => a.NroEquipo == nroEquipo && a.EstadoAsignacion != EstadoAsignacion.Liberada)
+            .OrderByDescending(a => a.FechaAsignacion)
+            .Select(a => (DateTime?)a.FechaAsignacion)
+            .FirstOrDefaultAsync();
+
+        var fechaEntrega = await _context.Entregas
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo)
+            .Select(e => (DateTime?)e.FechaEntrega)
+            .FirstOrDefaultAsync();
+
+        var donante = equipo.TipoUsuario == TipoUsuario.Persona
+            ? $"{equipo.Nombre} {equipo.Apellido}".Trim()
+            : equipo.RazonSocial ?? string.Empty;
+
+        var verificadas = diagnostico is not null;
+
+        return new DonacionDetalleViewModel
+        {
+            NroEquipo = equipo.NroEquipo,
+            TipoEquipo = equipo.TipoEquipo,
+            Marca = equipo.Marca,
+            Modelo = equipo.Modelo,
+            EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
+            FechaRegistro = equipo.FechaRegistro,
+            EstadoEquipo = equipo.EstadoEquipo,
+            Donante = donante,
+            Observaciones = equipo.Observaciones,
+            EspecificacionesVerificadas = verificadas,
+            Procesador = verificadas ? diagnostico!.Procesador : equipo.Procesador,
+            MemoriaRam = verificadas ? diagnostico!.MemoriaRam : equipo.MemoriaRam,
+            Almacenamiento = verificadas ? diagnostico!.Almacenamiento : equipo.Almacenamiento,
+            TamanoPantalla = verificadas ? diagnostico!.TamanoPantalla : equipo.TamanoPantalla,
+            EstadoBateria = verificadas ? diagnostico!.EstadoBateria : equipo.EstadoBateria,
+            Otros = verificadas ? diagnostico!.Otros : equipo.Otros,
+            Historial = ArmarHistorial(
+                equipo.EstadoEquipo, equipo.EstadoInicialDeclarado, equipo.FechaRegistro, equipo.FechaCancelacion,
+                diagnostico?.DictamenTecnico, diagnostico?.FechaDiagnostico, fechaAsignacion, fechaEntrega)
+        };
+    }
+
+    private static IReadOnlyList<HitoViewModel> ArmarHistorial(
+        EstadoEquipo estado, EstadoInicialDeclarado condicion, DateTime fechaRegistro, DateTime? fechaCancelacion,
+        DictamenTecnico? dictamen, DateTime? fechaDiagnostico, DateTime? fechaAsignacion, DateTime? fechaEntrega)
+    {
+        var condicionTexto = condicion switch
+        {
+            EstadoInicialDeclarado.ConFallas => "con fallas",
+            EstadoInicialDeclarado.ParaRepuestos => "para repuestos",
+            _ => "funcional"
+        };
+
+        var registrada = Hito("Donación registrada", fechaRegistro, "gift", EstadoHito.Completado,
+            $"Estado inicial declarado: {condicionTexto}.");
+
+        if (estado == EstadoEquipo.Cancelado)
+        {
+            return
+            [
+                registrada,
+                Hito("Donación cancelada", fechaCancelacion, "x", EstadoHito.Cancelado,
+                    "Cancelada por el donante antes de la recepción.")
+            ];
+        }
+
+        var dictamenTexto = dictamen switch
+        {
+            DictamenTecnico.NecesitaReparacion => "Necesita reparación",
+            DictamenTecnico.NoRecuperable => "No recuperable",
+            _ => "Funcional"
+        };
+
+        var pasos = new List<(string Titulo, string Icono, bool Hecho, DateTime? Fecha, string? Texto)>
+        {
+            ("Equipo recibido", "package", estado != EstadoEquipo.PendienteRecepcion, null, null),
+            ("Diagnóstico técnico", "wrench", dictamen is not null, fechaDiagnostico,
+                dictamen is null ? null : $"Dictamen: {dictamenTexto}.")
+        };
+
+        if (estado == EstadoEquipo.Baja)
+        {
+            pasos.Add(("Baja del equipo", "ban", true, fechaDiagnostico, "No recuperable: se destina a repuestos."));
+        }
+        else
+        {
+            pasos.Add(("Asignación a una solicitud", "swap", fechaAsignacion is not null, fechaAsignacion, null));
+            pasos.Add(("Entrega completada", "truck", estado == EstadoEquipo.Entregado || fechaEntrega is not null, fechaEntrega, null));
+        }
+
+        var historial = new List<HitoViewModel> { registrada };
+        var hayActual = false;
+
+        foreach (var paso in pasos)
+        {
+            var estadoHito = paso.Hecho
+                ? EstadoHito.Completado
+                : hayActual ? EstadoHito.Pendiente : EstadoHito.Actual;
+
+            hayActual |= !paso.Hecho;
+
+            historial.Add(Hito(paso.Titulo, paso.Hecho ? paso.Fecha : null, paso.Icono, estadoHito, paso.Hecho ? paso.Texto : null));
+        }
+
+        return historial;
+    }
+
+    private static HitoViewModel Hito(string titulo, DateTime? fecha, string icono, EstadoHito estado, string? texto = null) => new()
+    {
+        Titulo = titulo,
+        Fecha = fecha,
+        Icono = icono,
+        Estado = estado,
+        Texto = texto
+    };
 }

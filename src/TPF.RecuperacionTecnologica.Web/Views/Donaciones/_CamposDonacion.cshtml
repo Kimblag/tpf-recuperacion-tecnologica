@@ -1,5 +1,6 @@
 ﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.RegistroDonacionViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
     var condiciones = new[]
     {
@@ -9,6 +10,7 @@
     };
 
     string Tipos(params TipoEquipo[] tipos) => string.Join(",", tipos.Select(t => (int)t));
+    var tipoBloqueado = Model is EdicionDonacionViewModel;
 }
 
 <h3 class="span-2 sec-title">Datos del equipo</h3>
@@ -24,14 +26,28 @@
     <div class="form-text" id="NroEquipo-hint">@ViewData["AyudaNroEquipo"]</div>
 </div>
 <div class="field">
-    <label class="form-label" for="TipoEquipo">Tipo de equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-    <div class="select">
-        <select asp-for="TipoEquipo" class="form-select" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
-            <option value="">Seleccione…</option>
-        </select>
-        <partial name="_Icon" model="@("chevron-down")" />
-    </div>
-    <span asp-validation-for="TipoEquipo"></span>
+    @if (tipoBloqueado)
+    {
+        var textoTipo = Html.GetEnumSelectList<TipoEquipo>()
+            .FirstOrDefault(i => i.Value == ((int)Model.TipoEquipo!.Value).ToString())?.Text;
+
+        <label class="form-label" for="TipoEquipoVisible">Tipo de equipo</label>
+        @* el script del formulario necesita un elemento con id TipoEquipo para mostrar los campos del tipo *@
+        <input type="hidden" id="TipoEquipo" name="TipoEquipo" value="@((int)Model.TipoEquipo!.Value)" />
+        <input id="TipoEquipoVisible" class="form-control" value="@textoTipo" disabled aria-describedby="TipoEquipo-hint" />
+        <div class="form-text" id="TipoEquipo-hint">No se puede cambiar. Si se equivocó, cancele esta donación y registre una nueva.</div>
+    }
+    else
+    {
+        <label class="form-label" for="TipoEquipo">Tipo de equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+        <div class="select">
+            <select asp-for="TipoEquipo" class="form-select" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
+                <option value="">Seleccione…</option>
+            </select>
+            <partial name="_Icon" model="@("chevron-down")" />
+        </div>
+        <span asp-validation-for="TipoEquipo"></span>
+    }
 </div>
 <div class="field">
     <label class="form-label" for="EstadoInicialDeclarado">Estado del equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
