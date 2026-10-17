@@ -136,6 +136,28 @@ public class DonacionesController : Controller
     }
 
 
+    [HttpPost]
+    [Authorize(Policy = "UsuarioExterno")]
+    [ValidateAntiForgeryToken]
+    public IActionResult Cancelar(CancelarDonacionViewModel donacion)
+    {
+        // TODO: reemplazar por CancelarAsync del servicio de donaciones y redirigir a Mis donaciones con el aviso de éxito
+        var original = DatosDeEjemplo.FirstOrDefault(d => d.NroEquipo == donacion.NroEquipo);
+
+        if (original is null)
+        {
+            return NotFound();
+        }
+
+        if (!original.PuedeModificarse)
+        {
+            return RedirectToAction(nameof(Detalle), new { id = original.NroEquipo });
+        }
+
+        ModelState.AddModelError(string.Empty, "La cancelación de donaciones todavía no está implementada.");
+        return View(nameof(Detalle), original);
+    }
+
     private static DonacionDetalleViewModel Donacion(
         int nroEquipo, TipoEquipo tipo, string marca, string modelo, EstadoInicialDeclarado condicion,
         DateTime fecha, EstadoEquipo estado, string? observaciones = null, string? procesador = null,

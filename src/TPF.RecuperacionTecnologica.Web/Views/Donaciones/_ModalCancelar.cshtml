@@ -1,0 +1,21 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.CancelarDonacionViewModel
+
+<div class="modal fade" id="modal-cancelar-donacion" tabindex="-1" aria-labelledby="modal-cancelar-donacion-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" asp-action="Cancelar" method="post" novalidate>
+            <input type="hidden" asp-for="NroEquipo" />
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-cancelar-donacion-titulo"><partial name="_Icon" model="@("alert")" />Cancelar donación</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <div class="modal-body">
+                <p>Va a cancelar la donación del equipo <span class="mono">@Model.CodigoEquipo</span> (@Model.MarcaYModelo).</p>
+                <p>Esta acción no se puede deshacer. Podrá registrar una nueva donación cuando quiera.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                <button type="submit" class="btn btn-danger">Cancelar donación</button>
+            </div>
+        </form>
+    </div>
+</div>

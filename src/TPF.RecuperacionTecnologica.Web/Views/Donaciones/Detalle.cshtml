@@ -1,6 +1,9 @@
 ﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.DonacionDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
     ViewData["Title"] = "Detalle de donación";
+
+    var erroresGenerales = ViewData.ModelState[string.Empty]?.Errors;
 }
 
 @section Migas {
@@ -31,6 +34,19 @@
             }
         </div>
     </div>
+
+    @if (erroresGenerales is { Count: > 0 })
+    {
+        <div class="alert alert-danger" role="alert" tabindex="-1">
+            <partial name="_Icon" model="@("x-circle")" />
+            <div class="alert-body">
+                @foreach (var error in erroresGenerales)
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        </div>
+    }
 
     @if (!Model.PuedeModificarse)
     {
@@ -115,6 +131,11 @@
                 </div>
             </section>
         </div>
+
+        @if (Model.PuedeModificarse)
+        {
+            <partial name="_ModalCancelar" model="new CancelarDonacionViewModel { NroEquipo = Model.NroEquipo, CodigoEquipo = Model.CodigoEquipo, MarcaYModelo = Model.MarcaYModelo }" />
+        }
 
         <section class="card">
             <div class="card-header">
