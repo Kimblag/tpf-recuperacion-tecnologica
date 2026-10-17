@@ -18,8 +18,8 @@ public class DonacionDetalleViewModel : DonacionFilaViewModel
     public string? TamanoPantalla { get; set; }
 
     public string? EstadoBateria { get; set; }
-    public string? Otros { get; set; }
 
+    public string? Otros { get; set; }
 
     public IReadOnlyList<HitoViewModel> Historial { get; set; } = [];
 
