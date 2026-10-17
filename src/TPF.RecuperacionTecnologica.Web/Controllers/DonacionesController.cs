@@ -153,7 +153,6 @@ public class DonacionesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancelar(CancelarDonacionViewModel donacion)
     {
-        // TODO: reemplazar por CancelarAsync del servicio de donaciones y redirigir a Mis donaciones con el aviso de éxito
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var original = identityUserId is null
             ? null
@@ -164,12 +163,19 @@ public class DonacionesController : Controller
             return NotFound();
         }
 
-        if (!original.PuedeModificarse)
+        var resultado = await _donacionService.CancelarAsync(identityUserId!, donacion.NroEquipo);
+
+        if (!resultado.Succeeded)
         {
-            return RedirectToAction(nameof(Detalle), new { id = original.NroEquipo });
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(nameof(Detalle), original);
         }
 
-        ModelState.AddModelError(string.Empty, "La cancelación de donaciones todavía no está implementada.");
-        return View(nameof(Detalle), original);
+        TempData["Mensaje"] = "La donación se canceló correctamente.";
+        return RedirectToAction(nameof(Index));
     }
 }

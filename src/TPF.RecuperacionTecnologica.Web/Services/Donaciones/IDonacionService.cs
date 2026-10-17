@@ -48,4 +48,12 @@ public interface IDonacionService
     /// Los datos de la donación, o null si no existe o no pertenece al Usuario de la cuenta.
     /// </returns>
     Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo);
+
+    /// <summary>
+    /// Cancela una donación propia mientras el Equipo está Pendiente de recepción.
+    /// </summary>
+    /// <returns>
+    /// Éxito, o el motivo por el que no se pudo cancelar, si es que la donación no existe o es de otro Usuario
+    /// </returns>
+    Task<IdentityResult> CancelarAsync(string identityUserId, int nroEquipo);
 }
