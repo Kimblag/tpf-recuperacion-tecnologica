@@ -472,3 +472,7 @@
         gap: 4px;
     }
 }
+
+[data-tipos][hidden] {
+    display: none !important;
+}

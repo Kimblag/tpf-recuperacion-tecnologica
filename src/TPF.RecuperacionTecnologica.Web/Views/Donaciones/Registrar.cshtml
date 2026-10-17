@@ -1,20 +1,38 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.RegistroDonacionViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.Services.Cuenta
 @{
-    ViewData["Title"] = "Donar un equipo";
+    ViewData["Title"] = "Nueva donación";
+
+    var donante = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+
+    var condiciones = new[]
+    {
+        new SelectListItem("Funcional: anda bien", ((int)EstadoInicialDeclarado.Funcional).ToString()),
+        new SelectListItem("Con fallas: anda, pero con problemas", ((int)EstadoInicialDeclarado.ConFallas).ToString()),
+        new SelectListItem("Para repuestos: no anda", ((int)EstadoInicialDeclarado.ParaRepuestos).ToString())
+    };
+
+    string Tipos(params TipoEquipo[] tipos) => string.Join(",", tipos.Select(t => (int)t));
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Mis donaciones</a></li>
+    <li aria-current="page">Nueva donación</li>
 }
 
 <div class="stack narrow">
     <div class="page-head">
         <div>
-            <h1 tabindex="-1">Donar un equipo</h1>
-            <p class="page-sub">Cuéntenos qué equipo quiere donar. Al terminar le daremos un número para seguir su donación.</p>
+            <div class="h-id"><h1 tabindex="-1">Nueva donación</h1></div>
+            <p class="page-sub">Cuéntenos qué equipo quiere donar. Después tendrá que llevarlo para que lo recibamos.</p>
         </div>
     </div>
 
     <form class="card" asp-action="Registrar" method="post" id="f-donacion" novalidate aria-labelledby="f-donacion-titulo">
         <div class="card-header">
-            <div><h2 class="card-title" id="f-donacion-titulo">Datos de la donación</h2></div>
+            <div><h2 class="card-title" id="f-donacion-titulo">Datos del equipo</h2></div>
         </div>
         <div class="card-body">
             <div class="stack" style="gap:16px">
@@ -25,6 +43,16 @@
                 <div class="form-grid">
                     <h3 class="span-2 sec-title">Datos del equipo</h3>
 
+                    <div class="field">
+                        <label class="form-label" for="Donante">Donante</label>
+                        <input id="Donante" class="form-control" value="@donante" disabled aria-describedby="Donante-hint" />
+                        <div class="form-text" id="Donante-hint">Se completa con su cuenta.</div>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="NroEquipo">Número de equipo</label>
+                        <input id="NroEquipo" class="form-control" value="Se asigna al registrar" disabled aria-describedby="NroEquipo-hint" />
+                        <div class="form-text" id="NroEquipo-hint">Se asigna automáticamente al registrar.</div>
+                    </div>
                     <div class="field">
                         <label class="form-label" for="TipoEquipo">Tipo de equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <div class="select">
@@ -38,53 +66,52 @@
                     <div class="field">
                         <label class="form-label" for="EstadoInicialDeclarado">Estado del equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <div class="select">
-                            <select asp-for="EstadoInicialDeclarado" class="form-select" asp-items="Html.GetEnumSelectList<EstadoInicialDeclarado>()">
+                            <select asp-for="EstadoInicialDeclarado" class="form-select" asp-items="condiciones" aria-describedby="EstadoInicialDeclarado-hint">
                                 <option value="">Seleccione…</option>
                             </select>
                             <partial name="_Icon" model="@("chevron-down")" />
                         </div>
+                        <div class="form-text" id="EstadoInicialDeclarado-hint">¿Funciona? Elija lo que mejor lo describe. Un técnico lo va a revisar.</div>
                         <span asp-validation-for="EstadoInicialDeclarado"></span>
                     </div>
                     <div class="field">
                         <label class="form-label" for="Marca">Marca<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <input asp-for="Marca" class="form-control" placeholder="Ej.: Lenovo" />
+                        <input asp-for="Marca" class="form-control" placeholder="Ej.: Lenovo" aria-describedby="Marca-hint" />
+                        <div class="form-text" id="Marca-hint">Suele estar escrita en el equipo. Por ejemplo: Lenovo, Dell, HP.</div>
                         <span asp-validation-for="Marca"></span>
                     </div>
                     <div class="field">
                         <label class="form-label" for="Modelo">Modelo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <input asp-for="Modelo" class="form-control" placeholder="Ej.: ThinkPad T440" />
+                        <input asp-for="Modelo" class="form-control" placeholder="Ej.: ThinkPad T480" aria-describedby="Modelo-hint" />
+                        <div class="form-text" id="Modelo-hint">Suele estar en una etiqueta, atrás o debajo del equipo.</div>
                         <span asp-validation-for="Modelo"></span>
                     </div>
-                    <div class="field span-2">
-                        <label class="form-label" for="Observaciones">Observaciones</label>
-                        <textarea asp-for="Observaciones" class="form-control" rows="3" maxlength="500" aria-describedby="Observaciones-hint"></textarea>
-                        <div class="form-text" id="Observaciones-hint">Por ejemplo: si tiene alguna falla, si incluye cargador.</div>
-                        <span asp-validation-for="Observaciones"></span>
-                    </div>
 
-                    <h3 class="span-2 sec-title">Especificaciones (opcional)</h3>
+                    <h3 class="span-2 sec-title">Características técnicas</h3>
+                    <p class="span-2 form-note" style="margin:-6px 0 0">Complete solo lo que sepa. Un técnico va a revisar estos datos antes de mostrar el equipo en el catálogo. Elija primero el tipo de equipo para ver qué datos pedimos.</p>
 
-                    <div class="field">
+                    <div class="field" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.PcEscritorio)" hidden>
                         <label class="form-label" for="Procesador">Procesador</label>
-                        <input asp-for="Procesador" class="form-control" placeholder="Ej.: Intel Core i5" />
+                        <input asp-for="Procesador" class="form-control" placeholder="Ej.: Intel Core i5" aria-describedby="Procesador-hint" />
+                        <div class="form-text" id="Procesador-hint">Suele decir “Intel Core i5” o “AMD Ryzen 5”. Puede dejarlo vacío.</div>
                         <span asp-validation-for="Procesador"></span>
                     </div>
-                    <div class="field">
+                    <div class="field" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.PcEscritorio, TipoEquipo.Celular)" hidden>
                         <label class="form-label" for="MemoriaRam">Memoria RAM</label>
                         <input asp-for="MemoriaRam" class="form-control" placeholder="Ej.: 8 GB" />
                         <span asp-validation-for="MemoriaRam"></span>
                     </div>
-                    <div class="field">
+                    <div class="field" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.PcEscritorio, TipoEquipo.Celular)" hidden>
                         <label class="form-label" for="Almacenamiento">Almacenamiento</label>
                         <input asp-for="Almacenamiento" class="form-control" placeholder="Ej.: 256 GB SSD" />
                         <span asp-validation-for="Almacenamiento"></span>
                     </div>
-                    <div class="field">
+                    <div class="field" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.Monitor)" hidden>
                         <label class="form-label" for="TamanoPantalla">Tamaño de pantalla</label>
                         <input asp-for="TamanoPantalla" class="form-control" placeholder="Ej.: 14 pulgadas" />
                         <span asp-validation-for="TamanoPantalla"></span>
                     </div>
-                    <div class="field span-2">
+                    <div class="field span-2" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.Celular)" hidden>
                         <label class="form-label" for="EstadoBateria">Estado de la batería</label>
                         <input asp-for="EstadoBateria" class="form-control" placeholder="Ej.: dura 2 horas" />
                         <span asp-validation-for="EstadoBateria"></span>
@@ -94,11 +121,24 @@
                         <textarea asp-for="Otros" class="form-control" rows="2" maxlength="300"></textarea>
                         <span asp-validation-for="Otros"></span>
                     </div>
+
+                    <h3 class="span-2 sec-title">Observaciones</h3>
+
+                    <div class="field span-2">
+                        <label class="form-label" for="Observaciones">Observaciones</label>
+                        <textarea asp-for="Observaciones" class="form-control" rows="3" maxlength="500" aria-describedby="Observaciones-hint"></textarea>
+                        <div class="form-text" id="Observaciones-hint">Accesorios incluidos, golpes, fallas conocidas u otros detalles.</div>
+                        <span asp-validation-for="Observaciones"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="FechaRegistro">Fecha de registro</label>
+                        <input id="FechaRegistro" class="form-control" value="@DateTime.Today.ToString("dd/MM/yyyy")" disabled />
+                    </div>
                 </div>
             </div>
         </div>
         <div class="form-actions">
-            <a class="btn btn-secondary btn-lg" asp-controller="Home" asp-action="Index">Cancelar</a>
+            <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
             <button type="submit" class="btn btn-primary btn-lg">Registrar donación</button>
         </div>
     </form>
@@ -106,9 +146,25 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-        <script>
+    <script>
         var resumen = document.getElementById('resumen-errores');
         if (resumen) resumen.focus();
+
+        var tipo = document.getElementById('TipoEquipo');
+        var camposPorTipo = document.querySelectorAll('[data-tipos]');
+
+        function mostrarCamposDelTipo() {
+            camposPorTipo.forEach(function (campo) {
+                var visible = campo.dataset.tipos.split(',').indexOf(tipo.value) !== -1;
+                campo.hidden = !visible;
+                campo.querySelectorAll('input, select, textarea').forEach(function (control) {
+                    control.disabled = !visible;
+                });
+            });
+        }
+
+        tipo.addEventListener('change', mostrarCamposDelTipo);
+        mostrarCamposDelTipo();
 
         var formulario = document.getElementById('f-donacion');
         var boton = formulario.querySelector('button[type="submit"]');
