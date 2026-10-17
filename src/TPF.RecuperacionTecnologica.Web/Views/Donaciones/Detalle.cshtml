@@ -1,0 +1,131 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.DonacionDetalleViewModel
+@{
+    ViewData["Title"] = "Detalle de donación";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Mis donaciones</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Donación del equipo <span class="mono">@Model.CodigoEquipo</span></h1>
+                <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
+            </div>
+            <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+        </div>
+        <div class="page-actions">
+            @if (Model.PuedeModificarse)
+            {
+                <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("edit")" /><span>Editar donación</span></a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-cancelar-donacion"><partial name="_Icon" model="@("x")" /><span>Cancelar donación</span></button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("edit")" /><span>Editar donación</span></button>
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("x")" /><span>Cancelar donación</span></button>
+            }
+        </div>
+    </div>
+
+    @if (!Model.PuedeModificarse)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body">Solo puede editar o cancelar una donación mientras está <b>Pendiente de recepción</b>.</div>
+        </div>
+    }
+
+    <div class="grid-3-1">
+        <div class="stack">
+            <section class="card">
+                <div class="card-header">
+                    <div><h2 class="card-title">Datos de la donación</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Donante</dt>
+                        <dd>@Model.Donante</dd>
+                        <dt>Número de equipo</dt>
+                        <dd><span class="mono">@Model.CodigoEquipo</span></dd>
+                        <dt>Tipo de equipo</dt>
+                        <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
+                        <dt>Marca</dt>
+                        <dd>@Model.Marca</dd>
+                        <dt>Modelo</dt>
+                        <dd>@Model.Modelo</dd>
+                        <dt>Estado inicial declarado</dt>
+                        <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
+                        <dt>Observaciones</dt>
+                        <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
+                        <dt>Fecha de registro</dt>
+                        <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                        <dt>Estado actual</dt>
+                        <dd><partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" /></dd>
+                    </dl>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Características técnicas</h2>
+                        <p class="card-sub">@(Model.EspecificacionesVerificadas ? "Verificadas por el técnico en el diagnóstico" : "Declaradas por el donante; se verificarán en el diagnóstico")</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.TieneEspecificaciones)
+                    {
+                        <dl class="dl">
+                            @if (!string.IsNullOrWhiteSpace(Model.Procesador))
+                            {
+                                <dt>Procesador</dt>
+                                <dd>@Model.Procesador</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.MemoriaRam))
+                            {
+                                <dt>Memoria RAM</dt>
+                                <dd>@Model.MemoriaRam</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Almacenamiento))
+                            {
+                                <dt>Almacenamiento</dt>
+                                <dd>@Model.Almacenamiento</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.TamanoPantalla))
+                            {
+                                <dt>Tamaño de pantalla</dt>
+                                <dd>@Model.TamanoPantalla</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.EstadoBateria))
+                            {
+                                <dt>Estado de la batería</dt>
+                                <dd>@Model.EstadoBateria</dd>
+                            }
+                        </dl>
+                    }
+                    else
+                    {
+                        <p class="muted">No se declararon características técnicas.</p>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Historial</h2>
+                    <p class="card-sub">Eventos de la donación</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <partial name="_LineaDeTiempo" model="Model.Historial" />
+            </div>
+        </section>
+    </div>
+</div>
