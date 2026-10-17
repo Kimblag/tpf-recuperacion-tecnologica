@@ -1,0 +1,58 @@
+@model (int Pagina, int TotalPaginas, int Desde, int Hasta, int Total, Func<int, string?> Enlace)
+@{
+    var paginas = new List<int>();
+
+    for (var numero = 1; numero <= Model.TotalPaginas; numero++)
+    {
+        if (numero == 1 || numero == Model.TotalPaginas || Math.Abs(numero - Model.Pagina) <= 1)
+        {
+            paginas.Add(numero);
+        }
+    }
+}
+<div class="card-foot">
+    <span>Mostrando @Model.Desde–@Model.Hasta de @Model.Total</span>
+    @if (Model.TotalPaginas > 1)
+    {
+        <nav aria-label="Paginación">
+            <div class="pagination">
+                @if (Model.Pagina > 1)
+                {
+                    <a class="page-btn" href="@Model.Enlace(Model.Pagina - 1)" aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></a>
+                }
+                else
+                {
+                    <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
+                }
+
+                @for (var i = 0; i < paginas.Count; i++)
+                {
+                    var actual = paginas[i];
+
+                    @if (i > 0 && actual - paginas[i - 1] > 1)
+                    {
+                        <span class="page-gap" aria-hidden="true">…</span>
+                    }
+
+                    @if (actual == Model.Pagina)
+                    {
+                        <button type="button" class="page-btn" aria-current="page" aria-label="Página @actual, actual">@actual</button>
+                    }
+                    else
+                    {
+                        <a class="page-btn" href="@Model.Enlace(actual)" aria-label="Página @actual">@actual</a>
+                    }
+                }
+
+                @if (Model.Pagina < Model.TotalPaginas)
+                {
+                    <a class="page-btn" href="@Model.Enlace(Model.Pagina + 1)" aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></a>
+                }
+                else
+                {
+                    <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
+                }
+            </div>
+        </nav>
+    }
+</div>

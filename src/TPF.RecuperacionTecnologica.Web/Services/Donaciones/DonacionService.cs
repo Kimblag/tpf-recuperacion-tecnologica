@@ -215,9 +215,9 @@ public class DonacionService : IDonacionService
         return IdentityResult.Success;
     }
 
-    public async Task<IReadOnlyList<DonacionFilaViewModel>> ListarAsync(
+    public async Task<ResultadoPaginado<DonacionFilaViewModel>> ListarAsync(
         string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo,
-        EstadoInicialDeclarado? condicion, OrdenDonacion orden)
+        EstadoInicialDeclarado? condicion, OrdenDonacion orden, int pagina, int tamanoPagina)
     {
         var consulta = _context.Equipos
             .AsNoTracking() // no se van a modificar los objetos, solo leerlos
@@ -247,6 +247,10 @@ public class DonacionService : IDonacionService
                 : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
         }
 
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
         Expression<Func<Equipo, int>> rangoTipo = e =>
             e.TipoEquipo == TipoEquipo.Celular ? 0
             : e.TipoEquipo == TipoEquipo.Monitor ? 1
@@ -275,8 +279,10 @@ public class DonacionService : IDonacionService
             _ => consulta.OrderByDescending(e => e.FechaRegistro)
         };
 
-        return await ordenada
+        var elementos = await ordenada
             .ThenByDescending(e => e.NroEquipo)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
             .Select(e => new DonacionFilaViewModel
             {
                 NroEquipo = e.NroEquipo,
@@ -288,6 +294,13 @@ public class DonacionService : IDonacionService
                 EstadoEquipo = e.EstadoEquipo
             })
             .ToListAsync();
+
+        return new ResultadoPaginado<DonacionFilaViewModel>
+        {
+            Elementos = elementos,
+            Total = total,
+            Pagina = pagina
+        };
     }
 
     public async Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo)

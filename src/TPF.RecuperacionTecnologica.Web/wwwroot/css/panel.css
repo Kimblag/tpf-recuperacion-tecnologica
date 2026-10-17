@@ -556,11 +556,9 @@
     font-size: calc(13px * var(--fs));
 }
 
-.pista-estado {
-    display: block;
-    margin-top: 3px;
-    font-size: calc(12px * var(--fs));
-    color: var(--bs-secondary-color);
+.estado-con-pista {
+    display: inline-block;
+    cursor: help;
 }
 
 .state.err .state-ic {
@@ -609,6 +607,16 @@
         height: 12px;
         opacity: .55;
     }
+
+a.page-btn {
+    text-decoration: none;
+    color: inherit;
+}
+
+.page-gap {
+    padding: 0 4px;
+    color: var(--bs-secondary-color);
+}
 
 th[aria-sort] .orden-link {
     color: var(--bs-body-color);

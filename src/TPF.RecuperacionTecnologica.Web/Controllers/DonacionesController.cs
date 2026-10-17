@@ -31,9 +31,13 @@ public class DonacionesController : Controller
 
         try
         {
-            filtros.Filas = await _donacionService.ListarAsync(
-                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion, filtros.Orden);
-            filtros.Total = filtros.Filas.Count;
+            var resultado = await _donacionService.ListarAsync(
+                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion,
+                filtros.Orden, filtros.Pagina, MisDonacionesViewModel.TamanoPagina);
+
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

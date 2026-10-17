@@ -3,17 +3,16 @@
 @{
     var texto = Model switch
     {
-        EstadoEquipo.PendienteRecepcion => "Falta que lleve el equipo.",
+        EstadoEquipo.PendienteRecepcion => "Falta llevar el equipo.",
         EstadoEquipo.EnReparacion => "Un técnico lo está arreglando.",
         EstadoEquipo.Disponible => "Listo para que otra persona lo pida.",
         EstadoEquipo.Asignado => "Una persona debe retirarlo.",
         EstadoEquipo.Entregado => "Ya se entregó.",
         EstadoEquipo.Baja => "No se pudo recuperar.",
-        EstadoEquipo.Cancelado => "Usted canceló la donación.",
+        EstadoEquipo.Cancelado => "La donación fue cancelada.",
         _ => ""
     };
 }
-@if (!string.IsNullOrEmpty(texto))
-{
-    <span class="pista-estado">@texto</span>
-}
+<span class="estado-con-pista" tabindex="0" data-bs-toggle="tooltip" data-bs-container="body" data-bs-title="@texto">
+    <partial name="_EstadoEquipoBadge" model="Model" />
+</span>

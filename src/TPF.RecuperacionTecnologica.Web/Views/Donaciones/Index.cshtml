@@ -3,6 +3,16 @@
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
     ViewData["Title"] = "Mis donaciones";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Estado = Model.Estado,
+        Tipo = Model.Tipo,
+        Condicion = Model.Condicion,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
 }
 
 @section Migas {
@@ -127,10 +137,7 @@
                                     <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
                                     <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
                                     <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
-                                    <td data-label="Estado">
-                                        <partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" />
-                                        <partial name="_PistaEstadoDonacion" model="fila.EstadoEquipo" />
-                                    </td>
+                                    <td data-label="Estado"><partial name="_PistaEstadoDonacion" model="fila.EstadoEquipo" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
                                     </td>
@@ -140,16 +147,7 @@
                     </table>
                 </div>
 
-                <div class="card-foot">
-                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
-                    <nav aria-label="Paginación">
-                        <div class="pagination">
-                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
-                            <button type="button" class="page-btn" aria-current="page">1</button>
-                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
-                        </div>
-                    </nav>
-                </div>
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
     </section>
