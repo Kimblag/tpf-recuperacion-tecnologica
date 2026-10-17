@@ -608,6 +608,45 @@
         opacity: .55;
     }
 
+.filtros-activos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--bs-border-color);
+    font-size: calc(12px * var(--fs));
+}
+
+.filtros-activos-total {
+    margin-right: 4px;
+    color: var(--bs-secondary-color);
+}
+
+.filtro-activo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 4px 2px 10px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    background-color: var(--app-surface-low);
+}
+
+    .filtro-activo a {
+        display: inline-grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        color: var(--bs-secondary-color);
+    }
+
+        .filtro-activo a:hover {
+            background-color: var(--bs-border-color);
+            color: var(--bs-body-color);
+        }
+
 a.page-btn {
     text-decoration: none;
     color: inherit;

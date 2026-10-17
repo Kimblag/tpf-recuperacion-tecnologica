@@ -13,6 +13,18 @@
         Orden = Model.Orden,
         Pagina = pagina
     });
+
+    string Nombre<T>(T valor) where T : struct, Enum =>
+        Html.GetEnumSelectList<T>().First(i => i.Value == Convert.ToInt32(valor).ToString()).Text;
+
+    string? EnlaceSin(string filtro) => Url.Action("Index", new
+    {
+        Busqueda = filtro == "Busqueda" ? null : Model.Busqueda,
+        Estado = filtro == "Estado" ? null : Model.Estado,
+        Tipo = filtro == "Tipo" ? null : Model.Tipo,
+        Condicion = filtro == "Condicion" ? null : Model.Condicion,
+        Orden = Model.Orden
+    });
 }
 
 @section Migas {
@@ -34,7 +46,7 @@
         }
     </div>
 
-    <section class="card overflow" aria-label="Mis donaciones" data-listado data-filas-carga="6">
+    <section class="card overflow" aria-label="Mis donaciones" data-listado data-filas-carga="6" data-lista-guardar="mis-donaciones">
         <partial name="_AyudaEstadosDonacion" />
 
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
@@ -83,6 +95,44 @@
                 <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
             </div>
         </form>
+
+        @if (Model.HayFiltros && !Model.ErrorAlCargar)
+        {
+            <div class="filtros-activos" aria-label="Filtros aplicados">
+                <span class="filtros-activos-total" role="status">@(Model.Total == 1 ? "1 resultado" : $"{Model.Total} resultados")</span>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Busqueda))
+                {
+                    <span class="filtro-activo">
+                        <span>Búsqueda: “@Model.Busqueda”</span>
+                        <a href="@EnlaceSin("Busqueda")" aria-label="Quitar el filtro de búsqueda" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+                @if (Model.Estado is not null)
+                {
+                    <span class="filtro-activo">
+                        <span>Estado: @Nombre(Model.Estado.Value)</span>
+                        <a href="@EnlaceSin("Estado")" aria-label="Quitar el filtro de estado" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+                @if (Model.Tipo is not null)
+                {
+                    <span class="filtro-activo">
+                        <span>Tipo: @Nombre(Model.Tipo.Value)</span>
+                        <a href="@EnlaceSin("Tipo")" aria-label="Quitar el filtro de tipo de equipo" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+                @if (Model.Condicion is not null)
+                {
+                    <span class="filtro-activo">
+                        <span>Condición: @Nombre(Model.Condicion.Value)</span>
+                        <a href="@EnlaceSin("Condicion")" aria-label="Quitar el filtro de condición declarada" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+
+                <a class="link" asp-action="Index" data-muestra-carga>Quitar todos</a>
+            </div>
+        }
 
         <div class="card-body flush">
             @if (Model.ErrorAlCargar)

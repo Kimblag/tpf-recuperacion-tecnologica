@@ -6,3 +6,24 @@
 document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (elemento) {
     new bootstrap.Tooltip(elemento);
 });
+
+(function () {
+    var prefijo = 'lista:';
+
+    try {
+        var guardable = document.querySelector('[data-lista-guardar]');
+
+        if (guardable) {
+            sessionStorage.setItem(prefijo + guardable.dataset.listaGuardar, location.search);
+        }
+
+        document.querySelectorAll('[data-volver-a]').forEach(function (enlace) {
+            var guardada = sessionStorage.getItem(prefijo + enlace.dataset.volverA);
+
+            if (guardada) {
+                enlace.search = guardada;
+            }
+        });
+    } catch (error) {
+    }
+})();
