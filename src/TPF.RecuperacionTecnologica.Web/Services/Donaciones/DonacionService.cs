@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
@@ -215,7 +216,8 @@ public class DonacionService : IDonacionService
     }
 
     public async Task<IReadOnlyList<DonacionFilaViewModel>> ListarAsync(
-        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo, EstadoInicialDeclarado? condicion)
+        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo,
+        EstadoInicialDeclarado? condicion, OrdenDonacion orden)
     {
         var consulta = _context.Equipos
             .AsNoTracking() // no se van a modificar los objetos, solo leerlos
@@ -245,8 +247,35 @@ public class DonacionService : IDonacionService
                 : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
         }
 
-        return await consulta
-            .OrderByDescending(e => e.FechaRegistro)
+        Expression<Func<Equipo, int>> rangoTipo = e =>
+            e.TipoEquipo == TipoEquipo.Celular ? 0
+            : e.TipoEquipo == TipoEquipo.Monitor ? 1
+            : e.TipoEquipo == TipoEquipo.Notebook ? 2
+            : e.TipoEquipo == TipoEquipo.PcEscritorio ? 3
+            : 4;
+
+        Expression<Func<Equipo, int>> rangoCondicion = e =>
+            e.EstadoInicialDeclarado == EstadoInicialDeclarado.ConFallas ? 0
+            : e.EstadoInicialDeclarado == EstadoInicialDeclarado.Funcional ? 1
+            : 2;
+
+        IOrderedQueryable<Equipo> ordenada = orden switch
+        {
+            OrdenDonacion.RegistroAsc => consulta.OrderBy(e => e.FechaRegistro),
+            OrdenDonacion.EquipoAsc => consulta.OrderBy(e => e.NroEquipo),
+            OrdenDonacion.EquipoDesc => consulta.OrderByDescending(e => e.NroEquipo),
+            OrdenDonacion.TipoAsc => consulta.OrderBy(rangoTipo),
+            OrdenDonacion.TipoDesc => consulta.OrderByDescending(rangoTipo),
+            OrdenDonacion.ModeloAsc => consulta.OrderBy(e => e.Marca).ThenBy(e => e.Modelo),
+            OrdenDonacion.ModeloDesc => consulta.OrderByDescending(e => e.Marca).ThenByDescending(e => e.Modelo),
+            OrdenDonacion.CondicionAsc => consulta.OrderBy(rangoCondicion),
+            OrdenDonacion.CondicionDesc => consulta.OrderByDescending(rangoCondicion),
+            OrdenDonacion.EstadoAsc => consulta.OrderBy(e => e.EstadoEquipo),
+            OrdenDonacion.EstadoDesc => consulta.OrderByDescending(e => e.EstadoEquipo),
+            _ => consulta.OrderByDescending(e => e.FechaRegistro)
+        };
+
+        return await ordenada
             .ThenByDescending(e => e.NroEquipo)
             .Select(e => new DonacionFilaViewModel
             {

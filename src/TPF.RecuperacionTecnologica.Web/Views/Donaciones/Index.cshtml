@@ -1,5 +1,6 @@
 ﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.MisDonacionesViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
     ViewData["Title"] = "Mis donaciones";
 }
@@ -58,6 +59,13 @@
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
             </div>
+            <div class="filter d-md-none">
+                <label for="Orden">Ordenar por</label>
+                <div class="select">
+                    <select asp-for="Orden" class="form-select sm" asp-items="Html.GetEnumSelectList<OrdenDonacion>()"></select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
             <div class="filter" style="min-width:0">
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
             </div>
@@ -101,12 +109,12 @@
                         <caption class="visually-hidden">Mis donaciones</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Equipo</th>
-                                <th scope="col">Tipo</th>
-                                <th scope="col">Marca y modelo</th>
-                                <th scope="col">Condición declarada</th>
-                                <th scope="col">Registro</th>
-                                <th scope="col">Estado</th>
+                                <partial name="_EncabezadoOrdenable" model="@(("Equipo", OrdenDonacion.EquipoAsc, OrdenDonacion.EquipoDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Tipo", OrdenDonacion.TipoAsc, OrdenDonacion.TipoDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Marca y modelo", OrdenDonacion.ModeloAsc, OrdenDonacion.ModeloDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Condición declarada", OrdenDonacion.CondicionAsc, OrdenDonacion.CondicionDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Registro", OrdenDonacion.RegistroAsc, OrdenDonacion.RegistroDesc, true, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Estado", OrdenDonacion.EstadoAsc, OrdenDonacion.EstadoDesc, false, Model))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>

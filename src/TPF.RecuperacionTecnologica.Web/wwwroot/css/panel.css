@@ -591,3 +591,30 @@
     font-size: calc(12px * var(--fs));
     color: var(--bs-secondary-color);
 }
+
+.orden-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit;
+    text-decoration: none;
+}
+
+    .orden-link:hover {
+        color: var(--bs-link-color);
+    }
+
+    .orden-link .ic {
+        width: 12px;
+        height: 12px;
+        opacity: .55;
+    }
+
+th[aria-sort] .orden-link {
+    color: var(--bs-body-color);
+}
+
+    th[aria-sort] .orden-link .ic {
+        opacity: 1;
+        color: var(--bs-link-color);
+    }

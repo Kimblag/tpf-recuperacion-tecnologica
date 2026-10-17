@@ -18,6 +18,8 @@ public class MisDonacionesViewModel
 
     public EstadoInicialDeclarado? Condicion { get; set; }
 
+    public OrdenDonacion Orden { get; set; } = OrdenDonacion.RegistroDesc;
+
     public IReadOnlyList<DonacionFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }

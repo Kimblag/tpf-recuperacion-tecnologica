@@ -39,7 +39,8 @@ public interface IDonacionService
     /// La lista de donaciones propias, vacía si no hay ninguna que cumpla los filtros.
     /// </returns>
     Task<IReadOnlyList<DonacionFilaViewModel>> ListarAsync(
-        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo, EstadoInicialDeclarado? condicion);
+        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo,
+        EstadoInicialDeclarado? condicion, OrdenDonacion orden);
 
     /// <summary>
     /// Devuelve los datos de una donación propia para ver su detalle.

@@ -32,7 +32,7 @@ public class DonacionesController : Controller
         try
         {
             filtros.Filas = await _donacionService.ListarAsync(
-                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion);
+                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion, filtros.Orden);
             filtros.Total = filtros.Filas.Count;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
