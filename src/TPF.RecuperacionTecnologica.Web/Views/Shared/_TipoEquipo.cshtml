@@ -1,0 +1,13 @@
+﻿@model TPF.RecuperacionTecnologica.Web.Models.Enums.TipoEquipo
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var icono = Model switch
+    {
+        TipoEquipo.Notebook => "laptop",
+        TipoEquipo.Celular => "smartphone",
+        TipoEquipo.Periferico => "keyboard",
+        _ => "monitor"
+    };
+    var texto = Html.GetEnumSelectList<TipoEquipo>().First(i => i.Value == ((int)Model).ToString()).Text;
+}
+<span class="nowrap"><partial name="_Icon" model="@icono" /> @texto</span>

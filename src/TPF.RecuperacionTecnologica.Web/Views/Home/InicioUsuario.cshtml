@@ -1,0 +1,161 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Home.InicioUsuarioViewModel
+@{
+    ViewData["Title"] = "Inicio";
+
+    var chipDonaciones = Model.DonacionesPendientesDeRecepcion switch
+    {
+        0 => "",
+        1 => "1 esperando que lo lleves",
+        var n => $"{n} esperando que los lleves"
+    };
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Inicio</h1></div>
+            <p class="page-sub">Puede donar equipos y solicitar los que necesite, cuando quiera.</p>
+        </div>
+    </div>
+
+    <section class="grid-2" aria-label="Acciones principales">
+        <a class="card action-card" asp-controller="Donaciones" asp-action="Registrar">
+            <span class="act-ic ok action-ic"><partial name="_Icon" model="@("gift")" /></span>
+            <span class="action-text">
+                <span class="card-title d-block">Donar un equipo</span>
+                <span class="card-sub d-block">Registre una computadora, un celular u otro equipo que ya no use. Lo vamos a revisar y a entregar a otra persona.</span>
+            </span>
+            <span class="link nowrap">Nueva donación <partial name="_Icon" model="@("arrow-right")" /></span>
+        </a>
+        <a class="card action-card" asp-controller="Equipos" asp-action="Catalogo">
+            <span class="act-ic ok action-ic"><partial name="_Icon" model="@("laptop")" /></span>
+            <span class="action-text">
+                <span class="card-title d-block">Solicitar un equipo</span>
+                <span class="card-sub d-block">Mire los equipos disponibles y pida el que necesite, para usted, su escuela o su organización.</span>
+            </span>
+            <span class="link nowrap">Ver catálogo <partial name="_Icon" model="@("arrow-right")" /></span>
+        </a>
+    </section>
+
+    <div class="g-metrics">
+        <partial name="_Metrica" model="@(("Donaciones activas", "gift", "i-ok", Model.DonacionesActivas.ToString(), chipDonaciones, "warn", "Todavía en proceso"))" />
+        <partial name="_Metrica" model="@(("Solicitudes pendientes", "tray", "i-info", Model.SolicitudesPendientes.ToString(), "", "", "Esperando que le asignen el equipo"))" />
+        <partial name="_Metrica" model="@(("Equipos disponibles", "check-circle", "i-ok", Model.EquiposDisponibles.ToString(), "Catálogo", "", "Puede solicitarlos ahora"))" />
+        <partial name="_Metrica" model="@(("Entregas recibidas", "truck", "i-ok", Model.EntregasRecibidas.ToString(), "", "", "Equipos que ya retiró"))" />
+    </div>
+
+    <div class="grid-2">
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Mis donaciones</h2>
+                    <p class="card-sub">Equipos que registró</p>
+                </div>
+                <a class="link" asp-controller="Donaciones" asp-action="Index">Ver todas</a>
+            </div>
+            <div class="card-body flush">
+                @if (Model.DonacionesRecientes.Count == 0)
+                {
+                    <div class="state">
+                        <span class="state-ic"><partial name="_Icon" model="@("gift")" /></span>
+                        <h3>Todavía no registró donaciones</h3>
+                        <p>Cuando registre un equipo desde “Donar un equipo” aparecerá acá.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-wrap">
+                        <table class="table table-stack">
+                            <caption class="visually-hidden">Mis donaciones recientes</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Equipo</th>
+                                    <th scope="col">Marca y modelo</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col" class="col-actions">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var fila in Model.DonacionesRecientes)
+                                {
+                                    <tr>
+                                        <td data-label="Equipo"><a class="mono" asp-controller="Donaciones" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></td>
+                                        <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
+                                        <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                        <td class="col-actions" data-label="Acciones">
+                                            <a class="btn btn-ghost btn-sm" asp-controller="Donaciones" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Mis solicitudes</h2>
+                    <p class="card-sub">Equipos que pidió del catálogo</p>
+                </div>
+                <a class="link" asp-controller="Solicitudes" asp-action="Index">Ver todas</a>
+            </div>
+            <div class="card-body flush">
+                @if (Model.SolicitudesRecientes.Count == 0)
+                {
+                    <div class="state">
+                        <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
+                        <h3>Todavía no realizó solicitudes</h3>
+                        <p>Elija un equipo desde “Solicitar un equipo” y aparecerá acá.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-wrap">
+                        <table class="table table-stack">
+                            <caption class="visually-hidden">Mis solicitudes recientes</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Solicitud</th>
+                                    <th scope="col">Equipo</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col" class="col-actions">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var fila in Model.SolicitudesRecientes)
+                                {
+                                    <tr>
+                                        <td data-label="Solicitud"><a class="mono" asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@fila.NroSolicitud">@fila.Codigo</a></td>
+                                        <td data-label="Equipo"><span class="mono">@fila.CodigoEquipo</span></td>
+                                        <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
+                                        <td class="col-actions" data-label="Acciones">
+                                            <a class="btn btn-ghost btn-sm" asp-controller="Solicitudes" asp-action="Detalle" asp-route-id="@fila.NroSolicitud" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Actividad reciente</h2>
+                <p class="card-sub">Historial de sus movimientos</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <partial name="_ActividadReciente" model="Model.Actividad" />
+        </div>
+        <div class="card-foot center">
+            <a asp-controller="Solicitudes" asp-action="Historial">Ver historial de solicitudes →</a>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,38 @@
+﻿@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.HitoViewModel>
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
+<ol class="timeline">
+    @foreach (var hito in Model)
+    {
+        var clase = hito.Estado switch
+        {
+            EstadoHito.Actual => "current",
+            EstadoHito.Pendiente => "pending",
+            EstadoHito.Cancelado => "bad",
+            _ => ""
+        };
+        <li class="tl @clase" aria-current="@(hito.Estado == EstadoHito.Actual ? "step" : null)">
+            <span class="tl-mark"><partial name="_Icon" model="@hito.Icono" /></span>
+            <div>
+                <div class="tl-title">
+                    @hito.Titulo
+                    @if (hito.Estado == EstadoHito.Pendiente)
+                    {
+                        <span class="tag">Pendiente</span>
+                    }
+                </div>
+                @if (hito.Estado == EstadoHito.Actual)
+                {
+                    <div class="tl-meta">En curso</div>
+                }
+                else if (hito.Fecha is not null)
+                {
+                    <div class="tl-meta">@hito.Fecha.Value.ToString("dd/MM/yyyy")</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(hito.Texto))
+                {
+                    <p class="tl-text">@hito.Texto</p>
+                }
+            </div>
+        </li>
+    }
+</ol>

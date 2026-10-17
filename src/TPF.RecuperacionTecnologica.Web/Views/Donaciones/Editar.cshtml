@@ -1,0 +1,59 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.EdicionDonacionViewModel
+@{
+    ViewData["Title"] = "Editar donación";
+
+    ViewData["Donante"] = Model.Donante;
+    ViewData["NroEquipo"] = Model.CodigoEquipo;
+    ViewData["AyudaNroEquipo"] = "Asignado al registrar la donación.";
+    ViewData["Fecha"] = Model.FechaRegistro.ToString("dd/MM/yyyy");
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Mis donaciones</a></li>
+    <li aria-current="page">Editar</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Editar donación</h1>
+                <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
+            </div>
+            <p class="page-sub">Donación del equipo <span class="mono">@Model.CodigoEquipo</span></p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="status">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body">Solo se puede editar una donación mientras está <b>Pendiente de recepción</b>.</div>
+    </div>
+
+    <form class="card" asp-action="Editar" method="post" id="f-donacion" data-formulario-donacion novalidate aria-labelledby="f-donacion-titulo">
+        <input type="hidden" asp-for="NroEquipo" />
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-donacion-titulo">Datos del equipo</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <partial name="_CamposDonacion" model="Model" />
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/donacion-formulario.js" asp-append-version="true"></script>
+}

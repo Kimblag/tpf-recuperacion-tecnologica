@@ -1,0 +1,17 @@
+﻿@model TPF.RecuperacionTecnologica.Web.Models.Enums.EstadoEquipo
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var texto = Html.GetEnumSelectList<EstadoEquipo>().First(i => i.Value == ((int)Model).ToString()).Text;
+
+    var variante = Model switch
+    {
+        EstadoEquipo.Disponible => "ok",
+        EstadoEquipo.PendienteRecepcion => "muted d-recepcion",
+        EstadoEquipo.EnReparacion => "warn",
+        EstadoEquipo.Asignado => "info",
+        EstadoEquipo.Entregado => "neutral",
+        EstadoEquipo.Cancelado => "danger",
+        _ => "muted"
+    };
+}
+<partial name="_Badge" model="@((texto, variante))" />

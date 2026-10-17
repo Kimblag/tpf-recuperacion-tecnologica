@@ -1,0 +1,13 @@
+﻿@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Home.ActividadViewModel>
+<div class="activity">
+    @foreach (var item in Model)
+    {
+        <div class="act">
+            <span class="act-ic@(item.EsExito ? " ok" : "")"><partial name="_Icon" model="@item.Icono" /></span>
+            <div>
+                <div>@item.TextoAntes<span class="mono">@item.Codigo</span>@item.TextoDespues</div>
+                <div class="act-meta">@item.Detalle</div>
+            </div>
+        </div>
+    }
+</div>

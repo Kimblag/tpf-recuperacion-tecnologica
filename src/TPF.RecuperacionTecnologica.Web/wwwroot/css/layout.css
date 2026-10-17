@@ -17,7 +17,16 @@
 @media (min-width: 992px) {
     #sidebarOffcanvas {
         width: var(--bs-offcanvas-width);
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+        flex-shrink: 0;
+        height: 100vh !important;
     }
+
+        #sidebarOffcanvas .offcanvas-body {
+            overflow-y: auto;
+        }
 }
 
     #sidebarOffcanvas .offcanvas-header {
@@ -213,5 +222,18 @@
     flex-wrap: wrap;
     gap: 8px;
     font-size: calc(12px * var(--fs));
+    color: var(--bs-secondary-color);
+}
+
+.nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-heading {
+    padding: 16px 10px 4px;
+    font-size: calc(11px * var(--fs));
+    font-weight: 500;
     color: var(--bs-secondary-color);
 }
