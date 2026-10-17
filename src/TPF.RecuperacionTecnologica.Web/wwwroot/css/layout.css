@@ -215,3 +215,16 @@
     font-size: calc(12px * var(--fs));
     color: var(--bs-secondary-color);
 }
+
+.nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-heading {
+    padding: 16px 10px 4px;
+    font-size: calc(11px * var(--fs));
+    font-weight: 500;
+    color: var(--bs-secondary-color);
+}
