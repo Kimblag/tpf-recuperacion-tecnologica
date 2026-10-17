@@ -19,16 +19,19 @@ public class DonacionDetalleViewModel : DonacionFilaViewModel
 
     public string? EstadoBateria { get; set; }
 
+    public string? Otros { get; set; }
+
     public IReadOnlyList<HitoViewModel> Historial { get; set; } = [];
 
     public bool PuedeModificarse => EstadoEquipo == EstadoEquipo.PendienteRecepcion;
 
-    public bool EspecificacionesVerificadas => EstadoEquipo != EstadoEquipo.PendienteRecepcion;
+    public bool EspecificacionesVerificadas { get; set; }
 
     public bool TieneEspecificaciones =>
         !string.IsNullOrWhiteSpace(Procesador)
         || !string.IsNullOrWhiteSpace(MemoriaRam)
         || !string.IsNullOrWhiteSpace(Almacenamiento)
         || !string.IsNullOrWhiteSpace(TamanoPantalla)
-        || !string.IsNullOrWhiteSpace(EstadoBateria);
+        || !string.IsNullOrWhiteSpace(EstadoBateria)
+        || !string.IsNullOrWhiteSpace(Otros);
 }

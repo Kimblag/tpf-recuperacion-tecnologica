@@ -152,7 +152,14 @@
             </div>
         </div>
         <div class="card-body">
-            <partial name="_ActividadReciente" model="Model.Actividad" />
+            @if (Model.Actividad.Count == 0)
+            {
+                <p class="muted">Todavía no hay movimientos para mostrar.</p>
+            }
+            else
+            {
+                <partial name="_ActividadReciente" model="Model.Actividad" />
+            }
         </div>
         <div class="card-foot center">
             <a asp-controller="Solicitudes" asp-action="Historial">Ver historial de solicitudes →</a>

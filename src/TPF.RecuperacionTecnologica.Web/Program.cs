@@ -6,13 +6,29 @@ using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
+using TPF.RecuperacionTecnologica.Web.Services.Home;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    var mensajes = options.ModelBindingMessageProvider;
+
+    mensajes.SetValueMustNotBeNullAccessor(_ => "Este campo es obligatorio.");
+    mensajes.SetMissingBindRequiredValueAccessor(campo => $"Falta el valor del campo {campo}.");
+    mensajes.SetMissingKeyOrValueAccessor(() => "Falta un valor.");
+    mensajes.SetMissingRequestBodyRequiredValueAccessor(() => "Falta el contenido de la solicitud.");
+    mensajes.SetValueIsInvalidAccessor(valor => $"El valor '{valor}' no es válido.");
+    mensajes.SetAttemptedValueIsInvalidAccessor((valor, campo) => $"El valor '{valor}' no es válido para {campo}.");
+    mensajes.SetNonPropertyAttemptedValueIsInvalidAccessor(valor => $"El valor '{valor}' no es válido.");
+    mensajes.SetUnknownValueIsInvalidAccessor(campo => $"El valor ingresado no es válido para {campo}.");
+    mensajes.SetNonPropertyUnknownValueIsInvalidAccessor(() => "El valor ingresado no es válido.");
+    mensajes.SetValueMustBeANumberAccessor(campo => $"El campo {campo} debe ser un número.");
+    mensajes.SetNonPropertyValueMustBeANumberAccessor(() => "El valor debe ser un número.");
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
@@ -26,6 +42,7 @@ builder.Services.AddScoped<ICuentaService, CuentaService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPersonalService, PersonalService>();
 builder.Services.AddScoped<IDonacionService, DonacionService>();
+builder.Services.AddScoped<IInicioService, InicioService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services

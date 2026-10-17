@@ -23,16 +23,34 @@
     <section class="card overflow" aria-label="Mis donaciones">
         <partial name="_AyudaEstadosDonacion" />
 
-        <form class="filters" role="search" method="get" asp-action="Index">
+        <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
-                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo" />
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo, marca o modelo" data-filtro-texto />
             </div>
             <div class="filter">
                 <label for="Estado">Estado</label>
                 <div class="select">
                     <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoEquipo>()">
                         <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Tipo">Tipo de equipo</label>
+                <div class="select">
+                    <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Condicion">Condición declarada</label>
+                <div class="select">
+                    <select asp-for="Condicion" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoInicialDeclarado>()">
+                        <option value="">Todas</option>
                     </select>
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
@@ -46,7 +64,16 @@
         </form>
 
         <div class="card-body flush">
-            @if (Model.Filas.Count == 0)
+            @if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No hay donaciones que coincidan</h3>
+                    <p>Pruebe con otra búsqueda o quite algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Index">Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("gift")" /></span>
@@ -104,3 +131,7 @@
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+}

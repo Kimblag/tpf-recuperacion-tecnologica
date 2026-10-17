@@ -122,6 +122,11 @@
                                 <dt>Estado de la batería</dt>
                                 <dd>@Model.EstadoBateria</dd>
                             }
+                            @if (!string.IsNullOrWhiteSpace(Model.Otros))
+                            {
+                                <dt>Otros datos</dt>
+                                <dd>@Model.Otros</dd>
+                            }
                         </dl>
                     }
                     else
