@@ -24,8 +24,11 @@
     var boton = formulario.querySelector('button[type="submit"]');
 
     formulario.addEventListener('submit', function (evento) {
-        if (evento.defaultPrevented) return;
-        boton.disabled = true;
+        setTimeout(function () {
+            if (!evento.defaultPrevented) {
+                boton.disabled = true;
+            }
+        }, 0);
     });
 
     window.addEventListener('pageshow', function () {
