@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Inicio</h1></div>
+            <p class="page-sub">Se puede donar equipos y solicitar los que se necesiten, cuando se quiera.</p>
+        </div>
+    </div>
+
+    <section class="card">
+        <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener el resumen. Se puede intentar de nuevo en unos minutos.")" />
+    </section>
+</div>

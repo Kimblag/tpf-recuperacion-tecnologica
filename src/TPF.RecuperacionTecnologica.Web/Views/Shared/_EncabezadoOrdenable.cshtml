@@ -1,0 +1,26 @@
+@model (string Texto, TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.OrdenDonacion Ascendente, TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.OrdenDonacion Descendente, bool DescendenteInicial, TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.MisDonacionesViewModel Listado)
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
+@{
+    var orden = Model.Listado.Orden;
+
+    var siguiente = orden == Model.Ascendente
+        ? Model.Descendente
+        : orden == Model.Descendente
+            ? Model.Ascendente
+            : Model.DescendenteInicial ? Model.Descendente : Model.Ascendente;
+
+    var ariaSort = orden == Model.Ascendente ? "ascending" : orden == Model.Descendente ? "descending" : null;
+
+    var icono = orden == Model.Ascendente ? "arrow-up" : orden == Model.Descendente ? "arrow-down" : "chevrons";
+}
+<th scope="col" aria-sort="@ariaSort">
+    <a class="orden-link" asp-action="Index"
+       asp-route-Busqueda="@Model.Listado.Busqueda"
+       asp-route-Estado="@Model.Listado.Estado"
+       asp-route-Tipo="@Model.Listado.Tipo"
+       asp-route-Condicion="@Model.Listado.Condicion"
+       asp-route-Orden="@siguiente">
+        <span>@Model.Texto</span>
+        <partial name="_Icon" model="@icono" />
+    </a>
+</th>

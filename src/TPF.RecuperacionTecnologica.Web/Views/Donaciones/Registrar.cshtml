@@ -11,7 +11,7 @@
 
 @section Migas {
     <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-    <li><a asp-action="Index">Mis donaciones</a></li>
+    <li><a asp-action="Index" data-volver-a="mis-donaciones">Mis donaciones</a></li>
     <li aria-current="page">Nueva donación</li>
 }
 
@@ -39,7 +39,7 @@
             </div>
         </div>
         <div class="form-actions">
-            <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
+            <a class="btn btn-secondary btn-lg" asp-action="Index" data-volver-a="mis-donaciones">Cancelar</a>
             <button type="submit" class="btn btn-primary btn-lg">Registrar donación</button>
         </div>
     </form>

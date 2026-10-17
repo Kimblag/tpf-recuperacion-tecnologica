@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
@@ -214,8 +215,9 @@ public class DonacionService : IDonacionService
         return IdentityResult.Success;
     }
 
-    public async Task<IReadOnlyList<DonacionFilaViewModel>> ListarAsync(
-        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo, EstadoInicialDeclarado? condicion)
+    public async Task<ResultadoPaginado<DonacionFilaViewModel>> ListarAsync(
+        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo,
+        EstadoInicialDeclarado? condicion, OrdenDonacion orden, int pagina, int tamanoPagina)
     {
         var consulta = _context.Equipos
             .AsNoTracking() // no se van a modificar los objetos, solo leerlos
@@ -245,9 +247,42 @@ public class DonacionService : IDonacionService
                 : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
         }
 
-        return await consulta
-            .OrderByDescending(e => e.FechaRegistro)
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        Expression<Func<Equipo, int>> rangoTipo = e =>
+            e.TipoEquipo == TipoEquipo.Celular ? 0
+            : e.TipoEquipo == TipoEquipo.Monitor ? 1
+            : e.TipoEquipo == TipoEquipo.Notebook ? 2
+            : e.TipoEquipo == TipoEquipo.PcEscritorio ? 3
+            : 4;
+
+        Expression<Func<Equipo, int>> rangoCondicion = e =>
+            e.EstadoInicialDeclarado == EstadoInicialDeclarado.ConFallas ? 0
+            : e.EstadoInicialDeclarado == EstadoInicialDeclarado.Funcional ? 1
+            : 2;
+
+        IOrderedQueryable<Equipo> ordenada = orden switch
+        {
+            OrdenDonacion.RegistroAsc => consulta.OrderBy(e => e.FechaRegistro),
+            OrdenDonacion.EquipoAsc => consulta.OrderBy(e => e.NroEquipo),
+            OrdenDonacion.EquipoDesc => consulta.OrderByDescending(e => e.NroEquipo),
+            OrdenDonacion.TipoAsc => consulta.OrderBy(rangoTipo),
+            OrdenDonacion.TipoDesc => consulta.OrderByDescending(rangoTipo),
+            OrdenDonacion.ModeloAsc => consulta.OrderBy(e => e.Marca).ThenBy(e => e.Modelo),
+            OrdenDonacion.ModeloDesc => consulta.OrderByDescending(e => e.Marca).ThenByDescending(e => e.Modelo),
+            OrdenDonacion.CondicionAsc => consulta.OrderBy(rangoCondicion),
+            OrdenDonacion.CondicionDesc => consulta.OrderByDescending(rangoCondicion),
+            OrdenDonacion.EstadoAsc => consulta.OrderBy(e => e.EstadoEquipo),
+            OrdenDonacion.EstadoDesc => consulta.OrderByDescending(e => e.EstadoEquipo),
+            _ => consulta.OrderByDescending(e => e.FechaRegistro)
+        };
+
+        var elementos = await ordenada
             .ThenByDescending(e => e.NroEquipo)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
             .Select(e => new DonacionFilaViewModel
             {
                 NroEquipo = e.NroEquipo,
@@ -259,6 +294,13 @@ public class DonacionService : IDonacionService
                 EstadoEquipo = e.EstadoEquipo
             })
             .ToListAsync();
+
+        return new ResultadoPaginado<DonacionFilaViewModel>
+        {
+            Elementos = elementos,
+            Total = total,
+            Pagina = pagina
+        };
     }
 
     public async Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo)

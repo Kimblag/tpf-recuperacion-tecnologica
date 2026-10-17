@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Donaciones;
@@ -38,8 +39,9 @@ public interface IDonacionService
     /// <returns>
     /// La lista de donaciones propias, vacía si no hay ninguna que cumpla los filtros.
     /// </returns>
-    Task<IReadOnlyList<DonacionFilaViewModel>> ListarAsync(
-        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo, EstadoInicialDeclarado? condicion);
+    Task<ResultadoPaginado<DonacionFilaViewModel>> ListarAsync(
+        string identityUserId, string? busqueda, EstadoEquipo? estado, TipoEquipo? tipo,
+        EstadoInicialDeclarado? condicion, OrdenDonacion orden, int pagina, int tamanoPagina);
 
     /// <summary>
     /// Devuelve los datos de una donación propia para ver su detalle.

@@ -1,7 +1,30 @@
 ﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.MisDonacionesViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
     ViewData["Title"] = "Mis donaciones";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Estado = Model.Estado,
+        Tipo = Model.Tipo,
+        Condicion = Model.Condicion,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
+
+    string Nombre<T>(T valor) where T : struct, Enum =>
+        Html.GetEnumSelectList<T>().First(i => i.Value == Convert.ToInt32(valor).ToString()).Text;
+
+    string? EnlaceSin(string filtro) => Url.Action("Index", new
+    {
+        Busqueda = filtro == "Busqueda" ? null : Model.Busqueda,
+        Estado = filtro == "Estado" ? null : Model.Estado,
+        Tipo = filtro == "Tipo" ? null : Model.Tipo,
+        Condicion = filtro == "Condicion" ? null : Model.Condicion,
+        Orden = Model.Orden
+    });
 }
 
 @section Migas {
@@ -15,18 +38,21 @@
             <div class="h-id"><h1 tabindex="-1">Mis donaciones</h1></div>
             <p class="page-sub">Equipos que registró para donar y su estado actual</p>
         </div>
-        <div class="page-actions">
-            <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
-        </div>
+        @if (Model.Filas.Count > 0 || Model.HayFiltros || Model.ErrorAlCargar)
+        {
+            <div class="page-actions">
+                <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
+            </div>
+        }
     </div>
 
-    <section class="card overflow" aria-label="Mis donaciones">
+    <section class="card overflow" aria-label="Mis donaciones" data-listado data-filas-carga="6" data-lista-guardar="mis-donaciones">
         <partial name="_AyudaEstadosDonacion" />
 
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
-                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo, marca o modelo" data-filtro-texto />
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo, marca o modelo" maxlength="60" data-filtro-texto />
             </div>
             <div class="filter">
                 <label for="Estado">Estado</label>
@@ -55,22 +81,76 @@
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
             </div>
+            <div class="filter d-md-none">
+                <label for="Orden">Ordenar por</label>
+                <div class="select">
+                    <select asp-for="Orden" class="form-select sm" asp-items="Html.GetEnumSelectList<OrdenDonacion>()"></select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
             <div class="filter" style="min-width:0">
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
             </div>
             <div class="filter" style="min-width:0">
-                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
             </div>
         </form>
 
+        @if (Model.HayFiltros && !Model.ErrorAlCargar)
+        {
+            <div class="filtros-activos" aria-label="Filtros aplicados">
+                <span class="filtros-activos-total" role="status">@(Model.Total == 1 ? "1 resultado" : $"{Model.Total} resultados")</span>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Busqueda))
+                {
+                    <span class="filtro-activo">
+                        <span>Búsqueda: “@Model.Busqueda”</span>
+                        <a href="@EnlaceSin("Busqueda")" aria-label="Quitar el filtro de búsqueda" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+                @if (Model.Estado is not null)
+                {
+                    <span class="filtro-activo">
+                        <span>Estado: @Nombre(Model.Estado.Value)</span>
+                        <a href="@EnlaceSin("Estado")" aria-label="Quitar el filtro de estado" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+                @if (Model.Tipo is not null)
+                {
+                    <span class="filtro-activo">
+                        <span>Tipo: @Nombre(Model.Tipo.Value)</span>
+                        <a href="@EnlaceSin("Tipo")" aria-label="Quitar el filtro de tipo de equipo" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+                @if (Model.Condicion is not null)
+                {
+                    <span class="filtro-activo">
+                        <span>Condición: @Nombre(Model.Condicion.Value)</span>
+                        <a href="@EnlaceSin("Condicion")" aria-label="Quitar el filtro de condición declarada" data-muestra-carga><partial name="_Icon" model="@("x")" /></a>
+                    </span>
+                }
+
+                <a class="link" asp-action="Index" data-muestra-carga>Quitar todos</a>
+            </div>
+        }
+
         <div class="card-body flush">
-            @if (Model.Filas.Count == 0 && Model.HayFiltros)
+            @if (Model.ErrorAlCargar)
+            {
+                <div class="state err" role="alert">
+                    <span class="state-ic"><partial name="_Icon" model="@("alert")" /></span>
+                    <h3>No se pudo cargar la información</h3>
+                    <p>Ocurrió un error al obtener sus donaciones. Intente nuevamente en unos minutos.</p>
+                    <a class="btn btn-secondary btn-sm" href="@(Context.Request.Path + Context.Request.QueryString)"><partial name="_Icon" model="@("refresh")" /><span>Reintentar</span></a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
                     <h3>No hay donaciones que coincidan</h3>
                     <p>Pruebe con otra búsqueda o quite algún filtro.</p>
-                    <a class="btn btn-secondary" asp-action="Index">Limpiar filtros</a>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
                 </div>
             }
             else if (Model.Filas.Count == 0)
@@ -89,12 +169,12 @@
                         <caption class="visually-hidden">Mis donaciones</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Equipo</th>
-                                <th scope="col">Tipo</th>
-                                <th scope="col">Marca y modelo</th>
-                                <th scope="col">Condición declarada</th>
-                                <th scope="col">Registro</th>
-                                <th scope="col">Estado</th>
+                                <partial name="_EncabezadoOrdenable" model="@(("Equipo", OrdenDonacion.EquipoAsc, OrdenDonacion.EquipoDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Tipo", OrdenDonacion.TipoAsc, OrdenDonacion.TipoDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Marca y modelo", OrdenDonacion.ModeloAsc, OrdenDonacion.ModeloDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Condición declarada", OrdenDonacion.CondicionAsc, OrdenDonacion.CondicionDesc, false, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Registro", OrdenDonacion.RegistroAsc, OrdenDonacion.RegistroDesc, true, Model))" />
+                                <partial name="_EncabezadoOrdenable" model="@(("Estado", OrdenDonacion.EstadoAsc, OrdenDonacion.EstadoDesc, false, Model))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>
@@ -102,14 +182,19 @@
                             @foreach (var fila in Model.Filas)
                             {
                                 <tr>
-                                    <td data-label="Equipo"><a class="mono" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></td>
+                                    <td data-label="Equipo"><span class="mono">@fila.CodigoEquipo</span></td>
                                     <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
                                     <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
                                     <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
                                     <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
-                                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                    <td data-label="Estado"><partial name="_PistaEstadoDonacion" model="fila.EstadoEquipo" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                        @if (fila.PuedeModificarse)
+                                        {
+                                            <a class="btn btn-ghost btn-sm btn-icon" asp-action="Editar" asp-route-id="@fila.NroEquipo" aria-label="Editar equipo @fila.CodigoEquipo" title="Editar"><partial name="_Icon" model="@("edit")" /></a>
+                                            <button type="button" class="btn btn-ghost btn-sm btn-icon" data-bs-toggle="modal" data-bs-target="#modal-cancelar-lista" data-nro="@fila.NroEquipo" data-codigo="@fila.CodigoEquipo" data-equipo="@fila.MarcaYModelo" aria-label="Cancelar donación del equipo @fila.CodigoEquipo" title="Cancelar donación"><partial name="_Icon" model="@("x")" /></button>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -117,21 +202,23 @@
                     </table>
                 </div>
 
-                <div class="card-foot">
-                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
-                    <nav aria-label="Paginación">
-                        <div class="pagination">
-                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
-                            <button type="button" class="page-btn" aria-current="page">1</button>
-                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
-                        </div>
-                    </nav>
-                </div>
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
     </section>
 </div>
 
+@if (Model.Filas.Any(f => f.PuedeModificarse))
+{
+    <partial name="_ModalCancelarLista" />
+}
+
 @section Scripts {
     <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+    <script src="~/js/cancelar-donacion-lista.js" asp-append-version="true"></script>
 }

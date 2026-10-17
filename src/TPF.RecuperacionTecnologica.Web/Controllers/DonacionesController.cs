@@ -10,10 +10,12 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 public class DonacionesController : Controller
 {
     private readonly IDonacionService _donacionService;
+    private readonly ILogger<DonacionesController> _logger;
 
-    public DonacionesController(IDonacionService donacionService)
+    public DonacionesController(IDonacionService donacionService, ILogger<DonacionesController> logger)
     {
         _donacionService = donacionService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -27,9 +29,21 @@ public class DonacionesController : Controller
             return NotFound();
         }
 
-        filtros.Filas = await _donacionService.ListarAsync(
-            identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion);
-        filtros.Total = filtros.Filas.Count;
+        try
+        {
+            var resultado = await _donacionService.ListarAsync(
+                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion,
+                filtros.Orden, filtros.Pagina, MisDonacionesViewModel.TamanoPagina);
+
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el listado de donaciones");
+            filtros.ErrorAlCargar = true;
+        }
 
         return View(filtros);
     }
@@ -39,11 +53,23 @@ public class DonacionesController : Controller
     public async Task<IActionResult> Detalle(int id)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var donacion = identityUserId is null
-            ? null
-            : await _donacionService.ObtenerDetalleAsync(identityUserId, id);
 
-        return donacion is null ? NotFound() : View(donacion);
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var donacion = await _donacionService.ObtenerDetalleAsync(identityUserId, id);
+
+            return donacion is null ? NotFound() : View(donacion);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el detalle de la donación {NroEquipo}", id);
+            return View("DetalleError");
+        }
     }
 
     [HttpGet]

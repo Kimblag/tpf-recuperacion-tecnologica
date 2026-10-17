@@ -1,0 +1,7 @@
+@model string
+<div class="state err" role="alert">
+    <span class="state-ic"><partial name="_Icon" model="@("alert")" /></span>
+    <h3>No se pudo cargar la información</h3>
+    <p>@Model</p>
+    <a class="btn btn-secondary btn-sm" href="@(Context.Request.Path + Context.Request.QueryString)"><partial name="_Icon" model="@("refresh")" /><span>Reintentar</span></a>
+</div>
