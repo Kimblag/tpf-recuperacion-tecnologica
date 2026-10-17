@@ -91,6 +91,51 @@ public class DonacionesController : Controller
         return View(id);
     }
 
+
+    [HttpGet]
+    [Authorize(Policy = "UsuarioExterno")]
+    public IActionResult Editar(int id)
+    {
+        // TODO: reemplazar por el servicio real además el usuario solo puede editar sus propias donaciones
+        var donacion = DatosDeEjemplo.FirstOrDefault(d => d.NroEquipo == id);
+
+        if (donacion is null)
+        {
+            return NotFound();
+        }
+
+        return donacion.PuedeModificarse
+            ? View(ParaEdicion(donacion))
+            : RedirectToAction(nameof(Detalle), new { id });
+    }
+
+    [HttpPost]
+    [Authorize(Policy = "UsuarioExterno")]
+    [ValidateAntiForgeryToken]
+    public IActionResult Editar(EdicionDonacionViewModel donacion)
+    {
+        // TODO: reemplazar por EditarAsync del servicio de donaciones
+        var original = DatosDeEjemplo.FirstOrDefault(d => d.NroEquipo == donacion.NroEquipo);
+
+        if (original is null)
+        {
+            return NotFound();
+        }
+
+        donacion.Donante = original.Donante;
+        donacion.FechaRegistro = original.FechaRegistro;
+        donacion.EstadoEquipo = original.EstadoEquipo;
+
+        if (!ModelState.IsValid)
+        {
+            return View(donacion);
+        }
+
+        ModelState.AddModelError(string.Empty, "La edición de donaciones todavía no está implementada.");
+        return View(donacion);
+    }
+
+
     private static DonacionDetalleViewModel Donacion(
         int nroEquipo, TipoEquipo tipo, string marca, string modelo, EstadoInicialDeclarado condicion,
         DateTime fecha, EstadoEquipo estado, string? observaciones = null, string? procesador = null,
@@ -176,5 +221,23 @@ public class DonacionesController : Controller
         Icono = icono,
         Estado = estado,
         Texto = texto
+    };
+
+    private static EdicionDonacionViewModel ParaEdicion(DonacionDetalleViewModel donacion) => new()
+    {
+        NroEquipo = donacion.NroEquipo,
+        Donante = donacion.Donante,
+        FechaRegistro = donacion.FechaRegistro,
+        EstadoEquipo = donacion.EstadoEquipo,
+        TipoEquipo = donacion.TipoEquipo,
+        Marca = donacion.Marca,
+        Modelo = donacion.Modelo,
+        EstadoInicialDeclarado = donacion.EstadoInicialDeclarado,
+        Observaciones = donacion.Observaciones,
+        Procesador = donacion.Procesador,
+        MemoriaRam = donacion.MemoriaRam,
+        Almacenamiento = donacion.Almacenamiento,
+        TamanoPantalla = donacion.TamanoPantalla,
+        EstadoBateria = donacion.EstadoBateria
     };
 }
