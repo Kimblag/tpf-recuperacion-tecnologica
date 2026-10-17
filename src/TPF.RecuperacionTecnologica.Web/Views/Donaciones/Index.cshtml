@@ -15,9 +15,12 @@
             <div class="h-id"><h1 tabindex="-1">Mis donaciones</h1></div>
             <p class="page-sub">Equipos que registró para donar y su estado actual</p>
         </div>
-        <div class="page-actions">
-            <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
-        </div>
+        @if (Model.Filas.Count > 0 || Model.HayFiltros)
+        {
+            <div class="page-actions">
+                <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
+            </div>
+        }
     </div>
 
     <section class="card overflow" aria-label="Mis donaciones">
@@ -26,7 +29,7 @@
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
-                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo, marca o modelo" data-filtro-texto />
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo, marca o modelo" maxlength="60" data-filtro-texto />
             </div>
             <div class="filter">
                 <label for="Estado">Estado</label>
@@ -102,12 +105,15 @@
                             @foreach (var fila in Model.Filas)
                             {
                                 <tr>
-                                    <td data-label="Equipo"><a class="mono" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></td>
+                                    <td data-label="Equipo"><span class="mono">@fila.CodigoEquipo</span></td>
                                     <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
                                     <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
                                     <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
                                     <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
-                                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                    <td data-label="Estado">
+                                        <partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" />
+                                        <partial name="_PistaEstadoDonacion" model="fila.EstadoEquipo" />
+                                    </td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
                                     </td>

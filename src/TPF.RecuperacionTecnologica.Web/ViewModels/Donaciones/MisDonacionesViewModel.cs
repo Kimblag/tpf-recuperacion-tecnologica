@@ -4,7 +4,13 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
 public class MisDonacionesViewModel
 {
-    public string? Busqueda { get; set; }
+    private string? _busqueda;
+
+    public string? Busqueda
+    {
+        get => _busqueda;
+        set => _busqueda = value is { Length: > 60 } ? value[..60] : value;
+    }
 
     public EstadoEquipo? Estado { get; set; }
 
