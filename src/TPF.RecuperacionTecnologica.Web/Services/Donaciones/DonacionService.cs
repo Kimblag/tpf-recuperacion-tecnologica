@@ -32,6 +32,8 @@ public class DonacionService : IDonacionService
     private static IdentityResult Fallo(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
+    private const string MotivoCancelacionDonante = "Cancelada por el donante";
+
     private static EspecificacionesTecnicas EspecificacionesDelTipo(TipoEquipo tipo, RegistroDonacionViewModel modelo)
     {
         var aplicaProcesador = tipo is TipoEquipo.Notebook or TipoEquipo.PcEscritorio;
@@ -352,6 +354,56 @@ public class DonacionService : IDonacionService
         };
     }
 
+    public async Task<IdentityResult> CancelarAsync(string identityUserId, int nroEquipo)
+    {
+        // buscar el equipo y verificar que sea del Usuario y esté Pendiente de recepción
+        var equipo = await _context.Equipos
+            .FirstOrDefaultAsync(e => e.NroEquipo == nroEquipo
+            && e.UsuarioDonante.IdentityUserId == identityUserId
+            && e.UsuarioDonante.EstadoUsuario == EstadoUsuario.Activo);
+
+        if (equipo is null) return Fallo("DonacionNoEncontrada", "No se encontró la donación.");
+
+        if (equipo.EstadoEquipo != EstadoEquipo.PendienteRecepcion) return Fallo("DonacionNoCancelable",
+                "La donación ya no puede cancelarse porque el equipo fue recibido o su estado cambió.");
+
+        var ahora = DateTime.UtcNow;
+
+        equipo.EstadoEquipo = EstadoEquipo.Cancelado;
+        equipo.FechaCancelacion = ahora;
+        equipo.MotivoCancelacion = MotivoCancelacionDonante;
+        equipo.FechaUltimaModificacion = ahora;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Fallo("DonacionModificada",
+                "La donación cambió mientras se cancelaba. Vuelva a abrirla e intente nuevamente.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la cancelación de la donación del Equipo {NroEquipo}", equipo.NroEquipo);
+            return Fallo("CancelacionFallida", "No se pudo cancelar la donación. Intente nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.Donacion, null, nameof(Equipo), equipo.NroEquipo,
+                "Cancelación de donación");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la cancelación de la donación del Equipo {NroEquipo}", equipo.NroEquipo);
+        }
+
+        return IdentityResult.Success;
+    }
+
+
     private static IReadOnlyList<HitoViewModel> ArmarHistorial(
         EstadoEquipo estado, EstadoInicialDeclarado condicion, DateTime fechaRegistro, DateTime? fechaCancelacion,
         DictamenTecnico? dictamen, DateTime? fechaDiagnostico, DateTime? fechaAsignacion, DateTime? fechaEntrega)
@@ -416,6 +468,7 @@ public class DonacionService : IDonacionService
 
         return historial;
     }
+
 
     private static HitoViewModel Hito(string titulo, DateTime? fecha, string icono, EstadoHito estado, string? texto = null) => new()
     {
