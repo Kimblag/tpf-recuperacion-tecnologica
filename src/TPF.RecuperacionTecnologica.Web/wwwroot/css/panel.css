@@ -562,3 +562,32 @@
     font-size: calc(12px * var(--fs));
     color: var(--bs-secondary-color);
 }
+
+.state.err .state-ic {
+    background-color: var(--bs-danger-bg-subtle);
+    border-color: var(--bs-danger-border-subtle);
+    color: var(--bs-danger-text-emphasis);
+}
+
+.skel {
+    display: block;
+    height: 10px;
+    border-radius: 4px;
+    background-color: var(--bs-border-color);
+    animation: skel 1.3s ease-in-out infinite;
+}
+
+@keyframes skel {
+    50% {
+        opacity: .45;
+    }
+}
+
+.load-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: calc(12px * var(--fs));
+    color: var(--bs-secondary-color);
+}
