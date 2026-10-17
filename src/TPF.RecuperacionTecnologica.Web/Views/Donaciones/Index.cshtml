@@ -34,7 +34,7 @@
         }
     </div>
 
-    <section class="card overflow" aria-label="Mis donaciones">
+    <section class="card overflow" aria-label="Mis donaciones" data-listado data-filas-carga="6">
         <partial name="_AyudaEstadosDonacion" />
 
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
@@ -80,7 +80,7 @@
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
             </div>
             <div class="filter" style="min-width:0">
-                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
             </div>
         </form>
 
@@ -100,7 +100,7 @@
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
                     <h3>No hay donaciones que coincidan</h3>
                     <p>Pruebe con otra búsqueda o quite algún filtro.</p>
-                    <a class="btn btn-secondary" asp-action="Index">Limpiar filtros</a>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
                 </div>
             }
             else if (Model.Filas.Count == 0)
@@ -150,9 +150,14 @@
                 <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
     </section>
 </div>
 
 @section Scripts {
     <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
 }
