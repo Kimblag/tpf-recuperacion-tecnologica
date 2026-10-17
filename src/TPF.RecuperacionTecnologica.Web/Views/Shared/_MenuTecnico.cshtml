@@ -1,0 +1,24 @@
+@{
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
+    var accion = ViewContext.RouteData.Values["action"]?.ToString();
+    var esInicio = controlador == "Home" && accion == "Index";
+    var esEquipos = controlador == "Equipos";
+    var esDiagnosticos = controlador == "Diagnosticos";
+}
+<nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
+    <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(esInicio ? "page" : null)">
+        <span class="nav-dot"></span>
+        <partial name="_Icon" model="@("grid")" />Inicio
+    </a>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-diagnostico">
+        <div class="nav-heading" id="nav-grupo-diagnostico">Diagnóstico técnico</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esEquipos ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Index" aria-current="@(esEquipos ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("laptop")" />Equipos
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esDiagnosticos ? " active" : "")" asp-area="" asp-controller="Diagnosticos" asp-action="Index" aria-current="@(esDiagnosticos ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("wrench")" />Diagnósticos
+        </a>
+    </div>
+</nav>
