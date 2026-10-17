@@ -1,0 +1,180 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos.DiagnosticoFormularioViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = Model.Titulo;
+
+    var etiquetaObligatorio = "<span class=\"req\" aria-hidden=\"true\">*</span><span class=\"visually-hidden\"> (obligatorio)</span>";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-controller="Equipos" asp-action="Index">Equipos</a></li>
+    <li><a asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">@Model.CodigoEquipo</a></li>
+    <li aria-current="page">@Model.Titulo</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">@Model.Titulo</h1>
+                <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
+            </div>
+            <p class="page-sub">Equipo <span class="mono">@Model.CodigoEquipo</span> · @Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+        </div>
+    </div>
+
+    <div class="grid-3-1">
+        <form class="card" asp-action="@Model.Accion" asp-route-nroEquipo="@Model.NroEquipo" method="post" id="f-diagnostico" novalidate aria-labelledby="f-diagnostico-titulo">
+            <div class="card-header">
+                <div><h2 class="card-title" id="f-diagnostico-titulo">Resultado de la evaluación</h2></div>
+            </div>
+            <div class="card-body">
+                <div class="stack" style="gap:16px">
+                    <partial name="_ResumenErrores" />
+
+                    <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                    <div class="form-grid">
+                        <div class="field span-2">
+                            <label class="form-label" for="DictamenTecnico">Dictamen técnico@Html.Raw(etiquetaObligatorio)</label>
+                            <div class="select">
+                                <select asp-for="DictamenTecnico" class="form-select" asp-items="Html.GetEnumSelectList<DictamenTecnico>()">
+                                    <option value="">Seleccionar dictamen</option>
+                                </select>
+                                <partial name="_Icon" model="@("chevron-down")" />
+                            </div>
+                            <span asp-validation-for="DictamenTecnico"></span>
+                        </div>
+
+                        <div class="field span-2">
+                            <label class="form-label" for="DetalleFallas">Fallas detectadas</label>
+                            <textarea asp-for="DetalleFallas" class="form-control" rows="3" maxlength="500" aria-describedby="DetalleFallas-hint"></textarea>
+                            <div class="form-text" id="DetalleFallas-hint">Obligatorio si el dictamen es Necesita reparación o No recuperable.</div>
+                            <span asp-validation-for="DetalleFallas"></span>
+                        </div>
+
+                        <div class="field span-2">
+                            <label class="form-label" for="DetalleReparacionesRealizadas">Detalle de reparación@(Model.RequiereReparaciones ? Html.Raw(etiquetaObligatorio) : null)</label>
+                            <textarea asp-for="DetalleReparacionesRealizadas" class="form-control" rows="3" maxlength="500"></textarea>
+                            <span asp-validation-for="DetalleReparacionesRealizadas"></span>
+                        </div>
+
+                        <div class="field span-2">
+                            <label class="form-label" for="Observaciones">Observaciones</label>
+                            <textarea asp-for="Observaciones" class="form-control" rows="3" maxlength="500"></textarea>
+                            <span asp-validation-for="Observaciones"></span>
+                        </div>
+
+                        <h3 class="span-2 sec-title">Características verificadas</h3>
+
+                        <div class="field">
+                            <label class="form-label" for="Procesador">Procesador</label>
+                            <input asp-for="Procesador" class="form-control" maxlength="100" aria-describedby="Procesador-hint" />
+                            @if (!string.IsNullOrWhiteSpace(Model.ProcesadorDeclarado))
+                            {
+                                <div class="form-text" id="Procesador-hint">Declarado por el donante: @Model.ProcesadorDeclarado</div>
+                            }
+                            <span asp-validation-for="Procesador"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="MemoriaRam">Memoria RAM</label>
+                            <input asp-for="MemoriaRam" class="form-control" maxlength="30" aria-describedby="MemoriaRam-hint" />
+                            @if (!string.IsNullOrWhiteSpace(Model.MemoriaRamDeclarada))
+                            {
+                                <div class="form-text" id="MemoriaRam-hint">Declarada por el donante: @Model.MemoriaRamDeclarada</div>
+                            }
+                            <span asp-validation-for="MemoriaRam"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="Almacenamiento">Almacenamiento</label>
+                            <input asp-for="Almacenamiento" class="form-control" maxlength="30" aria-describedby="Almacenamiento-hint" />
+                            @if (!string.IsNullOrWhiteSpace(Model.AlmacenamientoDeclarado))
+                            {
+                                <div class="form-text" id="Almacenamiento-hint">Declarado por el donante: @Model.AlmacenamientoDeclarado</div>
+                            }
+                            <span asp-validation-for="Almacenamiento"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="TamanoPantalla">Tamaño de pantalla</label>
+                            <input asp-for="TamanoPantalla" class="form-control" maxlength="30" />
+                            <span asp-validation-for="TamanoPantalla"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="EstadoBateria">Estado de la batería</label>
+                            <input asp-for="EstadoBateria" class="form-control" maxlength="100" />
+                            <span asp-validation-for="EstadoBateria"></span>
+                        </div>
+                        <div class="field span-2">
+                            <label class="form-label" for="Otros">Otros datos</label>
+                            <textarea asp-for="Otros" class="form-control" rows="2" maxlength="300"></textarea>
+                            <span asp-validation-for="Otros"></span>
+                        </div>
+
+                        <h3 class="span-2 sec-title">Fotos del equipo</h3>
+
+                        <div class="field span-2">
+                            <label class="form-label" for="FotosDiagnostico">Fotos</label>
+                            <input id="FotosDiagnostico" type="file" class="form-control" disabled aria-describedby="FotosDiagnostico-hint" />
+                            @* TODO: habilitar la carga de fotos cuando se defina el almacenamiento de archivos *@
+                            <div class="form-text" id="FotosDiagnostico-hint">La carga de fotos todavía no está disponible.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-secondary btn-lg" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">@Model.TextoGuardar</button>
+            </div>
+        </form>
+
+        <div class="stack">
+            <section class="card">
+                <div class="card-header">
+                    <div><h2 class="card-title">Equipo declarado</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Tipo de equipo</dt>
+                        <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
+                        <dt>Marca y modelo</dt>
+                        <dd>@Model.MarcaYModelo</dd>
+                        <dt>Estado declarado</dt>
+                        <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
+                        <dt>Observaciones del donante</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(Model.ObservacionesDonante) ? "—" : Model.ObservacionesDonante)</dd>
+                    </dl>
+                </div>
+            </section>
+
+            @if (Model.DiagnosticoVigente is not null)
+            {
+                <section class="card">
+                    <div class="card-header">
+                        <div><h2 class="card-title">Diagnóstico vigente</h2></div>
+                    </div>
+                    <div class="card-body">
+                        <dl class="dl">
+                            <dt>Diagnóstico</dt>
+                            <dd><a class="mono" asp-action="Detalle" asp-route-id="@Model.DiagnosticoVigente.NroDiagnostico">@Model.DiagnosticoVigente.CodigoDiagnostico</a></dd>
+                            <dt>Tipo</dt>
+                            <dd>@Html.DisplayFor(m => m.DiagnosticoVigente!.TipoDiagnostico)</dd>
+                            <dt>Fecha</dt>
+                            <dd>@Model.DiagnosticoVigente.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
+                            <dt>Dictamen técnico</dt>
+                            <dd><partial name="_DictamenBadge" model="Model.DiagnosticoVigente.DictamenTecnico" /></dd>
+                        </dl>
+                    </div>
+                </section>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}

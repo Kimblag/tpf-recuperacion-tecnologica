@@ -1,0 +1,26 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos.NoDisponibleViewModel
+@{
+    ViewData["Title"] = "Diagnóstico no disponible";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-controller="Equipos" asp-action="Index">Equipos</a></li>
+    <li aria-current="page">Diagnóstico</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Diagnóstico no disponible</h1></div>
+            <p class="page-sub">Equipo <span class="mono">@Model.NroEquipo.ToString("D6")</span></p>
+        </div>
+    </div>
+
+    <div class="state">
+        <span class="state-ic"><partial name="_Icon" model="@("alert")" /></span>
+        <h3>No se puede diagnosticar este equipo</h3>
+        <p>@Model.Mensaje</p>
+        <a class="btn btn-secondary" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al equipo</span></a>
+    </div>
+</div>
