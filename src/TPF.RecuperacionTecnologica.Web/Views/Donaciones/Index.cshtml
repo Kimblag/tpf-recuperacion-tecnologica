@@ -1,0 +1,106 @@
+﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.MisDonacionesViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Mis donaciones";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Mis donaciones</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Mis donaciones</h1></div>
+            <p class="page-sub">Equipos que registró para donar y su estado actual</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Mis donaciones">
+        <partial name="_AyudaEstadosDonacion" />
+
+        <form class="filters" role="search" method="get" asp-action="Index">
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de equipo" />
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoEquipo>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("gift")" /></span>
+                    <h3>Todavía no registró donaciones</h3>
+                    <p>Cuando registre un equipo para donar aparecerá en esta lista.</p>
+                    <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Mis donaciones</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Marca y modelo</th>
+                                <th scope="col">Condición declarada</th>
+                                <th scope="col">Registro</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Equipo"><a class="mono" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></td>
+                                    <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
+                                    <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
+                                    <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
+                                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-foot">
+                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
+                    <nav aria-label="Paginación">
+                        <div class="pagination">
+                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
+                            <button type="button" class="page-btn" aria-current="page">1</button>
+                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
+                        </div>
+                    </nav>
+                </div>
+            }
+        </div>
+    </section>
+</div>
