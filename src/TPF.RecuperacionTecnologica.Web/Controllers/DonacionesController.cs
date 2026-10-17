@@ -53,11 +53,23 @@ public class DonacionesController : Controller
     public async Task<IActionResult> Detalle(int id)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var donacion = identityUserId is null
-            ? null
-            : await _donacionService.ObtenerDetalleAsync(identityUserId, id);
 
-        return donacion is null ? NotFound() : View(donacion);
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var donacion = await _donacionService.ObtenerDetalleAsync(identityUserId, id);
+
+            return donacion is null ? NotFound() : View(donacion);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el detalle de la donación {NroEquipo}", id);
+            return View("DetalleError");
+        }
     }
 
     [HttpGet]

@@ -27,3 +27,48 @@ document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (elemen
     } catch (error) {
     }
 })();
+
+(function () {
+    var indicador = document.getElementById('indicador-carga');
+
+    if (!indicador) return;
+
+    var temporizador = null;
+    var cierre = null;
+
+    function mostrar() {
+        indicador.hidden = false;
+        cierre = setTimeout(ocultar, 10000);
+    }
+
+    function ocultar() {
+        clearTimeout(temporizador);
+        clearTimeout(cierre);
+        temporizador = null;
+        indicador.hidden = true;
+    }
+
+    function programar() {
+        if (temporizador === null) {
+            temporizador = setTimeout(mostrar, 300);
+        }
+    }
+
+    document.addEventListener('click', function (evento) {
+        if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
+
+        var enlace = evento.target.closest('a[href]');
+
+        if (!enlace || enlace.target || enlace.hasAttribute('download') || enlace.hasAttribute('data-bs-toggle')) return;
+        if (enlace.origin !== location.origin) return;
+        if (enlace.pathname === location.pathname && enlace.search === location.search && enlace.hash) return;
+
+        programar();
+    });
+
+    document.addEventListener('submit', function (evento) {
+        if (!evento.defaultPrevented) programar();
+    });
+
+    window.addEventListener('pageshow', ocultar);
+})();

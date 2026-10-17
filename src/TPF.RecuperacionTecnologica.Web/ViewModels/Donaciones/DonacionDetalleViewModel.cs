@@ -23,8 +23,6 @@ public class DonacionDetalleViewModel : DonacionFilaViewModel
 
     public IReadOnlyList<HitoViewModel> Historial { get; set; } = [];
 
-    public bool PuedeModificarse => EstadoEquipo == EstadoEquipo.PendienteRecepcion;
-
     public bool EspecificacionesVerificadas { get; set; }
 
     public bool TieneEspecificaciones =>

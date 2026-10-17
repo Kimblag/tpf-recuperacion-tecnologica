@@ -190,6 +190,11 @@
                                     <td data-label="Estado"><partial name="_PistaEstadoDonacion" model="fila.EstadoEquipo" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                        @if (fila.PuedeModificarse)
+                                        {
+                                            <a class="btn btn-ghost btn-sm btn-icon" asp-action="Editar" asp-route-id="@fila.NroEquipo" aria-label="Editar equipo @fila.CodigoEquipo" title="Editar"><partial name="_Icon" model="@("edit")" /></a>
+                                            <button type="button" class="btn btn-ghost btn-sm btn-icon" data-bs-toggle="modal" data-bs-target="#modal-cancelar-lista" data-nro="@fila.NroEquipo" data-codigo="@fila.CodigoEquipo" data-equipo="@fila.MarcaYModelo" aria-label="Cancelar donación del equipo @fila.CodigoEquipo" title="Cancelar donación"><partial name="_Icon" model="@("x")" /></button>
+                                        }
                                     </td>
                                 </tr>
                             }
@@ -207,7 +212,13 @@
     </section>
 </div>
 
+@if (Model.Filas.Any(f => f.PuedeModificarse))
+{
+    <partial name="_ModalCancelarLista" />
+}
+
 @section Scripts {
     <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
     <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+    <script src="~/js/cancelar-donacion-lista.js" asp-append-version="true"></script>
 }

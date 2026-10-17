@@ -12,10 +12,12 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IInicioService _inicioService;
+    private readonly ILogger<HomeController> _logger;
 
-    public HomeController(IInicioService inicioService)
+    public HomeController(IInicioService inicioService, ILogger<HomeController> logger)
     {
         _inicioService = inicioService;
+        _logger = logger;
     }
 
     public async Task<IActionResult> Index()
@@ -26,11 +28,23 @@ public class HomeController : Controller
         }
 
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var inicio = identityUserId is null
-            ? null
-            : await _inicioService.ObtenerInicioUsuarioAsync(identityUserId);
 
-        return inicio is null ? NotFound() : View("InicioUsuario", inicio);
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var inicio = await _inicioService.ObtenerInicioUsuarioAsync(identityUserId);
+
+            return inicio is null ? NotFound() : View("InicioUsuario", inicio);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el inicio del usuario");
+            return View("InicioUsuarioError");
+        }
     }
 
     [AllowAnonymous]

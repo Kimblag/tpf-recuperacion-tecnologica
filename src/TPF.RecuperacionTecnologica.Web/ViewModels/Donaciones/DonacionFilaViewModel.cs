@@ -21,4 +21,6 @@ public class DonacionFilaViewModel
     public string CodigoEquipo => NroEquipo.ToString("D6");
 
     public string MarcaYModelo => $"{Marca} {Modelo}".Trim();
+
+    public bool PuedeModificarse => EstadoEquipo == EstadoEquipo.PendienteRecepcion;
 }

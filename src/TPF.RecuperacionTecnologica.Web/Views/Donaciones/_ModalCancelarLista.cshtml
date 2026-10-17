@@ -1,0 +1,19 @@
+<div class="modal fade" id="modal-cancelar-lista" tabindex="-1" aria-labelledby="modal-cancelar-lista-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" asp-action="Cancelar" method="post" novalidate>
+            <input type="hidden" name="NroEquipo" />
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-cancelar-lista-titulo"><partial name="_Icon" model="@("alert")" />Cancelar donación</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <div class="modal-body">
+                <p>Se cancelará la donación del equipo <span class="mono" data-cancelar-codigo></span> (<span data-cancelar-equipo></span>).</p>
+                <p>Esta acción no se puede deshacer. Se podrá registrar una nueva donación cuando se quiera.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                <button type="submit" class="btn btn-danger">Cancelar donación</button>
+            </div>
+        </form>
+    </div>
+</div>
