@@ -1,9 +1,20 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos
 @{
     ViewData["Title"] = "Pendientes de diagnóstico";
 
-    Func<int, string?> sinEnlace = _ => null;
+    Func<int, string?> enlacePagina = pagina => Url.Action("Pendientes", new
+    {
+        Busqueda = Model.Busqueda,
+        Estado = Model.Estado,
+        Tipo = Model.Tipo,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
+
+    var estadosPendientes = Html.GetEnumSelectList<EstadoEquipo>()
+        .Where(i => i.Value == ((int)EstadoEquipo.PendienteRecepcion).ToString() || i.Value == ((int)EstadoEquipo.EnReparacion).ToString());
 }
 
 @section Migas {
@@ -16,7 +27,7 @@
     <div class="page-head">
         <div>
             <div class="h-id"><h1 tabindex="-1">Pendientes de diagnóstico</h1></div>
-            <p class="page-sub">Equipos que todavía no tienen evaluación técnica</p>
+            <p class="page-sub">Equipos que esperan una evaluación técnica, del más antiguo al más reciente</p>
         </div>
     </div>
 
@@ -34,6 +45,22 @@
                     <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
                         <option value="">Todos</option>
                     </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="estadosPendientes">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter d-md-none">
+                <label for="Orden">Ordenar por</label>
+                <div class="select">
+                    <select asp-for="Orden" class="form-select sm" asp-items="Html.GetEnumSelectList<OrdenEquipo>()"></select>
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
             </div>
@@ -69,8 +96,8 @@
             }
             else
             {
-                <partial name="_TablaEquipos" model="@((Model.Filas, true))" />
-                <partial name="_Paginador" model="@((1, 1, 1, Model.Filas.Count, Model.Total, sinEnlace))" />
+                <partial name="_TablaEquipos" model="@((Model.Filas, true, Model, "Pendientes"))" />
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
 

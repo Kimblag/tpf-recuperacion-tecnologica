@@ -6,7 +6,6 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Home;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
-using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
@@ -25,12 +24,12 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         if (!User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
         {
-            return User.IsInRole(nameof(RolPersonal.Tecnico)) ? View("InicioTecnico", InicioTecnicoDeEjemplo()) : View();
+            return User.IsInRole(nameof(RolPersonal.Tecnico)) ? await InicioTecnicoAsync(identityUserId) : View();
         }
-
-        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (identityUserId is null)
         {
@@ -50,43 +49,25 @@ public class HomeController : Controller
         }
     }
 
-    private static TecnicoInicioViewModel InicioTecnicoDeEjemplo()
+    private async Task<IActionResult> InicioTecnicoAsync(string? identityUserId)
     {
-        // TODO: reemplazar por el resumen real del servicio de inicio del Técnico
-        return new TecnicoInicioViewModel
+        if (identityUserId is null)
         {
-            PendientesDeDiagnostico = 4,
-            FechaPendienteMasAntiguo = new DateTime(2026, 9, 15),
-            EnReparacion = 18,
-            DiagnosticosDelMes = 9,
-            EquiposDisponibles = 42,
-            Pendientes =
-            [
-                Pendiente(130, TipoEquipo.Notebook, "Dell", "Latitude 3410", EstadoInicialDeclarado.ConFallas, new DateTime(2026, 9, 15)),
-                Pendiente(127, TipoEquipo.Notebook, "Lenovo", "ThinkPad T440", EstadoInicialDeclarado.ConFallas, new DateTime(2026, 9, 17)),
-                Pendiente(133, TipoEquipo.Monitor, "LG", "22MK430", EstadoInicialDeclarado.Funcional, new DateTime(2026, 9, 18)),
-                Pendiente(136, TipoEquipo.Periferico, "Logitech", "K120", EstadoInicialDeclarado.Funcional, new DateTime(2026, 9, 19))
-            ],
-            ActividadReciente =
-            [
-                new() { Icono = "wrench", TextoAntes = "Diagnóstico ", Codigo = "DIA-001321", TextoDespues = " registrado", Detalle = "Equipo 000132 · 18/09/2026", EsExito = true },
-                new() { Icono = "edit", TextoAntes = "Rectificación ", Codigo = "DIA-001312", TextoDespues = " guardada", Detalle = "Equipo 000131 · 08/08/2026" },
-                new() { Icono = "wrench", TextoAntes = "Segundo diagnóstico ", Codigo = "DIA-001232", TextoDespues = " registrado", Detalle = "Equipo 000123 · 31/08/2026", EsExito = true }
-            ]
-        };
-    }
+            return NotFound();
+        }
 
-    private static EquipoFilaViewModel Pendiente(
-        int nroEquipo, TipoEquipo tipo, string marca, string modelo, EstadoInicialDeclarado condicion, DateTime fecha) => new()
+        try
         {
-            NroEquipo = nroEquipo,
-            TipoEquipo = tipo,
-            Marca = marca,
-            Modelo = modelo,
-            EstadoInicialDeclarado = condicion,
-            FechaRegistro = fecha,
-            EstadoEquipo = EstadoEquipo.PendienteRecepcion
-        };
+            var inicio = await _inicioService.ObtenerInicioTecnicoAsync(identityUserId);
+
+            return inicio is null ? NotFound() : View("InicioTecnico", inicio);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el inicio del Técnico");
+            return View("InicioTecnico", new TecnicoInicioViewModel { ErrorAlCargar = true });
+        }
+    }
 
     [AllowAnonymous]
     public IActionResult Privacy()

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
@@ -8,6 +9,13 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
 public class DiagnosticosController : Controller
 {
+    private readonly IEquipoConsultaService _equipoConsultaService;
+
+    public DiagnosticosController(IEquipoConsultaService equipoConsultaService)
+    {
+        _equipoConsultaService = equipoConsultaService;
+    }
+
     private sealed record EquipoEjemplo(
         TipoEquipo Tipo, string Marca, string Modelo, EstadoEquipo Estado, EstadoInicialDeclarado Condicion);
 
@@ -98,42 +106,44 @@ public class DiagnosticosController : Controller
 
     [HttpGet]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Registrar(int nroEquipo) => MostrarFormulario(nroEquipo, TipoDiagnostico.Inicial);
+    public Task<IActionResult> Registrar(int nroEquipo) => MostrarFormularioAsync(nroEquipo, TipoDiagnostico.Inicial);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Registrar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
-        Guardar(nroEquipo, TipoDiagnostico.Inicial, formulario, "El diagnóstico se registró correctamente.");
+    public Task<IActionResult> Registrar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
+        GuardarAsync(nroEquipo, TipoDiagnostico.Inicial, formulario, "El diagnóstico se registró correctamente.");
 
     [HttpGet]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Segundo(int nroEquipo) => MostrarFormulario(nroEquipo, TipoDiagnostico.Segundo);
+    public Task<IActionResult> Segundo(int nroEquipo) => MostrarFormularioAsync(nroEquipo, TipoDiagnostico.Segundo);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Segundo(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
-        Guardar(nroEquipo, TipoDiagnostico.Segundo, formulario, "El segundo diagnóstico se registró correctamente.");
+    public Task<IActionResult> Segundo(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
+        GuardarAsync(nroEquipo, TipoDiagnostico.Segundo, formulario, "El segundo diagnóstico se registró correctamente.");
 
     [HttpGet]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Rectificar(int nroEquipo) => MostrarFormulario(nroEquipo, TipoDiagnostico.Rectificacion);
+    public Task<IActionResult> Rectificar(int nroEquipo) => MostrarFormularioAsync(nroEquipo, TipoDiagnostico.Rectificacion);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Rectificar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
-        Guardar(nroEquipo, TipoDiagnostico.Rectificacion, formulario, "La rectificación se guardó correctamente.");
+    public Task<IActionResult> Rectificar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
+        GuardarAsync(nroEquipo, TipoDiagnostico.Rectificacion, formulario, "La rectificación se guardó correctamente.");
 
-    private IActionResult MostrarFormulario(int nroEquipo, TipoDiagnostico tipo)
+    private async Task<IActionResult> MostrarFormularioAsync(int nroEquipo, TipoDiagnostico tipo)
     {
-        if (!EquiposDeEjemplo.TryGetValue(nroEquipo, out var equipo))
+        var equipo = await _equipoConsultaService.ObtenerDetalleAsync(nroEquipo);
+
+        if (equipo is null)
         {
             return NotFound();
         }
 
-        var redireccion = RedirigirSiCorresponde(nroEquipo, equipo.Estado, tipo, out var bloqueo);
+        var redireccion = RedirigirSiCorresponde(nroEquipo, equipo.EstadoEquipo, tipo, out var bloqueo);
 
         if (redireccion is not null || bloqueo is not null)
         {
@@ -144,26 +154,33 @@ public class DiagnosticosController : Controller
 
         if (tipo == TipoDiagnostico.Rectificacion && formulario.DiagnosticoVigente is not null)
         {
-            // TODO: precargar los datos reales del diagnóstico vigente
-            formulario.DictamenTecnico = formulario.DiagnosticoVigente.DictamenTecnico;
-            formulario.DetalleFallas = "Falla de ejemplo detectada en la evaluación.";
-            formulario.Observaciones = "Observación de ejemplo.";
-            formulario.Procesador = "Intel Core i5";
-            formulario.MemoriaRam = "8 GB";
-            formulario.Almacenamiento = "256 GB SSD";
+            var vigente = formulario.DiagnosticoVigente;
+
+            formulario.DictamenTecnico = vigente.DictamenTecnico;
+            formulario.DetalleFallas = vigente.DetalleFallas;
+            formulario.DetalleReparacionesRealizadas = vigente.DetalleReparacionesRealizadas;
+            formulario.Observaciones = vigente.Observaciones;
+            formulario.Procesador = vigente.Procesador;
+            formulario.MemoriaRam = vigente.MemoriaRam;
+            formulario.Almacenamiento = vigente.Almacenamiento;
+            formulario.TamanoPantalla = vigente.TamanoPantalla;
+            formulario.EstadoBateria = vigente.EstadoBateria;
+            formulario.Otros = vigente.Otros;
         }
 
         return View("Formulario", formulario);
     }
 
-    private IActionResult Guardar(int nroEquipo, TipoDiagnostico tipo, DiagnosticoFormularioViewModel formulario, string mensaje)
+    private async Task<IActionResult> GuardarAsync(int nroEquipo, TipoDiagnostico tipo, DiagnosticoFormularioViewModel formulario, string mensaje)
     {
-        if (!EquiposDeEjemplo.TryGetValue(nroEquipo, out var equipo))
+        var equipo = await _equipoConsultaService.ObtenerDetalleAsync(nroEquipo);
+
+        if (equipo is null)
         {
             return NotFound();
         }
 
-        var redireccion = RedirigirSiCorresponde(nroEquipo, equipo.Estado, tipo, out var bloqueo);
+        var redireccion = RedirigirSiCorresponde(nroEquipo, equipo.EstadoEquipo, tipo, out var bloqueo);
 
         if (redireccion is not null || bloqueo is not null)
         {
@@ -239,20 +256,20 @@ public class DiagnosticosController : Controller
             : RedirectToAction(permitidas[0], new { nroEquipo });
     }
 
-    private static DiagnosticoFormularioViewModel ArmarFormulario(int nroEquipo, EquipoEjemplo equipo, TipoDiagnostico tipo) => new()
+    private static DiagnosticoFormularioViewModel ArmarFormulario(int nroEquipo, EquipoDetalleTecnicoViewModel equipo, TipoDiagnostico tipo) => new()
     {
         NroEquipo = nroEquipo,
         TipoDiagnostico = tipo,
-        TipoEquipo = equipo.Tipo,
+        TipoEquipo = equipo.TipoEquipo,
         Marca = equipo.Marca,
         Modelo = equipo.Modelo,
-        EstadoInicialDeclarado = equipo.Condicion,
-        EstadoEquipo = equipo.Estado,
-        ObservacionesDonante = "Observaciones de ejemplo del donante.",
-        ProcesadorDeclarado = "Intel Core i5",
-        MemoriaRamDeclarada = "8 GB",
-        AlmacenamientoDeclarado = "256 GB SSD",
-        DiagnosticoVigente = DatosDeEjemplo.FirstOrDefault(d => d.NroEquipo == nroEquipo && d.EsVigente)
+        EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
+        EstadoEquipo = equipo.EstadoEquipo,
+        ObservacionesDonante = equipo.Observaciones,
+        ProcesadorDeclarado = equipo.Procesador,
+        MemoriaRamDeclarada = equipo.MemoriaRam,
+        AlmacenamientoDeclarado = equipo.Almacenamiento,
+        DiagnosticoVigente = equipo.DiagnosticoVigente
     };
 
     private static DiagnosticoFilaViewModel Diagnostico(

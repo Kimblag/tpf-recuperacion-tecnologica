@@ -53,7 +53,7 @@
                 }
                 else
                 {
-                    <partial name="~/Views/Equipos/_TablaEquipos.cshtml" model="@((Model.Pendientes, true))" />
+                    <partial name="~/Views/Equipos/_TablaEquipos.cshtml" model="@((Model.Pendientes, true, (TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel?)null, "Pendientes"))" />
                 }
             </div>
         </section>

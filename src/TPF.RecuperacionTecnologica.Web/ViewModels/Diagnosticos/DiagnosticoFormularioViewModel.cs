@@ -72,7 +72,7 @@ public class DiagnosticoFormularioViewModel
 
     public string? OtrosDeclarado { get; set; }
 
-    public DiagnosticoFilaViewModel? DiagnosticoVigente { get; set; }
+    public DiagnosticoVigenteViewModel? DiagnosticoVigente { get; set; }
 
     public string CodigoEquipo => NroEquipo.ToString("D6");
 

@@ -1,9 +1,17 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos
 @{
     ViewData["Title"] = "Equipos";
 
-    Func<int, string?> sinEnlace = _ => null;
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Estado = Model.Estado,
+        Tipo = Model.Tipo,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
 }
 
 @section Migas {
@@ -48,6 +56,13 @@
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
             </div>
+            <div class="filter d-md-none">
+                <label for="Orden">Ordenar por</label>
+                <div class="select">
+                    <select asp-for="Orden" class="form-select sm" asp-items="Html.GetEnumSelectList<OrdenEquipo>()"></select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
             <div class="filter" style="min-width:0">
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
             </div>
@@ -80,8 +95,8 @@
             }
             else
             {
-                <partial name="_TablaEquipos" model="@((Model.Filas, false))" />
-                <partial name="_Paginador" model="@((1, 1, 1, Model.Filas.Count, Model.Total, sinEnlace))" />
+                <partial name="_TablaEquipos" model="@((Model.Filas, false, Model, "Index"))" />
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
 
