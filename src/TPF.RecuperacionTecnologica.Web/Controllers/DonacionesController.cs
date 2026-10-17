@@ -10,10 +10,12 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 public class DonacionesController : Controller
 {
     private readonly IDonacionService _donacionService;
+    private readonly ILogger<DonacionesController> _logger;
 
-    public DonacionesController(IDonacionService donacionService)
+    public DonacionesController(IDonacionService donacionService, ILogger<DonacionesController> logger)
     {
         _donacionService = donacionService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -27,9 +29,17 @@ public class DonacionesController : Controller
             return NotFound();
         }
 
-        filtros.Filas = await _donacionService.ListarAsync(
-            identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion);
-        filtros.Total = filtros.Filas.Count;
+        try
+        {
+            filtros.Filas = await _donacionService.ListarAsync(
+                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Tipo, filtros.Condicion);
+            filtros.Total = filtros.Filas.Count;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el listado de donaciones");
+            filtros.ErrorAlCargar = true;
+        }
 
         return View(filtros);
     }

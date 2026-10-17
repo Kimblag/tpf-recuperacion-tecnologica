@@ -15,7 +15,7 @@
             <div class="h-id"><h1 tabindex="-1">Mis donaciones</h1></div>
             <p class="page-sub">Equipos que registró para donar y su estado actual</p>
         </div>
-        @if (Model.Filas.Count > 0 || Model.HayFiltros)
+        @if (Model.Filas.Count > 0 || Model.HayFiltros || Model.ErrorAlCargar)
         {
             <div class="page-actions">
                 <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Nueva donación</span></a>
@@ -67,7 +67,16 @@
         </form>
 
         <div class="card-body flush">
-            @if (Model.Filas.Count == 0 && Model.HayFiltros)
+            @if (Model.ErrorAlCargar)
+            {
+                <div class="state err" role="alert">
+                    <span class="state-ic"><partial name="_Icon" model="@("alert")" /></span>
+                    <h3>No se pudo cargar la información</h3>
+                    <p>Ocurrió un error al obtener sus donaciones. Intente nuevamente en unos minutos.</p>
+                    <a class="btn btn-secondary btn-sm" href="@(Context.Request.Path + Context.Request.QueryString)"><partial name="_Icon" model="@("refresh")" /><span>Reintentar</span></a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>

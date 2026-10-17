@@ -22,6 +22,8 @@ public class MisDonacionesViewModel
 
     public int Total { get; set; }
 
+    public bool ErrorAlCargar { get; set; }
+
     public bool HayFiltros =>
         !string.IsNullOrWhiteSpace(Busqueda)
         || Estado is not null
