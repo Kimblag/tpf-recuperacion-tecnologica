@@ -103,8 +103,8 @@ public class DiagnosticosController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Registrar(int nroEquipo, DiagnosticoFormularioViewModel modelo) =>
-        Guardar(nroEquipo, TipoDiagnostico.Inicial, modelo, "El diagnóstico se registró correctamente.");
+    public IActionResult Registrar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
+        Guardar(nroEquipo, TipoDiagnostico.Inicial, formulario, "El diagnóstico se registró correctamente.");
 
     [HttpGet]
     [Authorize(Policy = "PersonalInterno")]
@@ -113,8 +113,8 @@ public class DiagnosticosController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Segundo(int nroEquipo, DiagnosticoFormularioViewModel modelo) =>
-        Guardar(nroEquipo, TipoDiagnostico.Segundo, modelo, "El segundo diagnóstico se registró correctamente.");
+    public IActionResult Segundo(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
+        Guardar(nroEquipo, TipoDiagnostico.Segundo, formulario, "El segundo diagnóstico se registró correctamente.");
 
     [HttpGet]
     [Authorize(Policy = "PersonalInterno")]
@@ -123,8 +123,8 @@ public class DiagnosticosController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "PersonalInterno")]
-    public IActionResult Rectificar(int nroEquipo, DiagnosticoFormularioViewModel modelo) =>
-        Guardar(nroEquipo, TipoDiagnostico.Rectificacion, modelo, "La rectificación se guardó correctamente.");
+    public IActionResult Rectificar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
+        Guardar(nroEquipo, TipoDiagnostico.Rectificacion, formulario, "La rectificación se guardó correctamente.");
 
     private IActionResult MostrarFormulario(int nroEquipo, TipoDiagnostico tipo)
     {
@@ -140,23 +140,23 @@ public class DiagnosticosController : Controller
             return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo! });
         }
 
-        var modelo = ArmarFormulario(nroEquipo, equipo, tipo);
+        var formulario = ArmarFormulario(nroEquipo, equipo, tipo);
 
-        if (tipo == TipoDiagnostico.Rectificacion && modelo.DiagnosticoVigente is not null)
+        if (tipo == TipoDiagnostico.Rectificacion && formulario.DiagnosticoVigente is not null)
         {
             // TODO: precargar los datos reales del diagnóstico vigente
-            modelo.DictamenTecnico = modelo.DiagnosticoVigente.DictamenTecnico;
-            modelo.DetalleFallas = "Falla de ejemplo detectada en la evaluación.";
-            modelo.Observaciones = "Observación de ejemplo.";
-            modelo.Procesador = "Intel Core i5";
-            modelo.MemoriaRam = "8 GB";
-            modelo.Almacenamiento = "256 GB SSD";
+            formulario.DictamenTecnico = formulario.DiagnosticoVigente.DictamenTecnico;
+            formulario.DetalleFallas = "Falla de ejemplo detectada en la evaluación.";
+            formulario.Observaciones = "Observación de ejemplo.";
+            formulario.Procesador = "Intel Core i5";
+            formulario.MemoriaRam = "8 GB";
+            formulario.Almacenamiento = "256 GB SSD";
         }
 
-        return View("Formulario", modelo);
+        return View("Formulario", formulario);
     }
 
-    private IActionResult Guardar(int nroEquipo, TipoDiagnostico tipo, DiagnosticoFormularioViewModel modelo, string mensaje)
+    private IActionResult Guardar(int nroEquipo, TipoDiagnostico tipo, DiagnosticoFormularioViewModel formulario, string mensaje)
     {
         if (!EquiposDeEjemplo.TryGetValue(nroEquipo, out var equipo))
         {
@@ -170,35 +170,35 @@ public class DiagnosticosController : Controller
             return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo! });
         }
 
-        var conFallas = modelo.DictamenTecnico is DictamenTecnico.NecesitaReparacion or DictamenTecnico.NoRecuperable;
+        var conFallas = formulario.DictamenTecnico is DictamenTecnico.NecesitaReparacion or DictamenTecnico.NoRecuperable;
 
-        if (conFallas && string.IsNullOrWhiteSpace(modelo.DetalleFallas))
+        if (conFallas && string.IsNullOrWhiteSpace(formulario.DetalleFallas))
         {
-            ModelState.AddModelError(nameof(modelo.DetalleFallas), "Las fallas detectadas son obligatorias para este dictamen.");
+            ModelState.AddModelError(nameof(formulario.DetalleFallas), "Las fallas detectadas son obligatorias para este dictamen.");
         }
 
-        if (tipo == TipoDiagnostico.Segundo && string.IsNullOrWhiteSpace(modelo.DetalleReparacionesRealizadas))
+        if (tipo == TipoDiagnostico.Segundo && string.IsNullOrWhiteSpace(formulario.DetalleReparacionesRealizadas))
         {
-            ModelState.AddModelError(nameof(modelo.DetalleReparacionesRealizadas), "El detalle de reparación es obligatorio en el segundo diagnóstico.");
+            ModelState.AddModelError(nameof(formulario.DetalleReparacionesRealizadas), "El detalle de reparación es obligatorio en el segundo diagnóstico.");
         }
 
         if (!ModelState.IsValid)
         {
             var contexto = ArmarFormulario(nroEquipo, equipo, tipo);
-            modelo.NroEquipo = contexto.NroEquipo;
-            modelo.TipoDiagnostico = contexto.TipoDiagnostico;
-            modelo.TipoEquipo = contexto.TipoEquipo;
-            modelo.Marca = contexto.Marca;
-            modelo.Modelo = contexto.Modelo;
-            modelo.EstadoInicialDeclarado = contexto.EstadoInicialDeclarado;
-            modelo.EstadoEquipo = contexto.EstadoEquipo;
-            modelo.ObservacionesDonante = contexto.ObservacionesDonante;
-            modelo.ProcesadorDeclarado = contexto.ProcesadorDeclarado;
-            modelo.MemoriaRamDeclarada = contexto.MemoriaRamDeclarada;
-            modelo.AlmacenamientoDeclarado = contexto.AlmacenamientoDeclarado;
-            modelo.DiagnosticoVigente = contexto.DiagnosticoVigente;
+            formulario.NroEquipo = contexto.NroEquipo;
+            formulario.TipoDiagnostico = contexto.TipoDiagnostico;
+            formulario.TipoEquipo = contexto.TipoEquipo;
+            formulario.Marca = contexto.Marca;
+            formulario.Modelo = contexto.Modelo;
+            formulario.EstadoInicialDeclarado = contexto.EstadoInicialDeclarado;
+            formulario.EstadoEquipo = contexto.EstadoEquipo;
+            formulario.ObservacionesDonante = contexto.ObservacionesDonante;
+            formulario.ProcesadorDeclarado = contexto.ProcesadorDeclarado;
+            formulario.MemoriaRamDeclarada = contexto.MemoriaRamDeclarada;
+            formulario.AlmacenamientoDeclarado = contexto.AlmacenamientoDeclarado;
+            formulario.DiagnosticoVigente = contexto.DiagnosticoVigente;
 
-            return View("Formulario", modelo);
+            return View("Formulario", formulario);
         }
 
         // TODO: reemplazar por el registro real del diagnóstico y la transición de estado del equipo
