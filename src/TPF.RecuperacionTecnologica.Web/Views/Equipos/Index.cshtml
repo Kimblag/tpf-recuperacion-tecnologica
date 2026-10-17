@@ -1,0 +1,97 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Equipos";
+
+    Func<int, string?> sinEnlace = _ => null;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Equipos</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Equipos</h1></div>
+            <p class="page-sub">Equipos recuperados y su estado técnico</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Pendientes"><partial name="_Icon" model="@("clock")" /><span>Pendientes de diagnóstico</span></a>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Equipos" data-listado data-filas-carga="6">
+        <partial name="_AyudaEstadosEquipo" />
+
+        <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Número, marca o modelo" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter">
+                <label for="Tipo">Tipo de equipo</label>
+                <div class="select">
+                    <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoEquipo>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener los equipos. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No se encontraron equipos</h3>
+                    <p>Probar con otra búsqueda o quitar algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("laptop")" /></span>
+                    <h3>Todavía no hay equipos registrados</h3>
+                    <p>Los equipos aparecen acá cuando se registra una donación.</p>
+                </div>
+            }
+            else
+            {
+                <partial name="_TablaEquipos" model="@((Model.Filas, false))" />
+                <partial name="_Paginador" model="@((1, 1, 1, Model.Filas.Count, Model.Total, sinEnlace))" />
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+}

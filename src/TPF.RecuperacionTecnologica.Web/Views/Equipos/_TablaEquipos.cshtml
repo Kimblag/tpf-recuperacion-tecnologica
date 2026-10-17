@@ -1,0 +1,47 @@
+@model (IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoFilaViewModel> Filas, bool MostrarDiagnosticar)
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<div class="table-wrap">
+    <table class="table table-stack">
+        <caption class="visually-hidden">Equipos</caption>
+        <thead>
+            <tr>
+                <th scope="col">Equipo</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Marca y modelo</th>
+                <th scope="col">Condición declarada</th>
+                <th scope="col">Registro</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="col-actions">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fila in Model.Filas)
+            {
+                var urlDiagnosticar = Url.Action("Registrar", "Diagnosticos", new { nroEquipo = fila.NroEquipo });
+
+                <tr>
+                    <td data-label="Equipo"><span class="mono">@fila.CodigoEquipo</span></td>
+                    <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
+                    <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
+                    <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
+                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                    <td class="col-actions" data-label="Acciones">
+                        <a class="btn btn-ghost btn-sm" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                        @if (Model.MostrarDiagnosticar && fila.EstadoEquipo == EstadoEquipo.PendienteRecepcion)
+                        {
+                            if (urlDiagnosticar is not null)
+                            {
+                                <a class="btn btn-primary btn-sm" href="@urlDiagnosticar">Diagnosticar</a>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary btn-sm" disabled>Diagnosticar</button>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
