@@ -223,37 +223,36 @@ public class DiagnosticosController : Controller
             return View("Formulario", formulario);
         }
 
-        if (tipo is TipoDiagnostico.Inicial or TipoDiagnostico.Segundo)
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var codigoTecnico = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoTecnico is null)
         {
-            var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var codigoTecnico = identityUserId is null
-                ? null
-                : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
-
-            if (codigoTecnico is null)
-            {
-                return Forbid();
-            }
-
-            formulario.NroEquipo = nroEquipo;
-            var resultado = tipo == TipoDiagnostico.Inicial
-                ? await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario)
-                : await _diagnosticoService.RegistrarSegundoAsync(codigoTecnico.Value, formulario);
-
-            if (!resultado.Succeeded)
-            {
-                foreach (var error in resultado.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-
-                CompletarContexto(formulario, ArmarFormulario(nroEquipo, equipo, tipo));
-
-                return View("Formulario", formulario);
-            }
+            return Forbid();
         }
 
-        // TODO: reemplazar por el registro real de la rectificación
+        formulario.NroEquipo = nroEquipo;
+        var resultado = tipo switch
+        {
+            TipoDiagnostico.Inicial => await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario),
+            TipoDiagnostico.Segundo => await _diagnosticoService.RegistrarSegundoAsync(codigoTecnico.Value, formulario),
+            _ => await _diagnosticoService.RegistrarRectificacionAsync(codigoTecnico.Value, formulario)
+        };
+
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            CompletarContexto(formulario, ArmarFormulario(nroEquipo, equipo, tipo));
+
+            return View("Formulario", formulario);
+        }
+
         TempData["Mensaje"] = mensaje;
         return RedirectToAction("Detalle", "Equipos", new { id = nroEquipo });
     }
