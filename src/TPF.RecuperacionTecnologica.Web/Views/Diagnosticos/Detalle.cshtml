@@ -1,0 +1,123 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos.DiagnosticoDetalleViewModel
+@{
+    ViewData["Title"] = "Detalle de diagnóstico";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Diagnósticos</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Diagnóstico <span class="mono">@Model.CodigoDiagnostico</span></h1>
+                @if (Model.EsVigente)
+                {
+                    <partial name="_Badge" model="@(("Vigente", "ok"))" />
+                }
+                else
+                {
+                    <span class="tag">Histórico</span>
+                }
+            </div>
+            <p class="page-sub">@Html.DisplayFor(m => m.TipoDiagnostico) · @Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+            <a class="btn btn-secondary" asp-controller="Equipos" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>Historial del equipo</span></a>
+        </div>
+    </div>
+
+    <div class="grid-3-1">
+        <div class="stack">
+            <section class="card">
+                <div class="card-header">
+                    <div><h2 class="card-title">Datos del diagnóstico</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Número de equipo</dt>
+                        <dd><a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">@Model.CodigoEquipo</a></dd>
+                        <dt>Técnico</dt>
+                        <dd>@Model.Tecnico <span class="mono">(@Model.CodigoPersonal)</span></dd>
+                        <dt>Fecha de diagnóstico</dt>
+                        <dd>@Model.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
+                        <dt>Tipo de diagnóstico</dt>
+                        <dd>@Html.DisplayFor(m => m.TipoDiagnostico)</dd>
+                        @if (Model.NroDiagnosticoRectificado is not null)
+                        {
+                            <dt>Rectifica</dt>
+                            <dd><span class="mono">DIA-@Model.NroDiagnosticoRectificado.Value.ToString("D6")</span></dd>
+                        }
+                        @if (Model.NroDiagnosticoReemplazante is not null)
+                        {
+                            <dt>Reemplazado por</dt>
+                            <dd><span class="mono">DIA-@Model.NroDiagnosticoReemplazante.Value.ToString("D6")</span></dd>
+                        }
+                        <dt>Fallas detectadas</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(Model.DetalleFallas) ? "—" : Model.DetalleFallas)</dd>
+                        <dt>Detalle de reparación</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(Model.DetalleReparacionesRealizadas) ? "—" : Model.DetalleReparacionesRealizadas)</dd>
+                        <dt>Observaciones</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(Model.Observaciones) ? "—" : Model.Observaciones)</dd>
+                        <dt>Dictamen técnico</dt>
+                        <dd><partial name="_DictamenBadge" model="Model.DictamenTecnico" /></dd>
+                    </dl>
+                </div>
+            </section>
+        </div>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Características verificadas</h2>
+                    <p class="card-sub">Confirmadas por el técnico</p>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (Model.TieneEspecificaciones)
+                {
+                    <dl class="dl">
+                        @if (!string.IsNullOrWhiteSpace(Model.Procesador))
+                        {
+                            <dt>Procesador</dt>
+                            <dd>@Model.Procesador</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.MemoriaRam))
+                        {
+                            <dt>Memoria RAM</dt>
+                            <dd>@Model.MemoriaRam</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Almacenamiento))
+                        {
+                            <dt>Almacenamiento</dt>
+                            <dd>@Model.Almacenamiento</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.TamanoPantalla))
+                        {
+                            <dt>Tamaño de pantalla</dt>
+                            <dd>@Model.TamanoPantalla</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.EstadoBateria))
+                        {
+                            <dt>Estado de la batería</dt>
+                            <dd>@Model.EstadoBateria</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Otros))
+                        {
+                            <dt>Otros datos</dt>
+                            <dd>@Model.Otros</dd>
+                        }
+                    </dl>
+                }
+                else
+                {
+                    <p class="muted">No se verificaron características técnicas.</p>
+                }
+            </div>
+        </section>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+@model TPF.RecuperacionTecnologica.Web.Models.Enums.DictamenTecnico
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var texto = Html.GetEnumSelectList<DictamenTecnico>().First(i => i.Value == ((int)Model).ToString()).Text;
+
+    var variante = Model switch
+    {
+        DictamenTecnico.Funcional => "ok",
+        DictamenTecnico.NecesitaReparacion => "warn",
+        _ => "danger"
+    };
+}
+<partial name="_Badge" model="@((texto, variante))" />

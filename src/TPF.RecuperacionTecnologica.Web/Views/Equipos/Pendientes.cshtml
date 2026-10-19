@@ -1,0 +1,113 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos
+@{
+    ViewData["Title"] = "Pendientes de diagnóstico";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Pendientes", new
+    {
+        Busqueda = Model.Busqueda,
+        Estado = Model.Estado,
+        Tipo = Model.Tipo,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
+
+    var estadosPendientes = Html.GetEnumSelectList<EstadoEquipo>()
+        .Where(i => i.Value == ((int)EstadoEquipo.PendienteRecepcion).ToString() || i.Value == ((int)EstadoEquipo.EnReparacion).ToString());
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Equipos</a></li>
+    <li aria-current="page">Pendientes de diagnóstico</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Pendientes de diagnóstico</h1></div>
+            <p class="page-sub">Equipos que esperan una evaluación técnica, del más antiguo al más reciente</p>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Pendientes de diagnóstico" data-listado data-filas-carga="6">
+        <partial name="_AyudaEstadosEquipo" />
+
+        <form class="filters" role="search" method="get" asp-action="Pendientes" data-filtros-automaticos>
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Número, marca o modelo" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter">
+                <label for="Tipo">Tipo de equipo</label>
+                <div class="select">
+                    <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="estadosPendientes">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter d-md-none">
+                <label for="Orden">Ordenar por</label>
+                <div class="select">
+                    <select asp-for="Orden" class="form-select sm" asp-items="Html.GetEnumSelectList<OrdenEquipo>()"></select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Pendientes" data-muestra-carga>Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener los equipos. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No se encontraron equipos</h3>
+                    <p>Probar con otra búsqueda o quitar algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Pendientes" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("check-circle")" /></span>
+                    <h3>No hay equipos pendientes</h3>
+                    <p>Todos los equipos ya fueron evaluados.</p>
+                </div>
+            }
+            else
+            {
+                <partial name="_TablaEquipos" model="@((Model.Filas, true, Model, "Pendientes"))" />
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+}

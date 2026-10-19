@@ -1,0 +1,85 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Home.TecnicoInicioViewModel
+@{
+    ViewData["Title"] = "Inicio";
+
+    var chipPendientes = Model.FechaPendienteMasAntiguo is { } fecha ? $"Desde {fecha:dd/MM}" : "";
+    var claseChip = Model.PendientesDeDiagnostico > 0 ? "warn" : "";
+    var detallePendientes = Model.PendientesDeDiagnostico == 0 ? "Sin equipos en espera" : "Esperando el primer diagnóstico";
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Inicio</h1></div>
+            <p class="page-sub">Resumen del trabajo de diagnóstico técnico</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-controller="Equipos" asp-action="Index"><partial name="_Icon" model="@("laptop")" /><span>Ver equipos</span></a>
+            <a class="btn btn-primary" asp-controller="Equipos" asp-action="Pendientes"><partial name="_Icon" model="@("wrench")" /><span>Diagnosticar pendientes</span></a>
+        </div>
+    </div>
+
+    @if (Model.ErrorAlCargar)
+    {
+        <section class="card">
+            <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener el resumen. Se puede intentar de nuevo en unos minutos.")" />
+        </section>
+    }
+    else
+    {
+        <div class="g-metrics">
+            <partial name="_Metrica" model="@(("Pendientes de diagnóstico", "clock", "i-info", Model.PendientesDeDiagnostico.ToString(), chipPendientes, claseChip, detallePendientes))" />
+            <partial name="_Metrica" model="@(("En reparación", "wrench", "i-info", Model.EnReparacion.ToString(), "", "", "Esperando un segundo diagnóstico"))" />
+            <partial name="_Metrica" model="@(("Diagnósticos del mes", "clipboard", "i-ok", Model.DiagnosticosDelMes.ToString(), "", "", "Registrados por el Técnico"))" />
+            <partial name="_Metrica" model="@(("Equipos disponibles", "check-circle", "i-ok", Model.EquiposDisponibles.ToString(), "", "", "Listos para asignar"))" />
+        </div>
+
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Pendientes de diagnóstico</h2>
+                    <p class="card-sub">Los más antiguos primero</p>
+                </div>
+                <a class="link" asp-controller="Equipos" asp-action="Pendientes">Ver todos</a>
+            </div>
+            <div class="card-body flush">
+                @if (Model.Pendientes.Count == 0)
+                {
+                    <div class="state">
+                        <span class="state-ic"><partial name="_Icon" model="@("check-circle")" /></span>
+                        <h3>No hay equipos pendientes</h3>
+                        <p>Los equipos nuevos aparecen acá cuando se registra una donación.</p>
+                    </div>
+                }
+                else
+                {
+                    <partial name="~/Views/Equipos/_TablaEquipos.cshtml" model="@((Model.Pendientes, true, (TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel?)null, "Pendientes"))" />
+                }
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Actividad reciente</h2>
+                    <p class="card-sub">Últimos diagnósticos del Técnico</p>
+                </div>
+                <a class="link" asp-controller="Diagnosticos" asp-action="Index">Ver diagnósticos</a>
+            </div>
+            <div class="card-body">
+                @if (Model.ActividadReciente.Count == 0)
+                {
+                    <div class="state">
+                        <span class="state-ic"><partial name="_Icon" model="@("history")" /></span>
+                        <h3>Sin actividad reciente</h3>
+                        <p>Los diagnósticos registrados aparecen acá.</p>
+                    </div>
+                }
+                else
+                {
+                    <partial name="_ActividadReciente" model="Model.ActividadReciente" />
+                }
+            </div>
+        </section>
+    }
+</div>

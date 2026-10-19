@@ -55,51 +55,18 @@
                     <span class="d-inline-flex align-items-center justify-content-center brand-mark fw-semibold" style="width:28px;height:28px;">R</span>
                     <span class="fw-semibold" style="font-family:var(--app-font-brand)">Recuperación Tecnológica</span>
                 </div>
-                <!-- TODO: estos links son de ejemplo mientras implementamos todo -->
-                                @{
-                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-                    var isHome = currentController == "Home" && currentAction == "Index";
-                    var isPrivacy = currentController == "Home" && currentAction == "Privacy";
-                    var isDonaciones = currentController == "Donaciones";
-                    var isCatalogo = currentController == "Equipos";
-                    var isSolicitudes = currentController == "Solicitudes";
-                    var esUsuario = User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario);
+                @if (User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
+                {
+                    <partial name="_MenuUsuario" />
                 }
-                <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
-                    <a class="nav-link d-flex align-items-center gap-2@(isHome ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(isHome ? "page" : null)">
-                        <span class="nav-dot"></span>
-                        <partial name="_Icon" model="@("grid")" />Inicio
-                    </a>
-                    @if (esUsuario)
-                    {
-                        <div class="nav-group" role="group" aria-labelledby="nav-grupo-donar">
-                            <div class="nav-heading" id="nav-grupo-donar">Donar</div>
-                            <a class="nav-link d-flex align-items-center gap-2@(isDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Index" aria-current="@(isDonaciones ? "page" : null)">
-                                <span class="nav-dot"></span>
-                                <partial name="_Icon" model="@("gift")" />Mis donaciones
-                            </a>
-                        </div>
-                        <div class="nav-group" role="group" aria-labelledby="nav-grupo-solicitar">
-                            <div class="nav-heading" id="nav-grupo-solicitar">Solicitar equipos</div>
-                            <a class="nav-link d-flex align-items-center gap-2@(isCatalogo ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Catalogo" aria-current="@(isCatalogo ? "page" : null)">
-                                <span class="nav-dot"></span>
-                                <partial name="_Icon" model="@("laptop")" />Catálogo
-                            </a>
-                            <a class="nav-link d-flex align-items-center gap-2@(isSolicitudes ? " active" : "")" asp-area="" asp-controller="Solicitudes" asp-action="Index" aria-current="@(isSolicitudes ? "page" : null)">
-                                <span class="nav-dot"></span>
-                                <partial name="_Icon" model="@("tray")" />Mis solicitudes
-                            </a>
-                        </div>
-                    }
-                    else
-                    {
-                        <a class="nav-link d-flex align-items-center gap-2@(isPrivacy ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy" aria-current="@(isPrivacy ? "page" : null)">
-                            <span class="nav-dot"></span>
-                            <partial name="_Icon" model="@("file")" />Privacidad
-                        </a>
-                    }
-                </nav>
+                else if (User.IsInRole(nameof(RolPersonal.Tecnico)))
+                {
+                    <partial name="_MenuTecnico" />
+                }
+                else
+                {
+                    <partial name="_MenuBasico" />
+                }
                
                 @{
                     var estaAutenticado = User.Identity?.IsAuthenticated == true;

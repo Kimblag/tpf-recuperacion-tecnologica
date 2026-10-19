@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
+using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Home;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
@@ -22,12 +24,12 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         if (!User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
         {
-            return View();
+            return User.IsInRole(nameof(RolPersonal.Tecnico)) ? await InicioTecnicoAsync(identityUserId) : View();
         }
-
-        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (identityUserId is null)
         {
@@ -44,6 +46,26 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "No se pudo cargar el inicio del usuario");
             return View("InicioUsuarioError");
+        }
+    }
+
+    private async Task<IActionResult> InicioTecnicoAsync(string? identityUserId)
+    {
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var inicio = await _inicioService.ObtenerInicioTecnicoAsync(identityUserId);
+
+            return inicio is null ? NotFound() : View("InicioTecnico", inicio);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el inicio del Técnico");
+            return View("InicioTecnico", new TecnicoInicioViewModel { ErrorAlCargar = true });
         }
     }
 

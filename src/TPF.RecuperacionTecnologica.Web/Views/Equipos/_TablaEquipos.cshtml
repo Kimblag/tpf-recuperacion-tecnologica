@@ -1,0 +1,73 @@
+@model (IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoFilaViewModel> Filas, bool MostrarDiagnosticar, TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.EquipoListadoViewModel? Listado, string Accion)
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos
+<div class="table-wrap">
+    <table class="table table-stack">
+        <caption class="visually-hidden">Equipos</caption>
+        <thead>
+            <tr>
+                @if (Model.Listado is { } listado)
+                {
+                    <partial name="_EncabezadoOrdenEquipo" model="@(("Equipo", OrdenEquipo.EquipoAsc, OrdenEquipo.EquipoDesc, listado, Model.Accion))" />
+                    <partial name="_EncabezadoOrdenEquipo" model="@(("Tipo", OrdenEquipo.TipoAsc, OrdenEquipo.TipoDesc, listado, Model.Accion))" />
+                    <partial name="_EncabezadoOrdenEquipo" model="@(("Marca y modelo", OrdenEquipo.ModeloAsc, OrdenEquipo.ModeloDesc, listado, Model.Accion))" />
+                    <partial name="_EncabezadoOrdenEquipo" model="@(("Condición declarada", OrdenEquipo.CondicionAsc, OrdenEquipo.CondicionDesc, listado, Model.Accion))" />
+                    <partial name="_EncabezadoOrdenEquipo" model="@(("Registro", OrdenEquipo.RegistroAsc, OrdenEquipo.RegistroDesc, listado, Model.Accion))" />
+                    <partial name="_EncabezadoOrdenEquipo" model="@(("Estado", OrdenEquipo.EstadoAsc, OrdenEquipo.EstadoDesc, listado, Model.Accion))" />
+                }
+                else
+                {
+                    <th scope="col">Equipo</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Marca y modelo</th>
+                    <th scope="col">Condición declarada</th>
+                    <th scope="col">Registro</th>
+                    <th scope="col">Estado</th>
+                }
+                <th scope="col" class="col-actions">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fila in Model.Filas)
+            {
+                var urlDiagnosticar = Url.Action("Registrar", "Diagnosticos", new { nroEquipo = fila.NroEquipo });
+
+                <tr>
+                    <td data-label="Equipo"><span class="mono">@fila.CodigoEquipo</span></td>
+                    <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
+                    <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
+                    <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
+                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                    <td class="col-actions" data-label="Acciones">
+                        <a class="btn btn-ghost btn-sm" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                        @if (Model.MostrarDiagnosticar && fila.EstadoEquipo == EstadoEquipo.PendienteRecepcion)
+                        {
+                            if (urlDiagnosticar is not null)
+                            {
+                                <a class="btn btn-primary btn-sm" href="@urlDiagnosticar">Diagnosticar</a>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary btn-sm" disabled>Diagnosticar</button>
+                            }
+                        }
+                        else if (Model.MostrarDiagnosticar && fila.EstadoEquipo == EstadoEquipo.EnReparacion)
+                        {
+                            var urlSegundo = Url.Action("Segundo", "Diagnosticos", new { nroEquipo = fila.NroEquipo });
+
+                            if (urlSegundo is not null)
+                            {
+                                <a class="btn btn-primary btn-sm" href="@urlSegundo">Segundo diagnóstico</a>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary btn-sm" disabled>Segundo diagnóstico</button>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,13 @@
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<details class="help">
+    <summary>¿Qué significa cada estado?</summary>
+    <div class="help-list">
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.PendienteRecepcion" /><span>Donación registrada. Todavía sin recibir ni evaluar.</span></div>
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.EnReparacion" /><span>Ya tiene un diagnóstico y se está reparando.</span></div>
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.Disponible" /><span>Diagnóstico funcional. Puede asignarse.</span></div>
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.Asignado" /><span>Ya tiene una solicitud asignada.</span></div>
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.Entregado" /><span>Ya se entregó a la persona solicitante.</span></div>
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.Baja" /><span>Diagnóstico no recuperable. Se destina a repuestos.</span></div>
+        <div class="help-row"><partial name="_EstadoEquipoBadge" model="EstadoEquipo.Cancelado" /><span>La donación fue cancelada antes de la recepción.</span></div>
+    </div>
+</details>

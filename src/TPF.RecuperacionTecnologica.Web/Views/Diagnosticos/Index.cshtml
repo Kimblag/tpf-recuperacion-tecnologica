@@ -1,0 +1,144 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos.DiagnosticoListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Diagnósticos";
+
+    Func<int, string?> sinEnlace = _ => null;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Diagnósticos</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Diagnósticos</h1></div>
+            <p class="page-sub">Evaluaciones técnicas registradas</p>
+        </div>
+        @if (Model.Filas.Count > 0 || Model.HayFiltros || Model.ErrorAlCargar)
+        {
+            <div class="page-actions">
+                <a class="btn btn-primary" asp-controller="Equipos" asp-action="Pendientes"><partial name="_Icon" model="@("plus")" /><span>Registrar diagnóstico</span></a>
+            </div>
+        }
+    </div>
+
+    <section class="card overflow" aria-label="Diagnósticos" data-listado data-filas-carga="6">
+        <partial name="_AyudaDictamenes" />
+
+        <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de diagnóstico o de equipo" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter">
+                <label for="Tipo">Tipo de diagnóstico</label>
+                <div class="select">
+                    <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoDiagnostico>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Dictamen">Dictamen</label>
+                <div class="select">
+                    <select asp-for="Dictamen" class="form-select sm" asp-items="Html.GetEnumSelectList<DictamenTecnico>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener los diagnósticos. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No se encontraron diagnósticos</h3>
+                    <p>Probar con otra búsqueda o quitar algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("wrench")" /></span>
+                    <h3>No hay diagnósticos</h3>
+                    <p>El primer diagnóstico se registra desde un equipo pendiente.</p>
+                    <a class="btn btn-primary" asp-controller="Equipos" asp-action="Pendientes"><partial name="_Icon" model="@("plus")" /><span>Registrar diagnóstico</span></a>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Diagnósticos</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Diagnóstico</th>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Técnico</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Dictamen técnico</th>
+                                <th scope="col">Evaluación</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Diagnóstico"><span class="mono">@fila.CodigoDiagnostico</span></td>
+                                    <td data-label="Equipo"><a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></td>
+                                    <td data-label="Tipo">@Html.DisplayFor(m => fila.TipoDiagnostico)</td>
+                                    <td data-label="Técnico"><span class="mono">@fila.CodigoPersonal</span></td>
+                                    <td data-label="Fecha">@fila.FechaDiagnostico.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Dictamen técnico"><partial name="_DictamenBadge" model="fila.DictamenTecnico" /></td>
+                                    <td data-label="Evaluación">
+                                        @if (fila.EsVigente)
+                                        {
+                                            <partial name="_Badge" model="@(("Vigente", "ok"))" />
+                                        }
+                                        else
+                                        {
+                                            <span class="tag">Histórico</span>
+                                        }
+                                    </td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroDiagnostico" aria-label="Ver diagnóstico @fila.CodigoDiagnostico"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="_Paginador" model="@((1, 1, 1, Model.Filas.Count, Model.Total, sinEnlace))" />
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+}

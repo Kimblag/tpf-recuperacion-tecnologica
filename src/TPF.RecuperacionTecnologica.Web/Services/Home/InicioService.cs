@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
 
@@ -11,6 +12,7 @@ public class InicioService : IInicioService
 {
     private const int CantidadReciente = 4;
     private const int CantidadActividad = 5;
+    private const int CantidadPendientes = 5;
 
     private readonly ApplicationDbContext _context;
 
@@ -175,6 +177,88 @@ public class InicioService : IInicioService
             .Take(CantidadActividad)
             .Select(e => e.Actividad)
             .ToList();
+    }
+
+    public async Task<TecnicoInicioViewModel?> ObtenerInicioTecnicoAsync(string identityUserId)
+    {
+        var codigoPersonal = await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.IdentityUserId == identityUserId)
+            .Select(p => (int?)p.CodigoPersonal)
+            .FirstOrDefaultAsync();
+
+        if (codigoPersonal is null)
+        {
+            return null;
+        }
+
+        var equipos = _context.Equipos.AsNoTracking();
+        var enCola = equipos.Where(e => e.EstadoEquipo == EstadoEquipo.PendienteRecepcion || e.EstadoEquipo == EstadoEquipo.EnReparacion);
+
+        var pendientesDeDiagnostico = await equipos.CountAsync(e => e.EstadoEquipo == EstadoEquipo.PendienteRecepcion);
+        var fechaMasAntiguo = await equipos
+            .Where(e => e.EstadoEquipo == EstadoEquipo.PendienteRecepcion)
+            .Select(e => (DateTime?)e.FechaRegistro)
+            .MinAsync();
+        var enReparacion = await equipos.CountAsync(e => e.EstadoEquipo == EstadoEquipo.EnReparacion);
+        var disponibles = await equipos.CountAsync(e => e.EstadoEquipo == EstadoEquipo.Disponible);
+
+        var ahora = DateTime.UtcNow;
+        var inicioDeMes = new DateTime(ahora.Year, ahora.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var propios = _context.Diagnosticos
+            .AsNoTracking()
+            .Where(d => d.CodigoTecnico == codigoPersonal);
+
+        var diagnosticosDelMes = await propios.CountAsync(d => d.FechaDiagnostico >= inicioDeMes);
+
+        var pendientes = await enCola
+            .OrderBy(e => e.FechaRegistro)
+            .ThenBy(e => e.NroEquipo)
+            .Take(CantidadPendientes)
+            .Select(e => new EquipoFilaViewModel
+            {
+                NroEquipo = e.NroEquipo,
+                TipoEquipo = e.TipoEquipo,
+                Marca = e.Marca,
+                Modelo = e.Modelo,
+                EstadoInicialDeclarado = e.EstadoInicialDeclarado,
+                FechaRegistro = e.FechaRegistro,
+                EstadoEquipo = e.EstadoEquipo
+            })
+            .ToListAsync();
+
+        var recientes = await propios
+            .OrderByDescending(d => d.FechaDiagnostico)
+            .ThenByDescending(d => d.NroDiagnostico)
+            .Take(CantidadActividad)
+            .Select(d => new { d.NroDiagnostico, d.NroEquipo, d.TipoDiagnostico, d.FechaDiagnostico, d.DictamenTecnico })
+            .ToListAsync();
+
+        var actividad = recientes
+            .Select(d => d.TipoDiagnostico switch
+            {
+                TipoDiagnostico.Rectificacion => Evento("edit", "Rectificación ", $"DIA-{d.NroDiagnostico:D6}", " guardada",
+                    d.FechaDiagnostico, $"Equipo {CodigoEquipo(d.NroEquipo)} · {TextoDictamen(d.DictamenTecnico)}"),
+                TipoDiagnostico.Segundo => Evento("wrench", "Segundo diagnóstico ", $"DIA-{d.NroDiagnostico:D6}", " registrado",
+                    d.FechaDiagnostico, $"Equipo {CodigoEquipo(d.NroEquipo)} · {TextoDictamen(d.DictamenTecnico)}",
+                    exito: d.DictamenTecnico == DictamenTecnico.Funcional),
+                _ => Evento("wrench", "Diagnóstico ", $"DIA-{d.NroDiagnostico:D6}", " registrado",
+                    d.FechaDiagnostico, $"Equipo {CodigoEquipo(d.NroEquipo)} · {TextoDictamen(d.DictamenTecnico)}",
+                    exito: d.DictamenTecnico == DictamenTecnico.Funcional)
+            })
+            .ToList();
+
+        return new TecnicoInicioViewModel
+        {
+            PendientesDeDiagnostico = pendientesDeDiagnostico,
+            FechaPendienteMasAntiguo = fechaMasAntiguo,
+            EnReparacion = enReparacion,
+            DiagnosticosDelMes = diagnosticosDelMes,
+            EquiposDisponibles = disponibles,
+            Pendientes = pendientes,
+            ActividadReciente = actividad
+        };
     }
 
     private static string CodigoEquipo(int nroEquipo) => nroEquipo.ToString("D6");

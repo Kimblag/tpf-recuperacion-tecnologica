@@ -1,0 +1,9 @@
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<details class="help">
+    <summary>¿Qué significa cada dictamen?</summary>
+    <div class="help-list">
+        <div class="help-row"><partial name="_DictamenBadge" model="DictamenTecnico.Funcional" /><span>El equipo anda bien y puede quedar disponible.</span></div>
+        <div class="help-row"><partial name="_DictamenBadge" model="DictamenTecnico.NecesitaReparacion" /><span>Tiene una falla que hay que reparar antes de asignarlo.</span></div>
+        <div class="help-row"><partial name="_DictamenBadge" model="DictamenTecnico.NoRecuperable" /><span>No se puede reparar. El equipo pasa a Baja.</span></div>
+    </div>
+</details>

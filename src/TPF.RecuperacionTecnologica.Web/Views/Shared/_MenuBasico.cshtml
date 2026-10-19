@@ -1,0 +1,16 @@
+@{
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
+    var accion = ViewContext.RouteData.Values["action"]?.ToString();
+    var esInicio = controlador == "Home" && accion == "Index";
+    var esPrivacidad = controlador == "Home" && accion == "Privacy";
+}
+<nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
+    <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(esInicio ? "page" : null)">
+        <span class="nav-dot"></span>
+        <partial name="_Icon" model="@("grid")" />Inicio
+    </a>
+    <a class="nav-link d-flex align-items-center gap-2@(esPrivacidad ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Privacy" aria-current="@(esPrivacidad ? "page" : null)">
+        <span class="nav-dot"></span>
+        <partial name="_Icon" model="@("file")" />Privacidad
+    </a>
+</nav>
