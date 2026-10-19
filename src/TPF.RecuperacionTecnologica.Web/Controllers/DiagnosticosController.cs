@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
@@ -11,9 +14,17 @@ public class DiagnosticosController : Controller
 {
     private readonly IEquipoConsultaService _equipoConsultaService;
 
-    public DiagnosticosController(IEquipoConsultaService equipoConsultaService)
+    private readonly IDiagnosticoService _diagnosticoService;
+    private readonly IPersonalService _personalService;
+
+    public DiagnosticosController(
+        IEquipoConsultaService equipoConsultaService,
+        IDiagnosticoService diagnosticoService,
+        IPersonalService personalService)
     {
         _equipoConsultaService = equipoConsultaService;
+        _diagnosticoService = diagnosticoService;
+        _personalService = personalService;
     }
 
     private sealed record EquipoEjemplo(
@@ -201,24 +212,40 @@ public class DiagnosticosController : Controller
 
         if (!ModelState.IsValid)
         {
-            var contexto = ArmarFormulario(nroEquipo, equipo, tipo);
-            formulario.NroEquipo = contexto.NroEquipo;
-            formulario.TipoDiagnostico = contexto.TipoDiagnostico;
-            formulario.TipoEquipo = contexto.TipoEquipo;
-            formulario.Marca = contexto.Marca;
-            formulario.Modelo = contexto.Modelo;
-            formulario.EstadoInicialDeclarado = contexto.EstadoInicialDeclarado;
-            formulario.EstadoEquipo = contexto.EstadoEquipo;
-            formulario.ObservacionesDonante = contexto.ObservacionesDonante;
-            formulario.ProcesadorDeclarado = contexto.ProcesadorDeclarado;
-            formulario.MemoriaRamDeclarada = contexto.MemoriaRamDeclarada;
-            formulario.AlmacenamientoDeclarado = contexto.AlmacenamientoDeclarado;
-            formulario.DiagnosticoVigente = contexto.DiagnosticoVigente;
+            CompletarContexto(formulario, ArmarFormulario(nroEquipo, equipo, tipo));
 
             return View("Formulario", formulario);
         }
 
-        // TODO: reemplazar por el registro real del diagnóstico y la transición de estado del equipo
+        if (tipo == TipoDiagnostico.Inicial)
+        {
+            var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var codigoTecnico = identityUserId is null
+                ? null
+                : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+            if (codigoTecnico is null)
+            {
+                return Forbid();
+            }
+
+            formulario.NroEquipo = nroEquipo;
+            var resultado = await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario);
+
+            if (!resultado.Succeeded)
+            {
+                foreach (var error in resultado.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                CompletarContexto(formulario, ArmarFormulario(nroEquipo, equipo, tipo));
+
+                return View("Formulario", formulario);
+            }
+        }
+
+        // TODO: reemplazar por el registro real del segundo diagnóstico y la rectificación
         TempData["Mensaje"] = mensaje;
         return RedirectToAction("Detalle", "Equipos", new { id = nroEquipo });
     }
@@ -254,6 +281,23 @@ public class DiagnosticosController : Controller
         return permitidas.Contains(actual)
             ? null
             : RedirectToAction(permitidas[0], new { nroEquipo });
+    }
+
+    // vuelve a cargar los datos del equipo, que no viajan en el formulario enviado
+    private static void CompletarContexto(DiagnosticoFormularioViewModel formulario, DiagnosticoFormularioViewModel contexto)
+    {
+        formulario.NroEquipo = contexto.NroEquipo;
+        formulario.TipoDiagnostico = contexto.TipoDiagnostico;
+        formulario.TipoEquipo = contexto.TipoEquipo;
+        formulario.Marca = contexto.Marca;
+        formulario.Modelo = contexto.Modelo;
+        formulario.EstadoInicialDeclarado = contexto.EstadoInicialDeclarado;
+        formulario.EstadoEquipo = contexto.EstadoEquipo;
+        formulario.ObservacionesDonante = contexto.ObservacionesDonante;
+        formulario.ProcesadorDeclarado = contexto.ProcesadorDeclarado;
+        formulario.MemoriaRamDeclarada = contexto.MemoriaRamDeclarada;
+        formulario.AlmacenamientoDeclarado = contexto.AlmacenamientoDeclarado;
+        formulario.DiagnosticoVigente = contexto.DiagnosticoVigente;
     }
 
     private static DiagnosticoFormularioViewModel ArmarFormulario(int nroEquipo, EquipoDetalleTecnicoViewModel equipo, TipoDiagnostico tipo) => new()
