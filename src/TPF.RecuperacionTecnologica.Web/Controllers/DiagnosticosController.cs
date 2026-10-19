@@ -217,7 +217,7 @@ public class DiagnosticosController : Controller
             return View("Formulario", formulario);
         }
 
-        if (tipo == TipoDiagnostico.Inicial)
+        if (tipo is TipoDiagnostico.Inicial or TipoDiagnostico.Segundo)
         {
             var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var codigoTecnico = identityUserId is null
@@ -230,7 +230,9 @@ public class DiagnosticosController : Controller
             }
 
             formulario.NroEquipo = nroEquipo;
-            var resultado = await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario);
+            var resultado = tipo == TipoDiagnostico.Inicial
+                ? await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario)
+                : await _diagnosticoService.RegistrarSegundoAsync(codigoTecnico.Value, formulario);
 
             if (!resultado.Succeeded)
             {
@@ -245,7 +247,7 @@ public class DiagnosticosController : Controller
             }
         }
 
-        // TODO: reemplazar por el registro real del segundo diagnóstico y la rectificación
+        // TODO: reemplazar por el registro real de la rectificación
         TempData["Mensaje"] = mensaje;
         return RedirectToAction("Detalle", "Equipos", new { id = nroEquipo });
     }
