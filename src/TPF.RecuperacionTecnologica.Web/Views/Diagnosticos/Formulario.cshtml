@@ -97,17 +97,29 @@
                         </div>
                         <div class="field">
                             <label class="form-label" for="TamanoPantalla">Tamaño de pantalla</label>
-                            <input asp-for="TamanoPantalla" class="form-control" maxlength="30" />
+                            <input asp-for="TamanoPantalla" class="form-control" maxlength="30" aria-describedby="TamanoPantalla-hint" />
+                            @if (!string.IsNullOrWhiteSpace(Model.TamanoPantallaDeclarado))
+                            {
+                                <div class="form-text" id="TamanoPantalla-hint">Declarado por el donante: @Model.TamanoPantallaDeclarado</div>
+                            }
                             <span asp-validation-for="TamanoPantalla"></span>
                         </div>
                         <div class="field">
                             <label class="form-label" for="EstadoBateria">Estado de la batería</label>
-                            <input asp-for="EstadoBateria" class="form-control" maxlength="100" />
+                            <input asp-for="EstadoBateria" class="form-control" maxlength="100" aria-describedby="EstadoBateria-hint" />
+                            @if (!string.IsNullOrWhiteSpace(Model.EstadoBateriaDeclarado))
+                            {
+                                <div class="form-text" id="EstadoBateria-hint">Declarado por el donante: @Model.EstadoBateriaDeclarado</div>
+                            }
                             <span asp-validation-for="EstadoBateria"></span>
                         </div>
                         <div class="field span-2">
                             <label class="form-label" for="Otros">Otros datos</label>
-                            <textarea asp-for="Otros" class="form-control" rows="2" maxlength="300"></textarea>
+                            <textarea asp-for="Otros" class="form-control" rows="2" maxlength="300" aria-describedby="Otros-hint"></textarea>
+                            @if (!string.IsNullOrWhiteSpace(Model.OtrosDeclarado))
+                            {
+                                <div class="form-text" id="Otros-hint">Declarado por el donante: @Model.OtrosDeclarado</div>
+                            }
                             <span asp-validation-for="Otros"></span>
                         </div>
 
