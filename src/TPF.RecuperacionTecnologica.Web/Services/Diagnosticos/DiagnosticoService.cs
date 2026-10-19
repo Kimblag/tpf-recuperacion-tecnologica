@@ -58,17 +58,18 @@ public class DiagnosticoService : IDiagnosticoService
     // el estado del equipo sigue al dictamen; un equipo que pasa a Disponible registra desde cuándo lo está
     private static void AplicarDictamen(Equipo equipo, DictamenTecnico dictamen, DateTime fecha)
     {
+        // una rectificación sobre un equipo que ya estaba Disponible no cambia desde cuándo lo está
+        if (dictamen == DictamenTecnico.Funcional && equipo.EstadoEquipo != EstadoEquipo.Disponible)
+        {
+            equipo.FechaDisponibilidad = fecha;
+        }
+
         equipo.EstadoEquipo = dictamen switch
         {
             DictamenTecnico.Funcional => EstadoEquipo.Disponible,
             DictamenTecnico.NecesitaReparacion => EstadoEquipo.EnReparacion,
             _ => EstadoEquipo.Baja
         };
-
-        if (dictamen == DictamenTecnico.Funcional)
-        {
-            equipo.FechaDisponibilidad = fecha;
-        }
 
         equipo.FechaUltimaModificacion = fecha;
     }
@@ -140,6 +141,44 @@ public class DiagnosticoService : IDiagnosticoService
         _context.Diagnosticos.Add(diagnostico);
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico");
+    }
+
+    public async Task<IdentityResult> RegistrarRectificacionAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
+    {
+        if (modelo.DictamenTecnico is not { } dictamen)
+        {
+            return Fallo("DictamenRequerido", "El dictamen técnico es obligatorio.");
+        }
+
+        var equipo = await _context.Equipos.FirstOrDefaultAsync(e => e.NroEquipo == modelo.NroEquipo);
+
+        if (equipo is null) return Fallo("EquipoNoEncontrado", "No se encontró el equipo.");
+
+        // un equipo asignado o entregado ya salió del circuito de diagnóstico: se mantiene el dictamen vigente
+        if (equipo.EstadoEquipo is EstadoEquipo.Asignado or EstadoEquipo.Entregado) return Fallo("EquipoNoRectificable",
+                "El equipo ya fue asignado o entregado. Su diagnóstico no se puede rectificar.");
+
+        if (equipo.EstadoEquipo is not (EstadoEquipo.Disponible or EstadoEquipo.EnReparacion or EstadoEquipo.Baja))
+            return Fallo("EquipoNoRectificable", "El estado actual del equipo no admite rectificar su diagnóstico.");
+
+        var vigente = await _context.Diagnosticos
+            .FirstOrDefaultAsync(d => d.NroEquipo == equipo.NroEquipo && d.EsVigente);
+
+        if (vigente is null) return Fallo("SinDiagnosticoVigente", "El equipo no tiene un diagnóstico vigente para rectificar.");
+
+        var ahora = DateTime.UtcNow;
+
+        // el diagnóstico original queda en el historial como no vigente
+        vigente.EsVigente = false;
+
+        var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Rectificacion, dictamen, modelo, ahora);
+        diagnostico.DiagnosticoRectificadoId = vigente.NroDiagnostico;
+
+        AplicarDictamen(equipo, dictamen, ahora);
+        _context.Diagnosticos.Add(diagnostico);
+
+        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico,
+            $"Rectificación del diagnóstico {vigente.NroDiagnostico}");
     }
 
     // el diagnóstico y el cambio de estado se guardan juntos en una sola operación
