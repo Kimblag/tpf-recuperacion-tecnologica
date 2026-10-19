@@ -297,6 +297,9 @@ public class DiagnosticosController : Controller
         formulario.ProcesadorDeclarado = contexto.ProcesadorDeclarado;
         formulario.MemoriaRamDeclarada = contexto.MemoriaRamDeclarada;
         formulario.AlmacenamientoDeclarado = contexto.AlmacenamientoDeclarado;
+        formulario.TamanoPantallaDeclarado = contexto.TamanoPantallaDeclarado;
+        formulario.EstadoBateriaDeclarado = contexto.EstadoBateriaDeclarado;
+        formulario.OtrosDeclarado = contexto.OtrosDeclarado;
         formulario.DiagnosticoVigente = contexto.DiagnosticoVigente;
     }
 
@@ -313,6 +316,9 @@ public class DiagnosticosController : Controller
         ProcesadorDeclarado = equipo.Procesador,
         MemoriaRamDeclarada = equipo.MemoriaRam,
         AlmacenamientoDeclarado = equipo.Almacenamiento,
+        TamanoPantallaDeclarado = equipo.TamanoPantalla,
+        EstadoBateriaDeclarado = equipo.EstadoBateria,
+        OtrosDeclarado = equipo.Otros,
         DiagnosticoVigente = equipo.DiagnosticoVigente
     };
 
