@@ -163,20 +163,28 @@ public class DiagnosticosController : Controller
 
         var formulario = ArmarFormulario(nroEquipo, equipo, tipo);
 
-        if (tipo == TipoDiagnostico.Rectificacion && formulario.DiagnosticoVigente is not null)
+        // las características verificadas se precargan para que el Técnico solo corrija lo que cambió
+        if (tipo != TipoDiagnostico.Inicial && formulario.DiagnosticoVigente is not null)
         {
             var vigente = formulario.DiagnosticoVigente;
 
-            formulario.DictamenTecnico = vigente.DictamenTecnico;
-            formulario.DetalleFallas = vigente.DetalleFallas;
-            formulario.DetalleReparacionesRealizadas = vigente.DetalleReparacionesRealizadas;
-            formulario.Observaciones = vigente.Observaciones;
             formulario.Procesador = vigente.Procesador;
             formulario.MemoriaRam = vigente.MemoriaRam;
             formulario.Almacenamiento = vigente.Almacenamiento;
             formulario.TamanoPantalla = vigente.TamanoPantalla;
             formulario.EstadoBateria = vigente.EstadoBateria;
             formulario.Otros = vigente.Otros;
+
+            // las fallas se precargan para que el Técnico las conserve o las corrija según lo reparado
+            formulario.DetalleFallas = vigente.DetalleFallas;
+
+            // el segundo diagnóstico es una nueva evaluación; solo la rectificación parte del resto del vigente
+            if (tipo == TipoDiagnostico.Rectificacion)
+            {
+                formulario.DictamenTecnico = vigente.DictamenTecnico;
+                formulario.DetalleReparacionesRealizadas = vigente.DetalleReparacionesRealizadas;
+                formulario.Observaciones = vigente.Observaciones;
+            }
         }
 
         return View("Formulario", formulario);
@@ -217,7 +225,7 @@ public class DiagnosticosController : Controller
             return View("Formulario", formulario);
         }
 
-        if (tipo == TipoDiagnostico.Inicial)
+        if (tipo is TipoDiagnostico.Inicial or TipoDiagnostico.Segundo)
         {
             var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var codigoTecnico = identityUserId is null
@@ -230,7 +238,9 @@ public class DiagnosticosController : Controller
             }
 
             formulario.NroEquipo = nroEquipo;
-            var resultado = await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario);
+            var resultado = tipo == TipoDiagnostico.Inicial
+                ? await _diagnosticoService.RegistrarInicialAsync(codigoTecnico.Value, formulario)
+                : await _diagnosticoService.RegistrarSegundoAsync(codigoTecnico.Value, formulario);
 
             if (!resultado.Succeeded)
             {
@@ -245,7 +255,7 @@ public class DiagnosticosController : Controller
             }
         }
 
-        // TODO: reemplazar por el registro real del segundo diagnóstico y la rectificación
+        // TODO: reemplazar por el registro real de la rectificación
         TempData["Mensaje"] = mensaje;
         return RedirectToAction("Detalle", "Equipos", new { id = nroEquipo });
     }

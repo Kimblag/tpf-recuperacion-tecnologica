@@ -31,6 +31,48 @@ public class DiagnosticoService : IDiagnosticoService
     private static IdentityResult Fallo(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
+    private static Diagnostico ArmarDiagnostico(
+        Equipo equipo, int codigoTecnico, TipoDiagnostico tipo, DictamenTecnico dictamen,
+        DiagnosticoFormularioViewModel modelo, DateTime fecha) => new()
+        {
+            NroEquipo = equipo.NroEquipo,
+            CodigoTecnico = codigoTecnico,
+            TipoDiagnostico = tipo,
+            FechaDiagnostico = fecha,
+            DictamenTecnico = dictamen,
+            DetalleFallas = TextoOpcional(modelo.DetalleFallas),
+            DetalleReparacionesRealizadas = TextoOpcional(modelo.DetalleReparacionesRealizadas),
+            Observaciones = TextoOpcional(modelo.Observaciones),
+            EspecificacionesVerificadas = new EspecificacionesTecnicas
+            {
+                Procesador = TextoOpcional(modelo.Procesador),
+                MemoriaRam = TextoOpcional(modelo.MemoriaRam),
+                Almacenamiento = TextoOpcional(modelo.Almacenamiento),
+                TamanoPantalla = TextoOpcional(modelo.TamanoPantalla),
+                EstadoBateria = TextoOpcional(modelo.EstadoBateria),
+                Otros = TextoOpcional(modelo.Otros)
+            },
+            EsVigente = true
+        };
+
+    // el estado del equipo sigue al dictamen; un equipo que pasa a Disponible registra desde cuándo lo está
+    private static void AplicarDictamen(Equipo equipo, DictamenTecnico dictamen, DateTime fecha)
+    {
+        equipo.EstadoEquipo = dictamen switch
+        {
+            DictamenTecnico.Funcional => EstadoEquipo.Disponible,
+            DictamenTecnico.NecesitaReparacion => EstadoEquipo.EnReparacion,
+            _ => EstadoEquipo.Baja
+        };
+
+        if (dictamen == DictamenTecnico.Funcional)
+        {
+            equipo.FechaDisponibilidad = fecha;
+        }
+
+        equipo.FechaUltimaModificacion = fecha;
+    }
+
     public async Task<IdentityResult> RegistrarInicialAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
     {
         if (modelo.DictamenTecnico is not { } dictamen)
@@ -52,45 +94,58 @@ public class DiagnosticoService : IDiagnosticoService
         if (yaDiagnosticado) return Fallo("DiagnosticoInicialExistente", "El equipo ya tiene un diagnóstico inicial.");
 
         var ahora = DateTime.UtcNow;
+        var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Inicial, dictamen, modelo, ahora);
 
-        var diagnostico = new Diagnostico
-        {
-            NroEquipo = equipo.NroEquipo,
-            CodigoTecnico = codigoTecnico,
-            TipoDiagnostico = TipoDiagnostico.Inicial,
-            FechaDiagnostico = ahora,
-            DictamenTecnico = dictamen,
-            DetalleFallas = TextoOpcional(modelo.DetalleFallas),
-            Observaciones = TextoOpcional(modelo.Observaciones),
-            EspecificacionesVerificadas = new EspecificacionesTecnicas
-            {
-                Procesador = TextoOpcional(modelo.Procesador),
-                MemoriaRam = TextoOpcional(modelo.MemoriaRam),
-                Almacenamiento = TextoOpcional(modelo.Almacenamiento),
-                TamanoPantalla = TextoOpcional(modelo.TamanoPantalla),
-                EstadoBateria = TextoOpcional(modelo.EstadoBateria),
-                Otros = TextoOpcional(modelo.Otros)
-            },
-            EsVigente = true
-        };
-
-        equipo.EstadoEquipo = dictamen switch
-        {
-            DictamenTecnico.Funcional => EstadoEquipo.Disponible,
-            DictamenTecnico.NecesitaReparacion => EstadoEquipo.EnReparacion,
-            _ => EstadoEquipo.Baja
-        };
-
-        if (dictamen == DictamenTecnico.Funcional)
-        {
-            equipo.FechaDisponibilidad = ahora;
-        }
-
-        equipo.FechaUltimaModificacion = ahora;
-
+        AplicarDictamen(equipo, dictamen, ahora);
         _context.Diagnosticos.Add(diagnostico);
 
-        // el diagnóstico y el cambio de estado se guardan juntos en una sola operación
+        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Diagnóstico inicial");
+    }
+
+    public async Task<IdentityResult> RegistrarSegundoAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
+    {
+        if (modelo.DictamenTecnico is not { } dictamen)
+        {
+            return Fallo("DictamenRequerido", "El dictamen técnico es obligatorio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(modelo.DetalleReparacionesRealizadas))
+        {
+            return Fallo("DetalleReparacionRequerido", "El detalle de reparación es obligatorio en el segundo diagnóstico.");
+        }
+
+        var equipo = await _context.Equipos.FirstOrDefaultAsync(e => e.NroEquipo == modelo.NroEquipo);
+
+        if (equipo is null) return Fallo("EquipoNoEncontrado", "No se encontró el equipo.");
+
+        // el estado se verifica de nuevo para no diagnosticar un equipo que cambió desde que se abrió el formulario
+        if (equipo.EstadoEquipo != EstadoEquipo.EnReparacion) return Fallo("EquipoNoDiagnosticable",
+                "El equipo ya no está en reparación, por lo que no admite un segundo diagnóstico.");
+
+        var ahora = DateTime.UtcNow;
+
+        // el diagnóstico que estaba vigente pasa a ser histórico
+        var vigentes = await _context.Diagnosticos
+            .Where(d => d.NroEquipo == equipo.NroEquipo && d.EsVigente)
+            .ToListAsync();
+
+        foreach (var anterior in vigentes)
+        {
+            anterior.EsVigente = false;
+        }
+
+        var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Segundo, dictamen, modelo, ahora);
+
+        AplicarDictamen(equipo, dictamen, ahora);
+        _context.Diagnosticos.Add(diagnostico);
+
+        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico");
+    }
+
+    // el diagnóstico y el cambio de estado se guardan juntos en una sola operación
+    private async Task<IdentityResult> GuardarYAuditarAsync(
+        Equipo equipo, Diagnostico diagnostico, int codigoTecnico, string descripcion)
+    {
         try
         {
             await _context.SaveChangesAsync();
@@ -102,7 +157,8 @@ public class DiagnosticoService : IDiagnosticoService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Falló el registro del diagnóstico inicial del Equipo {NroEquipo}", equipo.NroEquipo);
+            _logger.LogError(ex, "Falló el registro del diagnóstico {Tipo} del Equipo {NroEquipo}",
+                diagnostico.TipoDiagnostico, equipo.NroEquipo);
             return Fallo("RegistroFallido", "No se pudo registrar el diagnóstico. Intente nuevamente.");
         }
 
@@ -110,11 +166,12 @@ public class DiagnosticoService : IDiagnosticoService
         {
             await _auditoriaService.RegistrarEventoAsync(
                 TipoOperacionAuditoria.Diagnostico, codigoTecnico, nameof(Diagnostico), diagnostico.NroDiagnostico,
-                $"Diagnóstico inicial del equipo {equipo.NroEquipo}");
+                $"{descripcion} del equipo {equipo.NroEquipo}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "No se pudo auditar el diagnóstico inicial del Equipo {NroEquipo}", equipo.NroEquipo);
+            _logger.LogError(ex, "No se pudo auditar el diagnóstico {Tipo} del Equipo {NroEquipo}",
+                diagnostico.TipoDiagnostico, equipo.NroEquipo);
         }
 
         return IdentityResult.Success;
