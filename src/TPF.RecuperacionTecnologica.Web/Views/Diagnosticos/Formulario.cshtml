@@ -37,7 +37,7 @@
 
                     <div class="form-grid">
                         <div class="field span-2">
-                            <label class="form-label" for="DictamenTecnico">Dictamen técnico@Html.Raw(etiquetaObligatorio)</label>
+                            <label class="form-label" for="DictamenTecnico">Dictamen técnico@(Html.Raw(etiquetaObligatorio))</label>
                             <div class="select">
                                 <select asp-for="DictamenTecnico" class="form-select" asp-items="Html.GetEnumSelectList<DictamenTecnico>()">
                                     <option value="">Seleccionar dictamen</option>

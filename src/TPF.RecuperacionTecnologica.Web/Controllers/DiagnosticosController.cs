@@ -163,20 +163,26 @@ public class DiagnosticosController : Controller
 
         var formulario = ArmarFormulario(nroEquipo, equipo, tipo);
 
-        if (tipo == TipoDiagnostico.Rectificacion && formulario.DiagnosticoVigente is not null)
+        // las características verificadas se precargan para que el Técnico solo corrija lo que cambió
+        if (tipo != TipoDiagnostico.Inicial && formulario.DiagnosticoVigente is not null)
         {
             var vigente = formulario.DiagnosticoVigente;
 
-            formulario.DictamenTecnico = vigente.DictamenTecnico;
-            formulario.DetalleFallas = vigente.DetalleFallas;
-            formulario.DetalleReparacionesRealizadas = vigente.DetalleReparacionesRealizadas;
-            formulario.Observaciones = vigente.Observaciones;
             formulario.Procesador = vigente.Procesador;
             formulario.MemoriaRam = vigente.MemoriaRam;
             formulario.Almacenamiento = vigente.Almacenamiento;
             formulario.TamanoPantalla = vigente.TamanoPantalla;
             formulario.EstadoBateria = vigente.EstadoBateria;
             formulario.Otros = vigente.Otros;
+
+            // el segundo diagnóstico es una nueva evaluación; solo la rectificación parte del resto del vigente
+            if (tipo == TipoDiagnostico.Rectificacion)
+            {
+                formulario.DictamenTecnico = vigente.DictamenTecnico;
+                formulario.DetalleFallas = vigente.DetalleFallas;
+                formulario.DetalleReparacionesRealizadas = vigente.DetalleReparacionesRealizadas;
+                formulario.Observaciones = vigente.Observaciones;
+            }
         }
 
         return View("Formulario", formulario);
