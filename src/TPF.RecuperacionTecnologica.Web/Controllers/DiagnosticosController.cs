@@ -175,11 +175,13 @@ public class DiagnosticosController : Controller
             formulario.EstadoBateria = vigente.EstadoBateria;
             formulario.Otros = vigente.Otros;
 
+            // las fallas se precargan para que el Técnico las conserve o las corrija según lo reparado
+            formulario.DetalleFallas = vigente.DetalleFallas;
+
             // el segundo diagnóstico es una nueva evaluación; solo la rectificación parte del resto del vigente
             if (tipo == TipoDiagnostico.Rectificacion)
             {
                 formulario.DictamenTecnico = vigente.DictamenTecnico;
-                formulario.DetalleFallas = vigente.DetalleFallas;
                 formulario.DetalleReparacionesRealizadas = vigente.DetalleReparacionesRealizadas;
                 formulario.Observaciones = vigente.Observaciones;
             }
