@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-// el catálogo es público: se puede consultar con o sin sesión
+// el catálogo lo ve cualquier persona con sesión, sea Usuario o Personal
+[Authorize]
 public class CatalogoController : Controller
 {
     private readonly IDonacionService _donacionService;

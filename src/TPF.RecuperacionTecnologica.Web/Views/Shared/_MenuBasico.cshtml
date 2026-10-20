@@ -14,8 +14,12 @@
         <span class="nav-dot"></span>
         <partial name="_Icon" model="@("file")" />Privacidad
     </a>
-    <a class="nav-link d-flex align-items-center gap-2@(esCatalogo ? " active" : "")" asp-area="" asp-controller="Catalogo" asp-action="Index" aria-current="@(esCatalogo ? "page" : null)">
-        <span class="nav-dot"></span>
-        <partial name="_Icon" model="@("laptop")" />Catálogo
-    </a>
+    @* este menú también lo ven Coordinador y Administrador; el catálogo pide sesión *@
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="nav-link d-flex align-items-center gap-2@(esCatalogo ? " active" : "")" asp-area="" asp-controller="Catalogo" asp-action="Index" aria-current="@(esCatalogo ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("laptop")" />Catálogo
+        </a>
+    }
 </nav>
