@@ -1,0 +1,127 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo.EquipoCatalogoDetalleViewModel
+@{
+    ViewData["Title"] = "Detalle del equipo";
+}
+
+@section Migas {
+    <li><a asp-action="Index">Catálogo</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">@Model.MarcaYModelo</h1>
+            </div>
+            <p class="page-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · Equipo <span class="mono">@Model.CodigoEquipo</span></p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-controller="Solicitudes" asp-action="Registrar" asp-route-nroEquipo="@Model.NroEquipo"><partial name="_Icon" model="@("tray")" /><span>Solicitar</span></a>
+        </div>
+    </div>
+
+    <div class="grid-3-1">
+        <div class="stack">
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Características técnicas</h2>
+                        <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.TieneEspecificaciones)
+                    {
+                        <dl class="dl">
+                            @if (!string.IsNullOrWhiteSpace(Model.Procesador))
+                            {
+                                <dt>Procesador</dt>
+                                <dd>@Model.Procesador</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.MemoriaRam))
+                            {
+                                <dt>Memoria RAM</dt>
+                                <dd>@Model.MemoriaRam</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Almacenamiento))
+                            {
+                                <dt>Almacenamiento</dt>
+                                <dd>@Model.Almacenamiento</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.TamanoPantalla))
+                            {
+                                <dt>Tamaño de pantalla</dt>
+                                <dd>@Model.TamanoPantalla</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.EstadoBateria))
+                            {
+                                <dt>Estado de la batería</dt>
+                                <dd>@Model.EstadoBateria</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Otros))
+                            {
+                                <dt>Otros datos</dt>
+                                <dd>@Model.Otros</dd>
+                            }
+                        </dl>
+                    }
+                    else
+                    {
+                        <p class="muted">Sin características técnicas registradas.</p>
+                    }
+                </div>
+            </section>
+
+            @if (Model.Imagenes.Count > 0)
+            {
+                <section class="card">
+                    <div class="card-header">
+                        <div><h2 class="card-title">Fotos del equipo</h2></div>
+                    </div>
+                    <div class="card-body">
+                        <ul class="grid-3 list-unstyled m-0">
+                            @foreach (var imagen in Model.Imagenes)
+                            {
+                                <li>
+                                    <figure class="m-0">
+                                        <div class="ratio ratio-4x3">
+                                            <img src="@Url.Content(imagen.UrlImagen)" class="object-fit-cover rounded" alt="Foto de @Model.MarcaYModelo@(string.IsNullOrWhiteSpace(imagen.Angulo) ? "" : $", vista {imagen.Angulo}")" loading="lazy" />
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(imagen.Angulo))
+                                        {
+                                            <figcaption class="card-sub">@imagen.Angulo</figcaption>
+                                        }
+                                    </figure>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </section>
+            }
+        </div>
+
+        <section class="card">
+            <div class="card-header">
+                <div><h2 class="card-title">Datos del equipo</h2></div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Número de equipo</dt>
+                    <dd><span class="mono">@Model.CodigoEquipo</span></dd>
+                    <dt>Tipo de equipo</dt>
+                    <dd><partial name="_TipoEquipo" model="Model.TipoEquipo" /></dd>
+                    <dt>Marca</dt>
+                    <dd>@Model.Marca</dd>
+                    <dt>Modelo</dt>
+                    <dd>@Model.Modelo</dd>
+                    @if (Model.FechaDisponibilidad is not null)
+                    {
+                        <dt>Disponible desde</dt>
+                        <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                    }
+                </dl>
+            </div>
+        </section>
+    </div>
+</div>

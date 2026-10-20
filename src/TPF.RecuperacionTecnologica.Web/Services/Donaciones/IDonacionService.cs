@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
@@ -58,4 +59,17 @@ public interface IDonacionService
     /// Éxito, o el motivo por el que no se pudo cancelar, si es que la donación no existe o es de otro Usuario
     /// </returns>
     Task<IdentityResult> CancelarAsync(string identityUserId, int nroEquipo);
+
+    /// <summary>
+    /// Lista los equipos Disponibles para el catálogo público, con filtro opcional por tipo.
+    /// Las características son las verificadas en el diagnóstico vigente, no las declaradas por el donante.
+    /// </summary>
+    /// <returns>Los equipos disponibles, vacía si ninguno cumple el filtro.</returns>
+    Task<IReadOnlyList<EquipoDisponibleViewModel>> ObtenerDisponiblesAsync(TipoEquipo? tipo);
+
+    /// <summary>
+    /// Devuelve el detalle público de un equipo Disponible, con sus características verificadas y sus imágenes.
+    /// </summary>
+    /// <returns>Los datos del equipo, o null si no existe o no está Disponible.</returns>
+    Task<EquipoCatalogoDetalleViewModel?> ObtenerDetalleDisponibleAsync(int nroEquipo);
 }

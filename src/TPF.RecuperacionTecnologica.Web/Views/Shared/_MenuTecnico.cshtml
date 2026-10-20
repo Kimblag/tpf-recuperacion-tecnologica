@@ -4,6 +4,7 @@
     var esInicio = controlador == "Home" && accion == "Index";
     var esEquipos = controlador == "Equipos";
     var esDiagnosticos = controlador == "Diagnosticos";
+    var esCatalogo = controlador == "Catalogo";
 }
 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
     <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(esInicio ? "page" : null)">
@@ -21,4 +22,8 @@
             <partial name="_Icon" model="@("wrench")" />Diagnósticos
         </a>
     </div>
+    <a class="nav-link d-flex align-items-center gap-2@(esCatalogo ? " active" : "")" asp-area="" asp-controller="Catalogo" asp-action="Index" aria-current="@(esCatalogo ? "page" : null)">
+        <span class="nav-dot"></span>
+        <partial name="_Icon" model="@("laptop")" />Catálogo
+    </a>
 </nav>

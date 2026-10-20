@@ -3,7 +3,7 @@
     var accion = ViewContext.RouteData.Values["action"]?.ToString();
     var esInicio = controlador == "Home" && accion == "Index";
     var esDonaciones = controlador == "Donaciones";
-    var esCatalogo = controlador == "Equipos" && accion is "Catalogo" or "CatalogoDetalle";
+    var esCatalogo = controlador == "Catalogo";
     var esSolicitudes = controlador == "Solicitudes";
 }
 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
@@ -20,7 +20,7 @@
     </div>
     <div class="nav-group" role="group" aria-labelledby="nav-grupo-solicitar">
         <div class="nav-heading" id="nav-grupo-solicitar">Solicitar equipos</div>
-        <a class="nav-link d-flex align-items-center gap-2@(esCatalogo ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Catalogo" aria-current="@(esCatalogo ? "page" : null)">
+        <a class="nav-link d-flex align-items-center gap-2@(esCatalogo ? " active" : "")" asp-area="" asp-controller="Catalogo" asp-action="Index" aria-current="@(esCatalogo ? "page" : null)">
             <span class="nav-dot"></span>
             <partial name="_Icon" model="@("laptop")" />Catálogo
         </a>
