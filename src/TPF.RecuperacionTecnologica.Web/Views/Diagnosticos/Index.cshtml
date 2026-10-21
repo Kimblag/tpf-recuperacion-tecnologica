@@ -3,7 +3,13 @@
 @{
     ViewData["Title"] = "Diagnósticos";
 
-    Func<int, string?> sinEnlace = _ => null;
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Tipo = Model.Tipo,
+        Dictamen = Model.Dictamen,
+        Pagina = pagina
+    });
 }
 
 @section Migas {
@@ -128,7 +134,7 @@
                     </table>
                 </div>
 
-                <partial name="_Paginador" model="@((1, 1, 1, Model.Filas.Count, Model.Total, sinEnlace))" />
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
 

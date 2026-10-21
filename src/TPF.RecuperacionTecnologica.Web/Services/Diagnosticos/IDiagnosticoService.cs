@@ -1,10 +1,29 @@
 using Microsoft.AspNetCore.Identity;
+using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Diagnosticos;
 
 public interface IDiagnosticoService
 {
+    /// <summary>
+    /// Lista todos los diagnósticos registrados para el personal interno, del más reciente al más antiguo,
+    /// con filtros opcionales de búsqueda (número de diagnóstico o de equipo), tipo y dictamen.
+    /// </summary>
+    /// <returns>
+    /// La página pedida, ajustada al rango válido, o vacía si ningún diagnóstico cumple los filtros.
+    /// </returns>
+    Task<ResultadoPaginado<DiagnosticoFilaViewModel>> ListarAsync(
+        string? busqueda, TipoDiagnostico? tipo, DictamenTecnico? dictamen, int pagina, int tamanoPagina);
+
+    /// <summary>
+    /// Devuelve los datos de un diagnóstico, del equipo evaluado y del Técnico que lo registró, para consulta.
+    /// </summary>
+    /// <returns>Los datos del diagnóstico, o null si no existe.</returns>
+    Task<DiagnosticoDetalleViewModel?> ObtenerDetalleAsync(int nroDiagnostico);
+
     /// <summary>
     /// Registra el diagnóstico inicial de un Equipo Pendiente de recepción y actualiza su estado según el dictamen:
     /// Funcional pasa a Disponible, Necesita reparación a En reparación y No recuperable a Baja.

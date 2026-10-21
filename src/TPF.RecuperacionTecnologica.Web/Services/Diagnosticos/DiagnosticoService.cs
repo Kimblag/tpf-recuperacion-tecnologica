@@ -4,7 +4,9 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Diagnosticos;
 
@@ -23,6 +25,105 @@ public class DiagnosticoService : IDiagnosticoService
         _auditoriaService = auditoriaService;
         _logger = logger;
     }
+
+    public async Task<ResultadoPaginado<DiagnosticoFilaViewModel>> ListarAsync(
+        string? busqueda, TipoDiagnostico? tipo, DictamenTecnico? dictamen, int pagina, int tamanoPagina)
+    {
+        var consulta = _context.Diagnosticos.AsNoTracking();
+
+        if (tipo is not null)
+        {
+            consulta = consulta.Where(d => d.TipoDiagnostico == tipo);
+        }
+
+        if (dictamen is not null)
+        {
+            consulta = consulta.Where(d => d.DictamenTecnico == dictamen);
+        }
+
+        var texto = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(texto))
+        {
+            // el código de diagnóstico se muestra como DIA-000123, así que se acepta con o sin el prefijo
+            if (texto.StartsWith("DIA-", StringComparison.OrdinalIgnoreCase))
+            {
+                texto = texto[4..];
+            }
+
+            consulta = int.TryParse(texto, out var numero)
+                ? consulta.Where(d => d.NroDiagnostico == numero || d.NroEquipo == numero)
+                : consulta.Where(d => false);
+        }
+
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        var elementos = await consulta
+            .OrderByDescending(d => d.FechaDiagnostico)
+            .ThenByDescending(d => d.NroDiagnostico)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .Select(d => new DiagnosticoFilaViewModel
+            {
+                NroDiagnostico = d.NroDiagnostico,
+                NroEquipo = d.NroEquipo,
+                TipoDiagnostico = d.TipoDiagnostico,
+                FechaDiagnostico = d.FechaDiagnostico,
+                CodigoTecnico = d.CodigoTecnico,
+                DictamenTecnico = d.DictamenTecnico,
+                EsVigente = d.EsVigente,
+                NroDiagnosticoRectificado = d.DiagnosticoRectificadoId,
+                NroDiagnosticoReemplazante = _context.Diagnosticos
+                    .Where(r => r.DiagnosticoRectificadoId == d.NroDiagnostico)
+                    .Select(r => (int?)r.NroDiagnostico)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        return new ResultadoPaginado<DiagnosticoFilaViewModel>
+        {
+            Elementos = elementos,
+            Total = total,
+            Pagina = pagina
+        };
+    }
+
+    public async Task<DiagnosticoDetalleViewModel?> ObtenerDetalleAsync(int nroDiagnostico) =>
+        await _context.Diagnosticos
+            .AsNoTracking()
+            .Where(d => d.NroDiagnostico == nroDiagnostico)
+            .Select(d => new DiagnosticoDetalleViewModel
+            {
+                NroDiagnostico = d.NroDiagnostico,
+                TipoDiagnostico = d.TipoDiagnostico,
+                FechaDiagnostico = d.FechaDiagnostico,
+                NroEquipo = d.NroEquipo,
+                TipoEquipo = d.Equipo.TipoEquipo,
+                Marca = d.Equipo.Marca,
+                Modelo = d.Equipo.Modelo,
+                EstadoEquipo = d.Equipo.EstadoEquipo,
+                CodigoTecnico = d.CodigoTecnico,
+                Tecnico = d.Tecnico.Nombre + " " + d.Tecnico.Apellido,
+                DictamenTecnico = d.DictamenTecnico,
+                EsVigente = d.EsVigente,
+                NroDiagnosticoRectificado = d.DiagnosticoRectificadoId,
+                NroDiagnosticoReemplazante = _context.Diagnosticos
+                    .Where(r => r.DiagnosticoRectificadoId == d.NroDiagnostico)
+                    .Select(r => (int?)r.NroDiagnostico)
+                    .FirstOrDefault(),
+                DetalleFallas = d.DetalleFallas,
+                DetalleReparacionesRealizadas = d.DetalleReparacionesRealizadas,
+                Observaciones = d.Observaciones,
+                Procesador = d.EspecificacionesVerificadas.Procesador,
+                MemoriaRam = d.EspecificacionesVerificadas.MemoriaRam,
+                Almacenamiento = d.EspecificacionesVerificadas.Almacenamiento,
+                TamanoPantalla = d.EspecificacionesVerificadas.TamanoPantalla,
+                EstadoBateria = d.EspecificacionesVerificadas.EstadoBateria,
+                Otros = d.EspecificacionesVerificadas.Otros
+            })
+            .FirstOrDefaultAsync();
 
     // los opcionales vacíos se guardan como null para no llenar la base de textos en blanco
     private static string? TextoOpcional(string? texto) =>
