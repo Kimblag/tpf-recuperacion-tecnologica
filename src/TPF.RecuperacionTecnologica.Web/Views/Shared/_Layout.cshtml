@@ -63,6 +63,10 @@
                 {
                     <partial name="_MenuTecnico" />
                 }
+                else if (User.IsInRole(nameof(RolPersonal.Coordinador)))
+                {
+                    <partial name="_MenuCoordinador" />
+                }
                 else
                 {
                     <partial name="_MenuBasico" />
