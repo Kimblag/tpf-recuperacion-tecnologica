@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
@@ -445,6 +446,87 @@ public class DonacionService : IDonacionService
         return IdentityResult.Success;
     }
 
+
+    public async Task<IReadOnlyList<EquipoDisponibleViewModel>> ObtenerDisponiblesAsync(TipoEquipo? tipo)
+    {
+        var consulta = _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.EstadoEquipo == EstadoEquipo.Disponible);
+
+        if (tipo is not null)
+        {
+            consulta = consulta.Where(e => e.TipoEquipo == tipo);
+        }
+
+        // el catálogo muestra lo que verificó el técnico, nunca lo declarado por el donante
+        return await consulta
+            .Join(_context.Diagnosticos.Where(d => d.EsVigente),
+                e => e.NroEquipo, d => d.NroEquipo,
+                (e, d) => new { Equipo = e, Diagnostico = d })
+            .OrderBy(x => x.Equipo.NroEquipo)
+            .Select(x => new EquipoDisponibleViewModel
+            {
+                NroEquipo = x.Equipo.NroEquipo,
+                TipoEquipo = x.Equipo.TipoEquipo,
+                Marca = x.Equipo.Marca,
+                Modelo = x.Equipo.Modelo,
+                Procesador = x.Diagnostico.EspecificacionesVerificadas.Procesador,
+                MemoriaRam = x.Diagnostico.EspecificacionesVerificadas.MemoriaRam,
+                Almacenamiento = x.Diagnostico.EspecificacionesVerificadas.Almacenamiento,
+                TamanoPantalla = x.Diagnostico.EspecificacionesVerificadas.TamanoPantalla,
+                EstadoBateria = x.Diagnostico.EspecificacionesVerificadas.EstadoBateria,
+                Otros = x.Diagnostico.EspecificacionesVerificadas.Otros,
+                ImagenUrl = _context.ImagenesEquipo
+                    .Where(i => i.NroEquipo == x.Equipo.NroEquipo)
+                    .OrderBy(i => i.FechaCarga)
+                    .Select(i => i.UrlImagen)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<EquipoCatalogoDetalleViewModel?> ObtenerDetalleDisponibleAsync(int nroEquipo)
+    {
+        // un equipo que no está Disponible responde igual que uno inexistente
+        var detalle = await _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo && e.EstadoEquipo == EstadoEquipo.Disponible)
+            .Join(_context.Diagnosticos.Where(d => d.EsVigente),
+                e => e.NroEquipo, d => d.NroEquipo,
+                (e, d) => new { Equipo = e, Diagnostico = d })
+            .Select(x => new EquipoCatalogoDetalleViewModel
+            {
+                NroEquipo = x.Equipo.NroEquipo,
+                TipoEquipo = x.Equipo.TipoEquipo,
+                Marca = x.Equipo.Marca,
+                Modelo = x.Equipo.Modelo,
+                FechaDisponibilidad = x.Equipo.FechaDisponibilidad,
+                Procesador = x.Diagnostico.EspecificacionesVerificadas.Procesador,
+                MemoriaRam = x.Diagnostico.EspecificacionesVerificadas.MemoriaRam,
+                Almacenamiento = x.Diagnostico.EspecificacionesVerificadas.Almacenamiento,
+                TamanoPantalla = x.Diagnostico.EspecificacionesVerificadas.TamanoPantalla,
+                EstadoBateria = x.Diagnostico.EspecificacionesVerificadas.EstadoBateria,
+                Otros = x.Diagnostico.EspecificacionesVerificadas.Otros
+            })
+            .FirstOrDefaultAsync();
+
+        if (detalle is null)
+        {
+            return null;
+        }
+
+        var imagenes = await _context.ImagenesEquipo
+            .AsNoTracking()
+            .Where(i => i.NroEquipo == nroEquipo)
+            .OrderBy(i => i.FechaCarga)
+            .Select(i => new { i.UrlImagen, i.Angulo })
+            .ToListAsync();
+
+        detalle.Imagenes = imagenes.Select(i => (i.UrlImagen, i.Angulo)).ToList();
+        detalle.ImagenUrl = imagenes.FirstOrDefault()?.UrlImagen;
+
+        return detalle;
+    }
 
     private static IReadOnlyList<HitoViewModel> ArmarHistorial(
         EstadoEquipo estado, EstadoInicialDeclarado condicion, DateTime fechaRegistro, DateTime? fechaCancelacion,
