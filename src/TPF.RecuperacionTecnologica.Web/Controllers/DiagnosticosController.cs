@@ -62,32 +62,32 @@ public class DiagnosticosController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public Task<IActionResult> Registrar(int nroEquipo) => MostrarFormularioAsync(nroEquipo, TipoDiagnostico.Inicial);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public Task<IActionResult> Registrar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
         GuardarAsync(nroEquipo, TipoDiagnostico.Inicial, formulario, "El diagnóstico se registró correctamente.");
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public Task<IActionResult> Segundo(int nroEquipo) => MostrarFormularioAsync(nroEquipo, TipoDiagnostico.Segundo);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public Task<IActionResult> Segundo(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
         GuardarAsync(nroEquipo, TipoDiagnostico.Segundo, formulario, "El segundo diagnóstico se registró correctamente.");
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public Task<IActionResult> Rectificar(int nroEquipo) => MostrarFormularioAsync(nroEquipo, TipoDiagnostico.Rectificacion);
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public Task<IActionResult> Rectificar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
         GuardarAsync(nroEquipo, TipoDiagnostico.Rectificacion, formulario, "La rectificación se guardó correctamente.");
 
