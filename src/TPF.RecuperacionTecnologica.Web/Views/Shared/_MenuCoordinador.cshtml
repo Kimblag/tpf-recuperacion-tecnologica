@@ -3,6 +3,7 @@
     var accion = ViewContext.RouteData.Values["action"]?.ToString();
     var esInicio = controlador == "Home" && accion == "Index";
     var esEquipos = controlador == "Equipos";
+    var esDonaciones = controlador == "Donaciones";
 }
 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
     <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(esInicio ? "page" : null)">
@@ -14,6 +15,10 @@
         <a class="nav-link d-flex align-items-center gap-2@(esEquipos ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Index" aria-current="@(esEquipos ? "page" : null)">
             <span class="nav-dot"></span>
             <partial name="_Icon" model="@("laptop")" />Equipos
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Gestion" aria-current="@(esDonaciones ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("gift")" />Donaciones
         </a>
     </div>
 </nav>

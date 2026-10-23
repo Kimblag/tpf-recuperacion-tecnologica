@@ -304,11 +304,79 @@ public class DonacionService : IDonacionService
         };
     }
 
-    public async Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo)
+    public async Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
+        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina)
     {
-        var equipo = await _context.Equipos
+        var consulta = _context.Equipos.AsNoTracking();
+
+        if (estado is not null)
+        {
+            consulta = consulta.Where(e => e.EstadoEquipo == estado);
+        }
+
+        var texto = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(texto))
+        {
+            consulta = int.TryParse(texto, out var nroEquipo)
+                ? consulta.Where(e => e.NroEquipo == nroEquipo)
+                : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
+        }
+
+        var textoDonante = donante?.Trim();
+
+        if (!string.IsNullOrEmpty(textoDonante))
+        {
+            consulta = consulta.Where(e =>
+                (e.UsuarioDonante.Nombre + " " + e.UsuarioDonante.Apellido).Contains(textoDonante)
+                || e.UsuarioDonante.RazonSocial!.Contains(textoDonante)
+                || e.UsuarioDonante.CorreoElectronico.Contains(textoDonante));
+        }
+
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        var elementos = await consulta
+            .OrderByDescending(e => e.FechaRegistro)
+            .ThenByDescending(e => e.NroEquipo)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .Select(e => new DonacionGestionFilaViewModel
+            {
+                NroEquipo = e.NroEquipo,
+                TipoEquipo = e.TipoEquipo,
+                Marca = e.Marca,
+                Modelo = e.Modelo,
+                EstadoInicialDeclarado = e.EstadoInicialDeclarado,
+                FechaRegistro = e.FechaRegistro,
+                EstadoEquipo = e.EstadoEquipo,
+                Donante = (e.UsuarioDonante.TipoUsuario == TipoUsuario.Persona
+                    ? e.UsuarioDonante.Nombre + " " + e.UsuarioDonante.Apellido
+                    : e.UsuarioDonante.RazonSocial) ?? string.Empty
+            })
+            .ToListAsync();
+
+        return new ResultadoPaginado<DonacionGestionFilaViewModel>
+        {
+            Elementos = elementos,
+            Total = total,
+            Pagina = pagina
+        };
+    }
+
+    public Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo) =>
+        ArmarDetalleAsync(_context.Equipos.Where(e => e.UsuarioDonante.IdentityUserId == identityUserId), nroEquipo);
+
+    public Task<DonacionDetalleViewModel?> ObtenerDetalleInternoAsync(int nroEquipo) =>
+        ArmarDetalleAsync(_context.Equipos, nroEquipo);
+
+    // la consulta de origen define qué donaciones se pueden ver: las propias del Usuario o todas
+    private async Task<DonacionDetalleViewModel?> ArmarDetalleAsync(IQueryable<Equipo> origen, int nroEquipo)
+    {
+        var equipo = await origen
             .AsNoTracking()
-            .Where(e => e.NroEquipo == nroEquipo && e.UsuarioDonante.IdentityUserId == identityUserId)
+            .Where(e => e.NroEquipo == nroEquipo)
             .Select(e => new
             {
                 e.NroEquipo,

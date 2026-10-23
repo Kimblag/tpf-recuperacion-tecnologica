@@ -72,6 +72,46 @@ public class DonacionesController : Controller
         }
     }
 
+    // listado de todas las donaciones para el personal interno; el donante usa Index y Detalle
+    [HttpGet]
+    [Authorize(Policy = "PersonalInterno")]
+    public async Task<IActionResult> Gestion(DonacionListadoViewModel filtros)
+    {
+        try
+        {
+            var resultado = await _donacionService.ListarTodasAsync(
+                filtros.Busqueda, filtros.Donante, filtros.Estado, filtros.Pagina, DonacionListadoViewModel.TamanoPagina);
+
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el listado de donaciones del personal");
+            filtros.ErrorAlCargar = true;
+        }
+
+        return View(filtros);
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "PersonalInterno")]
+    public async Task<IActionResult> DetalleInterno(int id)
+    {
+        try
+        {
+            var donacion = await _donacionService.ObtenerDetalleInternoAsync(id);
+
+            return donacion is null ? NotFound() : View(donacion);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el detalle de la donación {NroEquipo}", id);
+            return View("DetalleInternoError");
+        }
+    }
+
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]
     public IActionResult Registrar()
