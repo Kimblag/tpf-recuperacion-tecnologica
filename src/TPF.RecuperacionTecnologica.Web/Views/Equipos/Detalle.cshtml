@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Detalle de equipo";
 
+    var esTecnico = User.IsInRole(nameof(RolPersonal.Tecnico));
+
     string? Enlace(string accion) => Url.Action(accion, "Diagnosticos", new { nroEquipo = Model.NroEquipo });
 }
 
@@ -23,26 +25,32 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>Historial de diagnósticos</span></a>
-            @if (Model.EstadoEquipo != EstadoEquipo.Cancelado)
+            @if (esTecnico)
             {
-                <a class="btn btn-secondary" asp-action="CargarImagen" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("plus")" /><span>Cargar imagen</span></a>
-            }
-            @if (Model.PuedeRectificar)
-            {
-                <partial name="_AccionDiagnostico" model="@(("Rectificar", "edit", Enlace("Rectificar"), false))" />
-            }
-            @if (Model.PuedeRegistrarDiagnostico)
-            {
-                <partial name="_AccionDiagnostico" model="@(("Registrar diagnóstico", "plus", Enlace("Registrar"), true))" />
-            }
-            @if (Model.PuedeRegistrarSegundo)
-            {
-                <partial name="_AccionDiagnostico" model="@(("Segundo diagnóstico", "wrench", Enlace("Segundo"), true))" />
+                if (Model.EstadoEquipo != EstadoEquipo.Cancelado)
+                {
+                    <a class="btn btn-secondary" asp-action="CargarImagen" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("plus")" /><span>Cargar imagen</span></a>
+                }
+
+                if (Model.PuedeRectificar)
+                {
+                    <partial name="_AccionDiagnostico" model="@(("Rectificar", "edit", Enlace("Rectificar"), false))" />
+                }
+
+                if (Model.PuedeRegistrarDiagnostico)
+                {
+                    <partial name="_AccionDiagnostico" model="@(("Registrar diagnóstico", "plus", Enlace("Registrar"), true))" />
+                }
+
+                if (Model.PuedeRegistrarSegundo)
+                {
+                    <partial name="_AccionDiagnostico" model="@(("Segundo diagnóstico", "wrench", Enlace("Segundo"), true))" />
+                }
             }
         </div>
     </div>
 
-    @if (!Model.AdmiteAcciones)
+    @if (esTecnico && !Model.AdmiteAcciones)
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />

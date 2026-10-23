@@ -4,6 +4,8 @@
 @{
     ViewData["Title"] = "Pendientes de diagnóstico";
 
+    var esTecnico = User.IsInRole(nameof(RolPersonal.Tecnico));
+
     Func<int, string?> enlacePagina = pagina => Url.Action("Pendientes", new
     {
         Busqueda = Model.Busqueda,
@@ -96,7 +98,7 @@
             }
             else
             {
-                <partial name="_TablaEquipos" model="@((Model.Filas, true, Model, "Pendientes"))" />
+                <partial name="_TablaEquipos" model="@((Model.Filas, esTecnico, Model, "Pendientes"))" />
                 <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
