@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
@@ -81,6 +82,9 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 
 // las políticas se basan en los roles de Identity, que coinciden con RolPersonal
 builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build())
     .AddPolicy("SoloAdministrador", policy =>
         policy.RequireRole(nameof(RolPersonal.Administrador)))
     .AddPolicy("PersonalInterno", policy =>
@@ -89,7 +93,7 @@ builder.Services.AddAuthorizationBuilder()
             nameof(RolPersonal.Coordinador),
             nameof(RolPersonal.Administrador)))
     .AddPolicy("UsuarioExterno", policy =>
-        policy.RequireClaim(ClaimsSesion.TipoUsuario)); ;
+        policy.RequireClaim(ClaimsSesion.TipoUsuario));
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -130,7 +134,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+app.MapStaticAssets().AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",
