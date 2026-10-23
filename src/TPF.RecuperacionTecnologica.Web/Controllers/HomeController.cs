@@ -28,6 +28,11 @@ public class HomeController : Controller
 
         if (!User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
         {
+            if (User.IsInRole(nameof(RolPersonal.Administrador)))
+            {
+                return RedirectToAction("Inicio", "Administrador");
+            }
+
             return User.IsInRole(nameof(RolPersonal.Tecnico)) ? await InicioTecnicoAsync(identityUserId) : View();
         }
 
