@@ -33,7 +33,7 @@ public class EquiposController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public async Task<IActionResult> Pendientes(EquipoListadoViewModel filtros)
     {
         filtros.Orden ??= OrdenEquipo.RegistroAsc;
