@@ -23,6 +23,10 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>Historial de diagnósticos</span></a>
+            @if (Model.EstadoEquipo != EstadoEquipo.Cancelado)
+            {
+                <a class="btn btn-secondary" asp-action="CargarImagen" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("plus")" /><span>Cargar imagen</span></a>
+            }
             @if (Model.PuedeRectificar)
             {
                 <partial name="_AccionDiagnostico" model="@(("Rectificar", "edit", Enlace("Rectificar"), false))" />

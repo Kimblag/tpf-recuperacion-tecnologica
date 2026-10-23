@@ -1,0 +1,64 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Equipos.CargaImagenViewModel
+@{
+    ViewData["Title"] = "Cargar imagen";
+
+    var etiquetaObligatorio = "<span class=\"req\" aria-hidden=\"true\">*</span><span class=\"visually-hidden\"> (obligatorio)</span>";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Equipos</a></li>
+    <li><a asp-action="Detalle" asp-route-id="@Model.NroEquipo">@Model.CodigoEquipo</a></li>
+    <li aria-current="page">Cargar imagen</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <h1 tabindex="-1">Cargar imagen</h1>
+            <p class="page-sub">Equipo <span class="mono">@Model.CodigoEquipo</span> · @Model.MarcaYModelo</p>
+        </div>
+    </div>
+
+    <form class="card" asp-action="CargarImagen" asp-route-id="@Model.NroEquipo" method="post" enctype="multipart/form-data" novalidate aria-labelledby="f-imagen-titulo">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="f-imagen-titulo">Imagen del equipo</h2>
+                <p class="card-sub">Se mostrará en el catálogo público cuando el equipo esté disponible</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <input asp-for="NroEquipo" type="hidden" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <div class="field span-2">
+                        <label class="form-label" for="Archivo">Imagen@(Html.Raw(etiquetaObligatorio))</label>
+                        <input asp-for="Archivo" type="file" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-describedby="Archivo-hint" />
+                        <div class="form-text" id="Archivo-hint">Formato JPG o PNG, de hasta 5 MB.</div>
+                        <span asp-validation-for="Archivo"></span>
+                    </div>
+
+                    <div class="field span-2">
+                        <label class="form-label" for="Angulo">Ángulo</label>
+                        <input asp-for="Angulo" class="form-control" maxlength="40" aria-describedby="Angulo-hint" />
+                        <div class="form-text" id="Angulo-hint">Opcional. Por ejemplo: frontal, trasera, lateral.</div>
+                        <span asp-validation-for="Angulo"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Cargar imagen</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

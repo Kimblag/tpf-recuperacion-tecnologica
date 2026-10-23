@@ -46,6 +46,7 @@ builder.Services.AddScoped<IPersonalService, PersonalService>();
 builder.Services.AddScoped<IDonacionService, DonacionService>();
 builder.Services.AddScoped<IInicioService, InicioService>();
 builder.Services.AddScoped<IEquipoConsultaService, EquipoConsultaService>();
+builder.Services.AddScoped<IImagenEquipoService, ImagenEquipoService>();
 builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
