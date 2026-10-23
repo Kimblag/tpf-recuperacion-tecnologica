@@ -74,7 +74,7 @@ public class DonacionesController : Controller
 
     // listado de todas las donaciones para el personal interno; el donante usa Index y Detalle
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "Coordinacion")]
     public async Task<IActionResult> Gestion(DonacionListadoViewModel filtros)
     {
         try
@@ -96,7 +96,7 @@ public class DonacionesController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "Coordinacion")]
     public async Task<IActionResult> DetalleInterno(int id)
     {
         try
