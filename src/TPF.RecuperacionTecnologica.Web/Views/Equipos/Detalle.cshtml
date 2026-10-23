@@ -4,6 +4,9 @@
     ViewData["Title"] = "Detalle de equipo";
 
     var esTecnico = User.IsInRole(nameof(RolPersonal.Tecnico));
+    var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
+    var verSolicitudes = esCoordinador || User.IsInRole(nameof(RolPersonal.Administrador));
+    var textoHistorial = esCoordinador ? "Historial de equipo" : "Historial de diagnósticos";
 
     string? Enlace(string accion) => Url.Action(accion, "Diagnosticos", new { nroEquipo = Model.NroEquipo });
 }
@@ -24,7 +27,7 @@
             <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
-            <a class="btn btn-secondary" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>Historial de diagnósticos</span></a>
+            <a class="btn btn-secondary" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>@textoHistorial</span></a>
             @if (esTecnico)
             {
                 if (Model.EstadoEquipo != EstadoEquipo.Cancelado)
@@ -46,6 +49,11 @@
                 {
                     <partial name="_AccionDiagnostico" model="@(("Segundo diagnóstico", "wrench", Enlace("Segundo"), true))" />
                 }
+            }
+            @if (esCoordinador)
+            {
+                @* TODO: reemplazar por el enlace a Asignaciones/Asignar cuando exista la acción (#122) *@
+                <button type="button" class="btn @(Model.EstadoEquipo == EstadoEquipo.Disponible ? "btn-primary" : "btn-secondary")" disabled><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></button>
             }
         </div>
     </div>
@@ -74,14 +82,17 @@
                         <dd>@Model.Marca</dd>
                         <dt>Modelo</dt>
                         <dd>@Model.Modelo</dd>
-                        <dt>Condición declarada</dt>
-                        <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
-                        <dt>Observaciones</dt>
-                        <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
-                        <dt>Donante</dt>
-                        <dd>@Model.Donante</dd>
-                        <dt>Fecha de registro</dt>
-                        <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                        @if (!esCoordinador)
+                        {
+                            <dt>Condición declarada</dt>
+                            <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
+                            <dt>Observaciones</dt>
+                            <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
+                            <dt>Donante</dt>
+                            <dd>@Model.Donante</dd>
+                            <dt>Fecha de registro</dt>
+                            <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                        }
                         @if (Model.FechaDisponibilidad is not null)
                         {
                             <dt>Disponible desde</dt>
@@ -100,6 +111,70 @@
                 </div>
             </section>
 
+            @if (esCoordinador)
+            {
+                <section class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Características técnicas</h2>
+                            <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.DiagnosticoVigente is { } verificado)
+                        {
+                            var hayVerificadas = new[] { verificado.Procesador, verificado.MemoriaRam, verificado.Almacenamiento, verificado.TamanoPantalla, verificado.EstadoBateria, verificado.Otros }
+                                .Any(texto => !string.IsNullOrWhiteSpace(texto));
+
+                            if (hayVerificadas)
+                            {
+                                <dl class="dl">
+                                    @if (!string.IsNullOrWhiteSpace(verificado.Procesador))
+                                    {
+                                        <dt>Procesador</dt>
+                                        <dd>@verificado.Procesador</dd>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(verificado.MemoriaRam))
+                                    {
+                                        <dt>Memoria RAM</dt>
+                                        <dd>@verificado.MemoriaRam</dd>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(verificado.Almacenamiento))
+                                    {
+                                        <dt>Almacenamiento</dt>
+                                        <dd>@verificado.Almacenamiento</dd>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(verificado.TamanoPantalla))
+                                    {
+                                        <dt>Tamaño de pantalla</dt>
+                                        <dd>@verificado.TamanoPantalla</dd>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(verificado.EstadoBateria))
+                                    {
+                                        <dt>Estado de la batería</dt>
+                                        <dd>@verificado.EstadoBateria</dd>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(verificado.Otros))
+                                    {
+                                        <dt>Otros datos</dt>
+                                        <dd>@verificado.Otros</dd>
+                                    }
+                                </dl>
+                            }
+                            else
+                            {
+                                <p class="muted">No se verificaron características técnicas.</p>
+                            }
+                        }
+                        else
+                        {
+                            <p class="muted">Todavía no hay características verificadas.</p>
+                        }
+                    </div>
+                </section>
+            }
+            else
+            {
             <section class="card">
                 <div class="card-header">
                     <div>
@@ -149,6 +224,7 @@
                     }
                 </div>
             </section>
+            }
         </div>
 
         <section class="card">
@@ -185,4 +261,24 @@
             </div>
         </section>
     </div>
+
+    @if (verSolicitudes)
+    {
+        @* TODO: reemplazar por las solicitudes reales del equipo cuando exista su listado (#151) *@
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Solicitudes sobre este equipo</h2>
+                    <p class="card-sub">Cada solicitud es sobre un equipo específico</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
+                    <h3>Sin solicitudes</h3>
+                    <p>Todavía nadie solicitó este equipo.</p>
+                </div>
+            </div>
+        </section>
+    }
 </div>
