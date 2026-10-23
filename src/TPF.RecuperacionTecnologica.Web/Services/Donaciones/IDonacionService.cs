@@ -53,6 +53,22 @@ public interface IDonacionService
     Task<DonacionDetalleViewModel?> ObtenerDetalleAsync(string identityUserId, int nroEquipo);
 
     /// <summary>
+    /// Lista las donaciones de todos los Usuarios para el personal interno, de la más reciente a la más antigua,
+    /// con filtros opcionales de búsqueda (número, marca o modelo), donante (nombre, razón social o correo) y estado de equipo.
+    /// </summary>
+    /// <returns>
+    /// La página pedida, ajustada al rango válido, o vacía si ninguna donación cumple los filtros.
+    /// </returns>
+    Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
+        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina);
+
+    /// <summary>
+    /// Devuelve los datos de una donación de cualquier Usuario, en cualquier estado, para consulta del personal interno.
+    /// </summary>
+    /// <returns>Los datos de la donación, o null si no existe.</returns>
+    Task<DonacionDetalleViewModel?> ObtenerDetalleInternoAsync(int nroEquipo);
+
+    /// <summary>
     /// Cancela una donación propia mientras el Equipo está Pendiente de recepción.
     /// </summary>
     /// <returns>

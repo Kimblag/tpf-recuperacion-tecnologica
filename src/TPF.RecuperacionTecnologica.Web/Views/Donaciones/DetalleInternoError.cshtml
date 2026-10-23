@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Detalle de donación";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Gestion">Donaciones</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Detalle de donación</h1></div>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Gestion"><partial name="_Icon" model="@("arrow-left")" /><span>Donaciones</span></a>
+        </div>
+    </div>
+
+    <section class="card">
+        <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener los datos de la donación. Se puede intentar de nuevo en unos minutos.")" />
+    </section>
+</div>

@@ -1,0 +1,127 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.DonacionListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Donaciones";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Gestion", new
+    {
+        Busqueda = Model.Busqueda,
+        Donante = Model.Donante,
+        Estado = Model.Estado,
+        Pagina = pagina
+    });
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Donaciones</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Donaciones</h1></div>
+            <p class="page-sub">Donaciones de todos los donantes, en cualquier estado</p>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Donaciones" data-listado data-filas-carga="6">
+        <partial name="_AyudaEstadosEquipo" />
+
+        <form class="filters" role="search" method="get" asp-action="Gestion" data-filtros-automaticos>
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Número, marca o modelo" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter grow">
+                <label for="Donante">Donante</label>
+                <input asp-for="Donante" class="form-control sm" placeholder="Nombre, razón social o correo" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoEquipo>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Gestion" data-muestra-carga>Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las donaciones. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No se encontraron donaciones</h3>
+                    <p>Probar con otra búsqueda o quitar algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Gestion" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("gift")" /></span>
+                    <h3>Todavía no hay donaciones registradas</h3>
+                    <p>Las donaciones aparecen acá cuando un donante registra un equipo.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Donaciones</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Donante</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Marca y modelo</th>
+                                <th scope="col">Registro</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Equipo"><span class="mono">@fila.CodigoEquipo</span></td>
+                                    <td data-label="Donante">@fila.Donante</td>
+                                    <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
+                                    <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
+                                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="DetalleInterno" asp-route-id="@fila.NroEquipo" aria-label="Ver donación del equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+}
