@@ -62,7 +62,7 @@ public class EquiposController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public async Task<IActionResult> CargarImagen(int id)
     {
         var equipo = await _equipoConsultaService.ObtenerDetalleAsync(id);
@@ -82,7 +82,7 @@ public class EquiposController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "SoloTecnico")]
     public async Task<IActionResult> CargarImagen(int id, CargaImagenViewModel modelo)
     {
         var equipo = await _equipoConsultaService.ObtenerDetalleAsync(id);

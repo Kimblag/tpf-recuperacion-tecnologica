@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Diagnósticos";
 
+    var esTecnico = User.IsInRole(nameof(RolPersonal.Tecnico));
+
     Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
     {
         Busqueda = Model.Busqueda,
@@ -23,7 +25,7 @@
             <div class="h-id"><h1 tabindex="-1">Diagnósticos</h1></div>
             <p class="page-sub">Evaluaciones técnicas registradas</p>
         </div>
-        @if (Model.Filas.Count > 0 || Model.HayFiltros || Model.ErrorAlCargar)
+        @if (esTecnico && (Model.Filas.Count > 0 || Model.HayFiltros || Model.ErrorAlCargar))
         {
             <div class="page-actions">
                 <a class="btn btn-primary" asp-controller="Equipos" asp-action="Pendientes"><partial name="_Icon" model="@("plus")" /><span>Registrar diagnóstico</span></a>
@@ -85,7 +87,10 @@
                     <span class="state-ic"><partial name="_Icon" model="@("wrench")" /></span>
                     <h3>No hay diagnósticos</h3>
                     <p>El primer diagnóstico se registra desde un equipo pendiente.</p>
-                    <a class="btn btn-primary" asp-controller="Equipos" asp-action="Pendientes"><partial name="_Icon" model="@("plus")" /><span>Registrar diagnóstico</span></a>
+                    @if (esTecnico)
+                    {
+                        <a class="btn btn-primary" asp-controller="Equipos" asp-action="Pendientes"><partial name="_Icon" model="@("plus")" /><span>Registrar diagnóstico</span></a>
+                    }
                 </div>
             }
             else
