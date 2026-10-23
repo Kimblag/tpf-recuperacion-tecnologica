@@ -34,7 +34,7 @@ public class ImagenEquipoService : IImagenEquipoService
     {
         if (modelo.Archivo is not { Length: > 0 } archivo)
         {
-            return Fallo("ArchivoRequerido", "Seleccioná la imagen a cargar.");
+            return Fallo("ArchivoRequerido", "Seleccione la imagen a cargar.");
         }
 
         if (archivo.Length > TamanoMaximoBytes)
@@ -98,7 +98,7 @@ public class ImagenEquipoService : IImagenEquipoService
             // no se deja un archivo sin registro asociado
             if (File.Exists(rutaFisica)) File.Delete(rutaFisica);
 
-            return Fallo("ErrorAlGuardar", "No se pudo guardar la imagen. Intentá nuevamente.");
+            return Fallo("ErrorAlGuardar", "No se pudo guardar la imagen. Intente nuevamente.");
         }
 
         return IdentityResult.Success;

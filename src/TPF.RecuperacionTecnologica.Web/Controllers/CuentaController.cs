@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
@@ -6,6 +7,7 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
+[AllowAnonymous]
 public class CuentaController : Controller
 {
     private readonly IUsuarioService _usuarioService;

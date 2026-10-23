@@ -1,6 +1,8 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo.EquipoCatalogoDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.Services.Cuenta
 @{
     ViewData["Title"] = "Detalle del equipo";
+    var esUsuarioExterno = User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario);
 }
 
 @section Migas {
@@ -17,7 +19,11 @@
             <p class="page-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · Equipo <span class="mono">@Model.CodigoEquipo</span></p>
         </div>
         <div class="page-actions">
-            <a class="btn btn-primary" asp-controller="Solicitudes" asp-action="Registrar" asp-route-nroEquipo="@Model.NroEquipo"><partial name="_Icon" model="@("tray")" /><span>Solicitar</span></a>
+            @if (esUsuarioExterno)
+            {
+                @* TODO: reemplazar por el enlace a Solicitudes/Registrar cuando exista la acción (#118) *@
+                <button type="button" class="btn btn-primary" disabled><partial name="_Icon" model="@("tray")" /><span>Solicitar</span></button>
+            }
         </div>
     </div>
 
