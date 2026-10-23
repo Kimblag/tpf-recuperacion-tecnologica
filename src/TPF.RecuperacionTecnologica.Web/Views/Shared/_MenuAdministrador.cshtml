@@ -1,0 +1,57 @@
+@{
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
+    var esInicio = controlador == "Administrador";
+    var esUsuarios = controlador == "Usuarios";
+    var esPersonal = controlador == "Personal";
+    var esParametros = controlador == "Parametros";
+    var esAuditoria = controlador == "Auditoria";
+    var esReportes = controlador == "Reportes";
+    var esEquipos = controlador == "Equipos";
+    var esDonaciones = controlador == "Donaciones";
+}
+<nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
+    <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Administrador" asp-action="Inicio" aria-current="@(esInicio ? "page" : null)">
+        <span class="nav-dot"></span>
+        <partial name="_Icon" model="@("grid")" />Inicio
+    </a>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-personas">
+        <div class="nav-heading" id="nav-grupo-personas">Personas</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esUsuarios ? " active" : "")" asp-area="" asp-controller="Usuarios" asp-action="Index" aria-current="@(esUsuarios ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("users")" />Usuarios
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esPersonal ? " active" : "")" asp-area="" asp-controller="Personal" asp-action="Index" aria-current="@(esPersonal ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("idcard")" />Personal
+        </a>
+    </div>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-configuracion">
+        <div class="nav-heading" id="nav-grupo-configuracion">Configuración</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esParametros ? " active" : "")" asp-area="" asp-controller="Parametros" asp-action="Index" aria-current="@(esParametros ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("sliders")" />Parámetros
+        </a>
+    </div>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-supervision">
+        <div class="nav-heading" id="nav-grupo-supervision">Supervisión</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esAuditoria ? " active" : "")" asp-area="" asp-controller="Auditoria" asp-action="Index" aria-current="@(esAuditoria ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("history")" />Auditoría
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esReportes ? " active" : "")" asp-area="" asp-controller="Reportes" asp-action="Index" aria-current="@(esReportes ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("file")" />Reportes
+        </a>
+    </div>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-operacion">
+        <div class="nav-heading" id="nav-grupo-operacion">Operación (solo consulta)</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esEquipos ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Index" aria-current="@(esEquipos ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("laptop")" />Equipos
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Gestion" aria-current="@(esDonaciones ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("gift")" />Donaciones
+        </a>
+    </div>
+</nav>
