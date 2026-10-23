@@ -7,7 +7,7 @@ public class CargaImagenViewModel
     [Required(ErrorMessage = "El número de equipo es obligatorio.")]
     public int? NroEquipo { get; set; }
 
-    [Required(ErrorMessage = "Seleccioná la imagen a cargar.")]
+    [Required(ErrorMessage = "Seleccione la imagen a cargar.")]
     [Display(Name = "Imagen")]
     public IFormFile? Archivo { get; set; }
 
