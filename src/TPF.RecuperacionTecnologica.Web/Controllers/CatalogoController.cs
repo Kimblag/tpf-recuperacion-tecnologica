@@ -5,8 +5,8 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-// el catálogo lo ve cualquier persona con sesión, sea Usuario o Personal
-[Authorize]
+
+[Authorize(Policy = "UsuarioExterno")] // cualquier persona autenticada que sea externa
 public class CatalogoController : Controller
 {
     private readonly IDonacionService _donacionService;
