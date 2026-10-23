@@ -4,6 +4,8 @@
 @{
     ViewData["Title"] = "Equipos";
 
+    var esTecnico = User.IsInRole(nameof(RolPersonal.Tecnico));
+
     Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
     {
         Busqueda = Model.Busqueda,
@@ -25,9 +27,12 @@
             <div class="h-id"><h1 tabindex="-1">Equipos</h1></div>
             <p class="page-sub">Equipos recuperados y su estado técnico</p>
         </div>
-        <div class="page-actions">
-            <a class="btn btn-secondary" asp-action="Pendientes"><partial name="_Icon" model="@("clock")" /><span>Pendientes de diagnóstico</span></a>
-        </div>
+        @if (esTecnico)
+        {
+            <div class="page-actions">
+                <a class="btn btn-secondary" asp-action="Pendientes"><partial name="_Icon" model="@("clock")" /><span>Pendientes de diagnóstico</span></a>
+            </div>
+        }
     </div>
 
     <section class="card overflow" aria-label="Equipos" data-listado data-filas-carga="6">

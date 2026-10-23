@@ -31,7 +31,7 @@ public class DiagnosticosController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "TecnicoOAdministrador")]
     public async Task<IActionResult> Index(DiagnosticoListadoViewModel filtros)
     {
         try
@@ -53,7 +53,7 @@ public class DiagnosticosController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "TecnicoOAdministrador")]
     public async Task<IActionResult> Detalle(int id)
     {
         var diagnostico = await _diagnosticoService.ObtenerDetalleAsync(id);
