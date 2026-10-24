@@ -8,6 +8,10 @@ public class SolicitudFilaViewModel
 
     public int NroEquipo { get; set; }
 
+    public TipoEquipo TipoEquipo { get; set; }
+
+    public string MarcaYModelo { get; set; } = string.Empty;
+
     public TipoSolicitante TipoSolicitante { get; set; }
 
     public OrigenSolicitud OrigenSolicitud { get; set; }
