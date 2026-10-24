@@ -23,7 +23,15 @@ public class CatalogoController : Controller
     {
         try
         {
-            filtros.Filas = await _donacionService.ObtenerDisponiblesAsync(filtros.Tipo);
+            var resultado = await _donacionService.ObtenerDisponiblesAsync(
+               filtros.Busqueda, filtros.Marca, filtros.Tipo, filtros.Orden,
+               filtros.Pagina, CatalogoListadoViewModel.TamanoPagina);
+
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
+            filtros.TotalDisponibles = resultado.TotalDisponibles;
+            filtros.Marcas = resultado.Marcas;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

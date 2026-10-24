@@ -26,6 +26,11 @@ public class EquipoDisponibleViewModel
     public string? Otros { get; set; }
 
     public string? ImagenUrl { get; set; }
+    public DateTime? FechaDisponibilidad { get; set; }
+
+    public int CantidadImagenes { get; set; }
+
+    public int SolicitudesEnEspera { get; set; }
 
     public string CodigoEquipo => NroEquipo.ToString("D6");
 
