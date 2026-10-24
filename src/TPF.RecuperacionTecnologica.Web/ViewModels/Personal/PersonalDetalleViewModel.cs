@@ -4,4 +4,6 @@ public class PersonalDetalleViewModel : PersonalFilaViewModel
 {
     public string? Telefono { get; set; }
     public bool EsRaiz { get; set; }
+
+    public bool EsCuentaPropia { get; set; }
 }

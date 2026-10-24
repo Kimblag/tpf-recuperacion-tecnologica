@@ -77,9 +77,6 @@ builder.Services
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
 
-builder.Services.Configure<SecurityStampValidatorOptions>(options =>
-    options.ValidationInterval = TimeSpan.FromMinutes(1));
-
 // las políticas se basan en los roles de Identity, que coinciden con RolPersonal
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder()

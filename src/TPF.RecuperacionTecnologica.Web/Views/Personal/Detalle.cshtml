@@ -5,6 +5,7 @@
     ViewData["Title"] = "Detalle de personal";
 
     var estaActivo = Model.EstadoPersonal == EstadoPersonal.Activo;
+    var puedeInactivar = !Model.EsRaiz && !Model.EsCuentaPropia;
     var erroresGenerales = ViewData.ModelState.TryGetValue(string.Empty, out var entrada) ? entrada.Errors : null;
     var hayErrorEnModal = ViewData.ModelState.TryGetValue("MotivoInactivacion", out var motivo) && motivo.Errors.Count > 0;
 }
@@ -26,7 +27,7 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.CodigoPersonal"><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></a>
-            @if (!Model.EsRaiz)
+            @if (puedeInactivar)
             {
                 if (estaActivo)
                 {
@@ -58,6 +59,14 @@
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
             <div class="alert-body"><div>Este es el Administrador principal. No se puede inactivar y su rol y su correo no se pueden cambiar.</div></div>
+        </div>
+    }
+
+    @if (Model.EsCuentaPropia && !Model.EsRaiz)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Esta es la cuenta con la que se inició sesión. No se puede inactivar a sí misma: otro Administrador debe hacerlo.</div></div>
         </div>
     }
 
@@ -113,7 +122,7 @@
     </div>
 </div>
 
-@if (estaActivo && !Model.EsRaiz)
+@if (estaActivo && puedeInactivar)
 {
     <partial name="_ModalInactivar" model="new InactivarPersonalViewModel { CodigoPersonal = Model.CodigoPersonal, NombreCompleto = Model.NombreCompleto, Codigo = Model.Codigo }" />
 }

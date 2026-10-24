@@ -301,8 +301,6 @@ public class CuentaService : ICuentaService
     }
 
 
-    // TODO: cuando exista la baja de personal, hay que invalidar las sesiones (la baja de Usuario ya lo hace)
-    // abiertas con UserManager.UpdateSecurityStampAsync, porque esta verificación solo corre al iniciar sesión
     private async Task<bool> EstaHabilitadaAsync(string identityUserId)
     {
         var estadoPersonal = await _context.PersonalInterno
