@@ -3,6 +3,12 @@
     ViewData["Title"] = "Dar de baja mi cuenta";
 }
 
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Perfil">Mi perfil</a></li>
+    <li aria-current="page">Dar de baja mi cuenta</li>
+}
+
 <div class="stack narrow">
     <div class="page-head">
         <div>
@@ -34,7 +40,7 @@
             </div>
         </div>
         <div class="form-actions">
-            <a class="btn btn-secondary btn-lg" asp-action="Editar">Cancelar</a>
+            <a class="btn btn-secondary btn-lg" asp-action="Perfil">Cancelar</a>
             <button type="submit" class="btn btn-danger btn-lg">Dar de baja mi cuenta</button>
         </div>
     </form>
