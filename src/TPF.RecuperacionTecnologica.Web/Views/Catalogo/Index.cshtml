@@ -1,147 +1,204 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo.CatalogoListadoViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo
 @{
     ViewData["Title"] = "Catálogo";
 
-    string Nombre<T>(T valor) where T : struct, Enum =>
-        Html.GetEnumSelectList<T>().First(i => i.Value == Convert.ToInt32(valor).ToString()).Text;
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Marca = Model.Marca,
+        Tipo = Model.Tipo,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
+
+    string TextoDemanda(int cantidad) => cantidad switch
+    {
+        0 => "Sin solicitudes en espera",
+        1 => "1 solicitud en espera",
+        _ => $"{cantidad} solicitudes en espera"
+    };
+
+    var tipos = Enum.GetValues<TipoEquipo>();
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Catálogo</li>
 }
 
 <div class="stack">
     <div class="page-head">
         <div>
             <div class="h-id"><h1 tabindex="-1">Catálogo de equipos</h1></div>
-            <p class="page-sub">Equipos revisados por un técnico y disponibles para solicitar</p>
+            <p class="page-sub">Equipos disponibles para solicitar. Cada solicitud es sobre un equipo específico.</p>
+        </div>
+        <div class="page-actions">
+            @* TODO: enlazar a Solicitudes/Index cuando exista la pantalla de Mis solicitudes *@
+            <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("tray")" /><span>Mis solicitudes</span></button>
         </div>
     </div>
 
-    <section class="card" aria-label="Filtros del catálogo">
-        <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
-            <div class="filter">
-                <label for="Tipo">Tipo de equipo</label>
-                <div class="select">
-                    <select asp-for="Tipo" class="form-select sm" asp-items="Html.GetEnumSelectList<TipoEquipo>()">
-                        <option value="">Todos</option>
-                    </select>
-                    <partial name="_Icon" model="@("chevron-down")" />
+    <section class="stack" aria-label="Catálogo de equipos" data-listado data-tarjetas data-filas-carga="8">
+        <div class="card">
+            <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+                <input type="hidden" asp-for="Tipo" />
+                <div class="filter grow">
+                    <label for="Busqueda">Buscar</label>
+                    <input asp-for="Busqueda" class="form-control sm" type="search" placeholder="Número, marca, modelo o característica" maxlength="60" data-filtro-texto />
                 </div>
-            </div>
-            <div class="filter" style="min-width:0">
-                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
-            </div>
-            <div class="filter" style="min-width:0">
-                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
-            </div>
-        </form>
-
-        @if (Model.HayFiltros && !Model.ErrorAlCargar)
-        {
-            <div class="filtros-activos" aria-label="Filtros aplicados">
-                <span class="filtros-activos-total" role="status">@(Model.Filas.Count == 1 ? "1 resultado" : $"{Model.Filas.Count} resultados")</span>
-                <span class="filtro-activo">
-                    <span>Tipo: @Nombre(Model.Tipo!.Value)</span>
-                    <a asp-action="Index" aria-label="Quitar el filtro de tipo de equipo"><partial name="_Icon" model="@("x")" /></a>
-                </span>
-            </div>
-        }
-
-        @if (Model.ErrorAlCargar)
-        {
-            <div class="card-body">
-                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener los equipos disponibles. Intente nuevamente en unos minutos.")" />
-            </div>
-        }
-        else if (Model.Filas.Count == 0 && Model.HayFiltros)
-        {
-            <div class="card-body">
-                <div class="state">
-                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
-                    <h3>No hay equipos disponibles de este tipo</h3>
-                    <p>Pruebe con otro tipo de equipo o quite el filtro.</p>
-                    <a class="btn btn-secondary" asp-action="Index">Limpiar filtros</a>
+                <div class="filter">
+                    <label for="Marca">Marca</label>
+                    <div class="select">
+                        <select asp-for="Marca" class="form-select sm" asp-items="@(new SelectList(Model.Marcas))">
+                            <option value="">Todas</option>
+                        </select>
+                        <partial name="_Icon" model="@("chevron-down")" />
+                    </div>
                 </div>
-            </div>
-        }
-        else if (Model.Filas.Count == 0)
-        {
-            <div class="card-body">
-                <div class="state">
-                    <span class="state-ic"><partial name="_Icon" model="@("laptop")" /></span>
-                    <h3>Por ahora no hay equipos disponibles</h3>
-                    <p>Cuando un equipo donado pase la revisión técnica aparecerá en este catálogo.</p>
+                <div class="filter">
+                    <label for="Orden">Ordenar por</label>
+                    <div class="select">
+                        <select asp-for="Orden" class="form-select sm" asp-items="Html.GetEnumSelectList<OrdenCatalogo>()"></select>
+                        <partial name="_Icon" model="@("chevron-down")" />
+                    </div>
                 </div>
+                <div class="filter" style="min-width:0">
+                    <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+                </div>
+                <div class="filter" style="min-width:0">
+                    <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
+                </div>
+            </form>
+            <div class="cat-tipos">
+                <span class="form-label mb-2" id="cat-tipo-etiqueta">Tipo de equipo</span>
+                <nav aria-labelledby="cat-tipo-etiqueta">
+                    <ul class="chips list-unstyled m-0">
+                        <li>
+                            <a class="chip" asp-action="Index" asp-route-Busqueda="@Model.Busqueda" asp-route-Marca="@Model.Marca" asp-route-Orden="@Model.Orden" aria-current="@(Model.Tipo is null ? "true" : null)" data-muestra-carga>Todos</a>
+                        </li>
+                        @foreach (var tipo in tipos)
+                        {
+                            <li>
+                                <a class="chip" asp-action="Index" asp-route-Busqueda="@Model.Busqueda" asp-route-Marca="@Model.Marca" asp-route-Orden="@Model.Orden" asp-route-Tipo="@tipo" aria-current="@(Model.Tipo == tipo ? "true" : null)" data-muestra-carga><partial name="_TipoEquipo" model="tipo" /></a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
             </div>
-        }
-    </section>
+        </div>
 
-    @if (!Model.ErrorAlCargar && Model.Filas.Count > 0)
-    {
-        <ul class="grid-3 list-unstyled m-0" aria-label="Equipos disponibles">
-            @foreach (var equipo in Model.Filas)
+        <div class="card-body p-0">
+            @if (Model.ErrorAlCargar)
             {
-                <li class="card h-100">
-                    @if (!string.IsNullOrWhiteSpace(equipo.ImagenUrl))
-                    {
-                        <div class="ratio ratio-4x3">
-                            <img src="@Url.Content(equipo.ImagenUrl)" class="object-fit-cover rounded-top" alt="Foto de @equipo.MarcaYModelo" loading="lazy" />
-                        </div>
-                    }
-                    <div class="card-header">
-                        <div>
-                            <h2 class="card-title">@equipo.MarcaYModelo</h2>
-                            <p class="card-sub"><partial name="_TipoEquipo" model="equipo.TipoEquipo" /> · <span class="mono">@equipo.CodigoEquipo</span></p>
-                        </div>
+                <div class="card">
+                    <div class="card-body">
+                        <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener los equipos disponibles. Se puede intentar de nuevo en unos minutos.")" />
                     </div>
-                    <div class="card-body d-flex flex-column gap-3 flex-grow-1">
-                        @if (equipo.TieneEspecificaciones)
-                        {
-                            <dl class="dl">
-                                @if (!string.IsNullOrWhiteSpace(equipo.Procesador))
-                                {
-                                    <dt>Procesador</dt>
-                                    <dd>@equipo.Procesador</dd>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(equipo.MemoriaRam))
-                                {
-                                    <dt>Memoria RAM</dt>
-                                    <dd>@equipo.MemoriaRam</dd>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(equipo.Almacenamiento))
-                                {
-                                    <dt>Almacenamiento</dt>
-                                    <dd>@equipo.Almacenamiento</dd>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(equipo.TamanoPantalla))
-                                {
-                                    <dt>Tamaño de pantalla</dt>
-                                    <dd>@equipo.TamanoPantalla</dd>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(equipo.EstadoBateria))
-                                {
-                                    <dt>Estado de la batería</dt>
-                                    <dd>@equipo.EstadoBateria</dd>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(equipo.Otros))
-                                {
-                                    <dt>Otros datos</dt>
-                                    <dd>@equipo.Otros</dd>
-                                }
-                            </dl>
-                        }
-                        else
-                        {
-                            <p class="muted">Sin características técnicas registradas.</p>
-                        }
-                        <div class="mt-auto">
-                            <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@equipo.NroEquipo" aria-label="Ver detalle del equipo @equipo.MarcaYModelo"><partial name="_Icon" model="@("eye")" /><span>Ver detalle</span></a>
-                        </div>
-                    </div>
-                </li>
+                </div>
             }
-        </ul>
-    }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <div class="state">
+                            <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                            <h3>No hay equipos con esos filtros</h3>
+                            <p>Probar con otro tipo, otra marca o una búsqueda más corta.</p>
+                            <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <div class="state">
+                            <span class="state-ic"><partial name="_Icon" model="@("laptop")" /></span>
+                            <h3>No hay equipos disponibles por ahora</h3>
+                            <p>Cuando se incorporen nuevos equipos aparecerán aquí. Se puede volver a consultar más tarde.</p>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <p class="cat-results" role="status"><b>@Model.Total</b> de @Model.TotalDisponibles equipos disponibles</p>
+
+                <h2 class="visually-hidden">Equipos disponibles</h2>
+                <ul class="cat-grid">
+                    @foreach (var equipo in Model.Filas)
+                    {
+                        var caracteristicas = new[] { equipo.Procesador, equipo.MemoriaRam, equipo.Almacenamiento, equipo.TamanoPantalla, equipo.EstadoBateria }
+                            .Where(texto => !string.IsNullOrWhiteSpace(texto))
+                            .Take(4)
+                            .ToList();
+
+                        <li class="eq-card">
+                            <a class="eq-media" asp-action="Detalle" asp-route-id="@equipo.NroEquipo" tabindex="-1" aria-hidden="true">
+                                @if (!string.IsNullOrWhiteSpace(equipo.ImagenUrl))
+                                {
+                                    <img src="@Url.Content(equipo.ImagenUrl)" alt="" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <span class="eq-ilustracion"><partial name="_IlustracionEquipo" model="@((equipo.TipoEquipo, equipo.Modelo))" /></span>
+                                }
+                                <span class="eq-type"><partial name="_TipoEquipo" model="equipo.TipoEquipo" /></span>
+                                @if (equipo.CantidadImagenes > 0)
+                                {
+                                    <span class="eq-photos"><partial name="_Icon" model="@("image")" />@equipo.CantidadImagenes</span>
+                                }
+                            </a>
+                            <div class="eq-body">
+                                <div class="eq-top">
+                                    <span class="mono">@equipo.CodigoEquipo</span>
+                                    @if (equipo.FechaDisponibilidad is not null)
+                                    {
+                                        <span class="card-sub">Desde @equipo.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</span>
+                                    }
+                                </div>
+                                <h3 class="eq-title"><a asp-action="Detalle" asp-route-id="@equipo.NroEquipo">@equipo.MarcaYModelo</a></h3>
+                                @if (caracteristicas.Count > 0)
+                                {
+                                    <ul class="eq-specs">
+                                        @foreach (var caracteristica in caracteristicas)
+                                        {
+                                            <li>@caracteristica</li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p class="card-sub mb-0">Sin características registradas</p>
+                                }
+                                <p class="eq-demand"><partial name="_Icon" model="@("users")" /><span>@TextoDemanda(equipo.SolicitudesEnEspera)</span></p>
+                            </div>
+                            <div class="eq-foot">
+                                <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@equipo.NroEquipo" aria-label="Ver detalle de @equipo.MarcaYModelo">Ver detalle</a>
+                                @* TODO: reemplazar por el enlace a Solicitudes/Registrar cuando exista la acción (#118) *@
+                                <button type="button" class="btn btn-primary" disabled aria-label="Solicitar @equipo.MarcaYModelo">Solicitar</button>
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+                <div class="card mt-3">
+                    <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
+                </div>
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando equipos…</span></div>
+        </template>
+    </section>
 </div>
 
 @section Scripts {
     <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
 }

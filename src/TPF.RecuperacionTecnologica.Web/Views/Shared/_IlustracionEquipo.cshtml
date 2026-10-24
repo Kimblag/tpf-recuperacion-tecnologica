@@ -1,0 +1,16 @@
+@model (TPF.RecuperacionTecnologica.Web.Models.Enums.TipoEquipo Tipo, string Modelo)
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var esMouse = Model.Modelo.Contains("mouse", StringComparison.OrdinalIgnoreCase);
+
+    var dibujo = Model.Tipo switch
+    {
+        TipoEquipo.Notebook => """<rect class="body" x="46" y="26" width="108" height="74" rx="6"/><rect class="scr" x="53" y="33" width="94" height="60" rx="2"/><path class="body" d="M28 106h144l-8 12a6 6 0 0 1-5 3H41a6 6 0 0 1-5-3z"/><path class="ln" d="M88 111h24"/>""",
+        TipoEquipo.Monitor => """<rect class="body" x="38" y="20" width="124" height="80" rx="6"/><rect class="scr" x="45" y="27" width="110" height="66" rx="2"/><path class="ln" d="M100 100v16M76 121h48"/>""",
+        TipoEquipo.PcEscritorio => """<rect class="body" x="122" y="24" width="46" height="96" rx="5"/><path class="ln" d="M130 38h30M130 46h30"/><circle class="ln" cx="145" cy="104" r="4"/><rect class="body" x="24" y="38" width="86" height="60" rx="5"/><rect class="scr" x="30" y="44" width="74" height="48" rx="2"/><path class="ln" d="M67 98v12M50 114h34"/>""",
+        TipoEquipo.Celular => """<rect class="body" x="72" y="14" width="56" height="122" rx="10"/><rect class="scr" x="78" y="28" width="44" height="90" rx="3"/><path class="ln" d="M94 21h12"/><circle class="ln" cx="100" cy="127" r="2.5"/>""",
+        _ when esMouse => """<rect class="body" x="78" y="30" width="44" height="80" rx="22"/><path class="ln" d="M100 30v30M78 60h44"/>""",
+        _ => """<rect class="body" x="24" y="48" width="152" height="58" rx="7"/><path class="ln" d="M38 64h124M38 76h124M38 88h44M120 88h42" stroke-dasharray="7 6"/>"""
+    };
+}
+<svg class="eq-il" viewBox="0 0 200 150" aria-hidden="true" focusable="false">@Html.Raw(dibujo)</svg>
