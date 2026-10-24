@@ -1,9 +1,10 @@
-@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.FormularioSolicitudViewModel
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.EditarMotivoSolicitudViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
     ViewData["Title"] = "Editar solicitud";
 
-    var puedeEditarse = Model.EstadoSolicitud == EstadoSolicitud.Pendiente;
+    var textoTipo = Html.GetEnumSelectList<TipoSolicitante>().First(i => i.Value == ((int)Model.TipoSolicitante).ToString()).Text;
+    var textoOrigen = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)Model.OrigenSolicitud).ToString()).Text;
 }
 
 @section Migas {
@@ -24,16 +25,14 @@
         </div>
     </div>
 
-    @if (puedeEditarse)
+    @if (Model.PuedeEditarse)
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
-            <div class="alert-body"><div>Solo se puede editar mientras la solicitud está Pendiente. El equipo solicitado no se puede cambiar.</div></div>
+            <div class="alert-body"><div>Solo se puede cambiar el motivo, y solo mientras la solicitud está Pendiente. El equipo y el tipo de solicitante no se pueden cambiar: para pedir otro equipo hay que hacer una nueva solicitud.</div></div>
         </div>
 
-        <form class="card" method="post" id="f-solicitud-editar" novalidate aria-labelledby="f-solicitud-titulo">
-            <input type="hidden" asp-for="NroSolicitud" />
-            <input type="hidden" asp-for="NroEquipo" />
+        <form class="card" method="post" asp-action="Editar" asp-route-id="@Model.NroSolicitud" id="f-solicitud-editar" novalidate aria-labelledby="f-solicitud-titulo">
             <div class="card-header">
                 <div><h2 class="card-title" id="f-solicitud-titulo">Datos de la solicitud</h2></div>
             </div>
@@ -44,14 +43,46 @@
                     <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
 
                     <div class="form-grid">
-                        <partial name="_CamposSolicitud" model="Model" />
+                        <div class="span-2">
+                            <div class="card" style="background-color: var(--app-surface-low)">
+                                <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2" style="padding: 12px 16px">
+                                    <div>
+                                        <div class="card-sub">Equipo solicitado</div>
+                                        <div class="fw-semibold">@Model.MarcaYModelo</div>
+                                        <div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · Nº <span class="mono">@Model.CodigoEquipo</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="form-label" for="Solicitante">Solicitante</label>
+                            <input id="Solicitante" class="form-control" value="@Model.Solicitante" disabled />
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="TipoVisible">Tipo de solicitante</label>
+                            <input id="TipoVisible" class="form-control" value="@textoTipo" disabled />
+                        </div>
+                        <div class="field span-2">
+                            <label class="form-label" for="MotivoSolicitud">Motivo de la solicitud<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <textarea asp-for="MotivoSolicitud" class="form-control" rows="4" maxlength="500" placeholder="Contar para qué se necesita el equipo" aria-describedby="MotivoSolicitud-hint"></textarea>
+                            <div class="form-text" id="MotivoSolicitud-hint">Con unas pocas líneas alcanza.</div>
+                            <span asp-validation-for="MotivoSolicitud"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="OrigenVisible">Origen</label>
+                            <input id="OrigenVisible" class="form-control" value="@textoOrigen" disabled />
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="FechaVisible">Fecha de solicitud</label>
+                            <input id="FechaVisible" class="form-control" value="@Model.FechaSolicitud.ToString("dd/MM/yyyy")" disabled />
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="form-actions">
                 <a class="btn btn-secondary btn-lg" asp-action="Detalle" asp-route-id="@Model.NroSolicitud">Cancelar</a>
-                @* TODO: habilitar el guardado cuando exista la edición del motivo (#119) *@
-                <button type="submit" class="btn btn-primary btn-lg" disabled>Guardar cambios</button>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
             </div>
         </form>
     }

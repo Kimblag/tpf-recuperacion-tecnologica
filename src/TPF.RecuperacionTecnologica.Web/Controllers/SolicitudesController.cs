@@ -237,29 +237,100 @@ public class SolicitudesController : Controller
 
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]
-    public IActionResult Editar(int id)
+    public async Task<IActionResult> Editar(int id)
     {
-        // TODO: reemplazar por la consulta real de la solicitud propia (#119)
-        var solicitud = Ejemplos.FirstOrDefault(s => s.Propia && s.NroSolicitud == id);
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (solicitud is null)
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        var formulario = await _consultaService.ObtenerParaEdicionPropiaAsync(identityUserId, id);
+
+        return formulario is null ? NotFound() : View(formulario);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "UsuarioExterno")]
+    public async Task<IActionResult> Editar(int id, [Bind("MotivoSolicitud")] EditarMotivoSolicitudViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        if (ModelState.IsValid)
+        {
+            var resultado = await _solicitudService.EditarMotivoAsync(identityUserId, id, formulario.MotivoSolicitud);
+
+            if (resultado.Succeeded)
+            {
+                TempData["Mensaje"] = "El motivo de la solicitud se actualizó correctamente.";
+                return RedirectToAction(nameof(Detalle), new { id });
+            }
+
+            if (resultado.Errors.Any(e => e.Code == "SolicitudNoEncontrada"))
+            {
+                return NotFound();
+            }
+
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        var actual = await _consultaService.ObtenerParaEdicionPropiaAsync(identityUserId, id);
+
+        if (actual is null)
         {
             return NotFound();
         }
 
-        return View(new FormularioSolicitudViewModel
+        actual.MotivoSolicitud = formulario.MotivoSolicitud;
+
+        return View(actual);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "UsuarioExterno")]
+    public async Task<IActionResult> Cancelar(int id)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
         {
-            NroEquipo = solicitud.NroEquipo,
-            NroSolicitud = solicitud.NroSolicitud,
-            TipoSolicitante = solicitud.TipoSolicitante,
-            MotivoSolicitud = solicitud.Motivo,
-            Solicitante = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty,
-            TipoEquipo = solicitud.TipoEquipo,
-            MarcaYModelo = solicitud.MarcaYModelo,
-            OrigenSolicitud = solicitud.OrigenSolicitud,
-            FechaSolicitud = solicitud.Fecha,
-            EstadoSolicitud = solicitud.Estado
-        });
+            return Challenge();
+        }
+
+        var original = await _consultaService.ObtenerDetallePropioAsync(identityUserId, id);
+
+        if (original is null)
+        {
+            return NotFound();
+        }
+
+        var resultado = await _solicitudService.CancelarAsync(identityUserId, id);
+
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            var actual = await _consultaService.ObtenerDetallePropioAsync(identityUserId, id);
+
+            return View(nameof(Detalle), actual ?? original);
+        }
+
+        TempData["Mensaje"] = "La solicitud se canceló correctamente.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
