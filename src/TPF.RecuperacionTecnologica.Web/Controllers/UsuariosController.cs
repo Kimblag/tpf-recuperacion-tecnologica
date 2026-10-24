@@ -35,9 +35,21 @@ public class UsuariosController : Controller
         return usuario is null ? NotFound() : View(usuario);
     }
 
+
+    [HttpGet]
+    [Authorize(Policy = "UsuarioExterno")]
+    public async Task<IActionResult> Perfil()
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var modelo = identityUserId is null ? null : await _usuarioService.ObtenerEdicionAsync(identityUserId);
+
+        return modelo is null ? NotFound() : View(modelo);
+    }
+
+
     // el Usuario edita sus propios datos: se identifica por la sesión, no por un id en la URL
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "UsuarioExterno")]
     public async Task<IActionResult> Editar()
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -47,7 +59,7 @@ public class UsuariosController : Controller
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "UsuarioExterno")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Editar(EdicionUsuarioViewModel modelo)
     {
@@ -63,7 +75,7 @@ public class UsuariosController : Controller
             return NotFound();
         }
 
-        var (resultado, correoCambiado) = await _usuarioService.EditarAsync(identityUserId, modelo);
+        var resultado = await _usuarioService.EditarAsync(identityUserId, modelo);
 
         if (!resultado.Succeeded)
         {
@@ -75,21 +87,15 @@ public class UsuariosController : Controller
             return View(modelo);
         }
 
-        // al cambiar el correo la sesión deja de ser válida, así que se cierra y se pide entrar de nuevo
-        if (correoCambiado)
-        {
-            await _cuentaService.CerrarSesionAsync(identityUserId);
-            TempData["Mensaje"] = "Sus datos se actualizaron. Inicie sesión con su nuevo correo.";
-            return RedirectToAction("Login", "Cuenta");
-        }
+        await _cuentaService.RefrescarSesionAsync(identityUserId);
 
         TempData["Mensaje"] = "Sus datos se actualizaron correctamente.";
-        return RedirectToAction(nameof(Editar));
+        return RedirectToAction(nameof(Perfil));
     }
 
     // el Usuario da de baja su propia cuenta: se identifica por la sesión, no por un id en la URL
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "UsuarioExterno")]
     public async Task<IActionResult> Baja()
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -99,7 +105,7 @@ public class UsuariosController : Controller
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Policy = "UsuarioExterno")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Baja(BajaUsuarioViewModel modelo)
     {

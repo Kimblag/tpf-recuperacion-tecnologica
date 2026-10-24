@@ -107,6 +107,16 @@ public class CuentaService : ICuentaService
         }
     }
 
+    public async Task RefrescarSesionAsync(string identityUserId)
+    {
+        var identityUser = await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is not null)
+        {
+            await _signInManager.RefreshSignInAsync(identityUser);
+        }
+    }
+
 
     public async Task SolicitarRestablecimientoAsync(string correoElectronico, Func<string, string, string> construirRuta, string urlBaseSolicitud)
     {

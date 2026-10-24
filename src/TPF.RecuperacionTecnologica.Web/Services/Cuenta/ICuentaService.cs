@@ -14,6 +14,11 @@ public interface ICuentaService
     /// </summary>
     Task CerrarSesionAsync(string? identityUserId);
 
+    /// <summary>
+    /// Regenera la sesión actual para que refleje los datos vigentes de la cuenta, sin pedir iniciar sesión de nuevo.
+    /// </summary>
+    Task RefrescarSesionAsync(string identityUserId);
+
     /// <param name="construirRuta">Arma la ruta relativa del enlace a partir del id del usuario y el token ya codificado.</param>
     /// <param name="urlBaseSolicitud">Dominio de la solicitud actual (por ejemplo https://localhost:7127), este solo se usa en desarrollo, ya queen producción el dominio sale de la configuración.</param>
     Task SolicitarRestablecimientoAsync(string correoElectronico, Func<string, string, string> construirRuta, string urlBaseSolicitud);

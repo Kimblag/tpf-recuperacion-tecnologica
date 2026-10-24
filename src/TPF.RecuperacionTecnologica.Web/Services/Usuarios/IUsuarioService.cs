@@ -35,13 +35,10 @@ public interface IUsuarioService
     Task<EdicionUsuarioViewModel?> ObtenerEdicionAsync(string identityUserId);
 
     /// <summary>
-    /// Actualiza la dirección, el teléfono y el correo del Usuario asociado a la cuenta de Identity.
-    /// Si cambia el correo, también se actualiza en la cuenta de Identity.
+    /// Actualiza la dirección y el teléfono del Usuario asociado a la cuenta de Identity.
     /// </summary>
-    /// <returns>
-    /// El resultado de la edición y si el correo cambió (en ese caso la sesión deja de ser válida).
-    /// </returns>
-    Task<(IdentityResult Resultado, bool CorreoCambiado)> EditarAsync(string identityUserId, EdicionUsuarioViewModel modelo);
+    /// <returns>El resultado de la edición.</returns>
+    Task<IdentityResult> EditarAsync(string identityUserId, EdicionUsuarioViewModel modelo);
 
     /// <summary>
     /// Da de baja la cuenta del Usuario asociado a la cuenta de Identity: queda Inactivo, con fecha y motivo de baja.
