@@ -1,0 +1,130 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.MisSolicitudesViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Mis solicitudes";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Estado = Model.Estado,
+        Pagina = pagina
+    });
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Mis solicitudes</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Mis solicitudes</h1></div>
+            <p class="page-sub">Seguimiento de las solicitudes de equipos</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Historial"><partial name="_Icon" model="@("history")" /><span>Historial</span></a>
+            <a class="btn btn-primary" asp-controller="Catalogo" asp-action="Index"><partial name="_Icon" model="@("laptop")" /><span>Solicitar un equipo</span></a>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Mis solicitudes" data-listado data-filas-carga="5">
+        <partial name="_AyudaEstadosSolicitud" />
+
+        <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de solicitud o equipo" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter">
+                <label for="Estado">Estado</label>
+                <div class="select">
+                    <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoSolicitud>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las solicitudes. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No hay solicitudes que coincidan</h3>
+                    <p>Probar con otra búsqueda o quitar algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
+                    <h3>Todavía no se hicieron solicitudes</h3>
+                    <p>Elegir un equipo del catálogo y solicitarlo.</p>
+                    <a class="btn btn-primary" asp-controller="Catalogo" asp-action="Index"><partial name="_Icon" model="@("laptop")" /><span>Ver catálogo</span></a>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Mis solicitudes</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Solicitud</th>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Tipo de solicitante</th>
+                                <th scope="col">Origen</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Solicitud"><span class="mono">@fila.Codigo</span></td>
+                                    <td data-label="Equipo">
+                                        <div>@fila.MarcaYModelo</div>
+                                        <div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <span class="mono">@fila.CodigoEquipo</span></div>
+                                    </td>
+                                    <td data-label="Tipo de solicitante">@Html.DisplayFor(m => fila.TipoSolicitante)</td>
+                                    <td data-label="Origen">@Html.DisplayFor(m => fila.OrigenSolicitud)</td>
+                                    <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroSolicitud" aria-label="Ver solicitud @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+}

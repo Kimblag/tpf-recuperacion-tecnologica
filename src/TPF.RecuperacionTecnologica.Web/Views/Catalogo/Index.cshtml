@@ -36,8 +36,7 @@
             <p class="page-sub">Equipos disponibles para solicitar. Cada solicitud es sobre un equipo específico.</p>
         </div>
         <div class="page-actions">
-            @* TODO: enlazar a Solicitudes/Index cuando exista la pantalla de Mis solicitudes *@
-            <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("tray")" /><span>Mis solicitudes</span></button>
+            <a class="btn btn-secondary" asp-controller="Solicitudes" asp-action="Index"><partial name="_Icon" model="@("tray")" /><span>Mis solicitudes</span></a>
         </div>
     </div>
 
@@ -179,8 +178,7 @@
                             </div>
                             <div class="eq-foot">
                                 <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@equipo.NroEquipo" aria-label="Ver detalle de @equipo.MarcaYModelo">Ver detalle</a>
-                                @* TODO: reemplazar por el enlace a Solicitudes/Registrar cuando exista la acción (#118) *@
-                                <button type="button" class="btn btn-primary" disabled aria-label="Solicitar @equipo.MarcaYModelo">Solicitar</button>
+                                <a class="btn btn-primary" asp-controller="Solicitudes" asp-action="Registrar" asp-route-nroEquipo="@equipo.NroEquipo" aria-label="Solicitar @equipo.MarcaYModelo">Solicitar</a>
                             </div>
                         </li>
                     }

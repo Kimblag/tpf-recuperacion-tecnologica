@@ -1,0 +1,72 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.FormularioSolicitudViewModel
+@{
+    ViewData["Title"] = "Nueva solicitud";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Mis solicitudes</a></li>
+    <li aria-current="page">Nueva solicitud</li>
+}
+
+<div class="stack narrow">
+    @if (!Model.EquipoDisponible)
+    {
+        <div class="page-head">
+            <div>
+                <div class="h-id"><h1 tabindex="-1">Nueva solicitud</h1></div>
+                <p class="page-sub">La solicitud es sobre un equipo específico del catálogo</p>
+            </div>
+        </div>
+
+        <div class="alert alert-danger" role="alert">
+            <partial name="_Icon" model="@("x-circle")" />
+            <div class="alert-body">
+                <div class="alert-title">Este equipo ya no está disponible</div>
+                <div>Alguien más lo solicitó primero, o cambió de estado. Elegir otro equipo del catálogo.</div>
+            </div>
+        </div>
+
+        <div>
+            <a class="btn btn-primary" asp-controller="Catalogo" asp-action="Index"><partial name="_Icon" model="@("laptop")" /><span>Ver catálogo</span></a>
+        </div>
+    }
+    else
+    {
+        <div class="page-head">
+            <div>
+                <div class="h-id"><h1 tabindex="-1">Nueva solicitud</h1></div>
+                <p class="page-sub">La solicitud es sobre un equipo específico del catálogo</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-secondary" asp-controller="Catalogo" asp-action="Index"><partial name="_Icon" model="@("laptop")" /><span>Cambiar equipo</span></a>
+            </div>
+        </div>
+
+        <form class="card" method="post" id="f-solicitud" novalidate aria-labelledby="f-solicitud-titulo">
+            <div class="card-header">
+                <div><h2 class="card-title" id="f-solicitud-titulo">Datos de la solicitud</h2></div>
+            </div>
+            <div class="card-body">
+                <div class="stack" style="gap:16px">
+                    <partial name="_ResumenErrores" />
+
+                    <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                    <div class="form-grid">
+                        <partial name="_CamposSolicitud" model="Model" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-secondary btn-lg" asp-controller="Catalogo" asp-action="Index">Cancelar</a>
+                @* TODO: habilitar el envío cuando exista el registro de solicitudes (#118) *@
+                <button type="submit" class="btn btn-primary btn-lg" disabled>Enviar solicitud</button>
+            </div>
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

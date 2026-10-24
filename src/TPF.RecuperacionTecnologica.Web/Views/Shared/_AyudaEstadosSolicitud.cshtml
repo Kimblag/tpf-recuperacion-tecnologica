@@ -1,0 +1,11 @@
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<details class="help">
+    <summary>¿Qué significa cada estado?</summary>
+    <div class="help-list">
+        <div class="help-row"><partial name="_EstadoSolicitudBadge" model="EstadoSolicitud.Pendiente" /><span>Se está esperando poder asignar el equipo.</span></div>
+        <div class="help-row"><partial name="_EstadoSolicitudBadge" model="EstadoSolicitud.Asignada" /><span>Se asignó el equipo. Hay que retirarlo hasta la fecha indicada.</span></div>
+        <div class="help-row"><partial name="_EstadoSolicitudBadge" model="EstadoSolicitud.Completada" /><span>El equipo ya se retiró.</span></div>
+        <div class="help-row"><partial name="_EstadoSolicitudBadge" model="EstadoSolicitud.Cerrada" /><span>Pasó el plazo para retirarlo y la solicitud se cerró.</span></div>
+        <div class="help-row"><partial name="_EstadoSolicitudBadge" model="EstadoSolicitud.Cancelada" /><span>La solicitud se canceló.</span></div>
+    </div>
+</details>

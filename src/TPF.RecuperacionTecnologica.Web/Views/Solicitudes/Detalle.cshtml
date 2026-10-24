@@ -1,0 +1,99 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.SolicitudDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Detalle de solicitud";
+
+    var explicacionEstado = Model.EstadoSolicitud switch
+    {
+        EstadoSolicitud.Pendiente => "Se está esperando poder asignar el equipo.",
+        EstadoSolicitud.Asignada => "Se asignó el equipo. Hay que retirarlo hasta la fecha indicada.",
+        EstadoSolicitud.Completada => "El equipo ya se retiró.",
+        EstadoSolicitud.Cerrada => "Pasó el plazo para retirarlo y la solicitud se cerró.",
+        _ => "La solicitud se canceló."
+    };
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Mis solicitudes</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Solicitud <span class="mono">@Model.Codigo</span></h1>
+                <partial name="_EstadoSolicitudBadge" model="Model.EstadoSolicitud" />
+            </div>
+            <p class="page-sub">@Model.MarcaYModelo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+            @if (Model.PuedeModificarse)
+            {
+                <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.NroSolicitud"><partial name="_Icon" model="@("edit")" /><span>Editar solicitud</span></a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-cancelar-solicitud"><partial name="_Icon" model="@("x")" /><span>Cancelar solicitud</span></button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("edit")" /><span>Editar solicitud</span></button>
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("x")" /><span>Cancelar solicitud</span></button>
+            }
+        </div>
+    </div>
+
+    @if (!Model.PuedeModificarse)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Solo se puede editar o cancelar una solicitud mientras está Pendiente.</div></div>
+        </div>
+    }
+
+    <div class="grid-3-1">
+        <section class="card" aria-labelledby="titulo-datos">
+            <div class="card-header">
+                <div><h2 class="card-title" id="titulo-datos">Datos de la solicitud</h2></div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Número de solicitud</dt>
+                    <dd><span class="mono">@Model.Codigo</span></dd>
+                    <dt>Equipo solicitado</dt>
+                    <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
+                    <dt>Tipo de solicitante</dt>
+                    <dd>@Html.DisplayFor(m => m.TipoSolicitante)</dd>
+                    <dt>Motivo</dt>
+                    <dd>@Model.MotivoSolicitud</dd>
+                    <dt>Origen</dt>
+                    <dd>@Html.DisplayFor(m => m.OrigenSolicitud)</dd>
+                    <dt>Fecha de solicitud</dt>
+                    <dd>@Model.FechaSolicitud.ToString("dd/MM/yyyy")</dd>
+                    <dt>Estado</dt>
+                    <dd>
+                        <partial name="_EstadoSolicitudBadge" model="Model.EstadoSolicitud" />
+                        <div class="card-sub mt-1">@explicacionEstado</div>
+                    </dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="titulo-historial">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title" id="titulo-historial">Historial</h2>
+                    <p class="card-sub">Eventos de la solicitud</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <partial name="_LineaDeTiempo" model="Model.Hitos" />
+            </div>
+        </section>
+    </div>
+</div>
+
+@if (Model.PuedeModificarse)
+{
+    <partial name="_ModalCancelarSolicitud" model="Model" />
+}
