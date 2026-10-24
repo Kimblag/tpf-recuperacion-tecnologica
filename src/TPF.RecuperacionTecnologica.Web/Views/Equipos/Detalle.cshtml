@@ -52,8 +52,14 @@
             }
             @if (esCoordinador)
             {
-                @* TODO: reemplazar por el enlace a Asignaciones/Asignar cuando exista la acción (#122) *@
-                <button type="button" class="btn @(Model.EstadoEquipo == EstadoEquipo.Disponible ? "btn-primary" : "btn-secondary")" disabled><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></button>
+                if (Model.EstadoEquipo == EstadoEquipo.Disponible)
+                {
+                    <a class="btn btn-primary" asp-controller="Asignaciones" asp-action="Asignar" asp-route-nroEquipo="@Model.NroEquipo"><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></button>
+                }
             }
         </div>
     </div>

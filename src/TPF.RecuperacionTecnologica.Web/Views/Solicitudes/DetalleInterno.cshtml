@@ -34,8 +34,14 @@
             <a class="btn btn-secondary" asp-action="Gestion"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
             @if (esCoordinador)
             {
-                @* TODO: reemplazar por el enlace a Asignaciones/Asignar cuando exista la acción (#122) *@
-                <button type="button" class="btn @(Model.PuedeModificarse ? "btn-primary" : "btn-secondary")" disabled><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></button>
+                if (Model.PuedeModificarse)
+                {
+                    <a class="btn btn-primary" asp-controller="Asignaciones" asp-action="Asignar"><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></a>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></button>
+                }
             }
         </div>
     </div>
