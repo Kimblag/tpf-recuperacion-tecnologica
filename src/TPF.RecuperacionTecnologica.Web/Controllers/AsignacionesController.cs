@@ -24,28 +24,6 @@ public class AsignacionesController : Controller
         _personalService = personalService;
     }
 
-    private sealed record AsignacionEjemplo(
-        int NroAsignacion, int NroSolicitud, string Solicitante, TipoSolicitante TipoSolicitante,
-        int NroEquipo, TipoEquipo TipoEquipo, string MarcaYModelo, string Coordinador,
-        DateTime Fecha, DateTime Limite, EstadoAsignacion Estado, bool CambioPrioridad = false,
-        string? Justificacion = null, DateTime? FechaLiberacion = null, string? MotivoLiberacion = null,
-        DateTime? FechaEntrega = null);
-
-    // TODO: reemplazar estos datos de ejemplo por las asignaciones reales (#150)
-    private static readonly IReadOnlyList<AsignacionEjemplo> Ejemplos =
-    [
-        new(18, 25, "Valeria Acosta", TipoSolicitante.Particular, 125, TipoEquipo.Notebook, "HP ProBook 450 G5", "Sofía Gutiérrez",
-            new DateTime(2026, 9, 15), new DateTime(2026, 9, 25), EstadoAsignacion.Vigente),
-        new(17, 27, "Marcela Bustos", TipoSolicitante.Escuela, 135, TipoEquipo.Celular, "Samsung Galaxy A10", "Sofía Gutiérrez",
-            new DateTime(2026, 9, 12), new DateTime(2026, 9, 22), EstadoAsignacion.Vigente, true,
-            "La escuela retira el equipo hoy mismo para empezar las clases de mañana; la otra persona solicitante no puede retirarlo esta semana."),
-        new(16, 19, "Valeria Acosta", TipoSolicitante.Particular, 129, TipoEquipo.PcEscritorio, "Lenovo ThinkCentre M710", "Sofía Gutiérrez",
-            new DateTime(2026, 8, 14), new DateTime(2026, 8, 24), EstadoAsignacion.Concretada, FechaEntrega: new DateTime(2026, 8, 21)),
-        new(15, 17, "Valeria Acosta", TipoSolicitante.Particular, 128, TipoEquipo.Periferico, "Logitech K120", "Ramiro Ortega",
-            new DateTime(2026, 8, 10), new DateTime(2026, 8, 20), EstadoAsignacion.Liberada,
-            FechaLiberacion: new DateTime(2026, 8, 21), MotivoLiberacion: "Venció el plazo de retiro.")
-    ];
-
     [HttpGet]
     [Authorize(Policy = "Coordinacion")]
     public IActionResult Index(AsignacionListadoViewModel filtros)
@@ -58,7 +36,7 @@ public class AsignacionesController : Controller
         // TODO: reemplazar por la consulta real con filtros y paginación (#150)
         var texto = filtros.Busqueda?.Trim();
 
-        var filtradas = Ejemplos
+        var filtradas = AsignacionesDeEjemplo.Todas
             .Where(a => (filtros.Estado is null || a.Estado == filtros.Estado)
                 && (string.IsNullOrEmpty(texto)
                     || $"ASG-{a.NroAsignacion:D6}".Contains(texto, StringComparison.OrdinalIgnoreCase)
@@ -96,7 +74,7 @@ public class AsignacionesController : Controller
     public IActionResult Detalle(int id)
     {
         // TODO: reemplazar por la consulta real de la asignación (#150)
-        var asignacion = Ejemplos.FirstOrDefault(a => a.NroAsignacion == id);
+        var asignacion = AsignacionesDeEjemplo.Todas.FirstOrDefault(a => a.NroAsignacion == id);
 
         if (asignacion is null)
         {
