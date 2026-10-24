@@ -1,11 +1,27 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.SelectorUsuarioViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
+@using Microsoft.AspNetCore.Routing
 @{
     var accion = ViewContext.RouteData.Values["action"]?.ToString();
     var formularioId = ViewData["FormularioId"]?.ToString();
     var esExistente = Model.Modo == ModoUsuarioAsistido.Existente;
     var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+    var valoresExtra = (ViewData["ValoresRuta"] as IDictionary<string, string?> ?? new Dictionary<string, string?>())
+        .Where(par => !string.IsNullOrEmpty(par.Value))
+        .ToList();
+
+    string Enlace(object valores)
+    {
+        var ruta = new RouteValueDictionary(valores);
+
+        foreach (var par in valoresExtra)
+        {
+            ruta[par.Key] = par.Value;
+        }
+
+        return Url.Action(accion, ruta)!;
+    }
 }
 
 <div class="stack" style="gap:16px">
@@ -13,8 +29,8 @@
         <span class="form-label" id="selector-modo-etiqueta">¿De quién es la solicitud?</span>
         <nav aria-labelledby="selector-modo-etiqueta">
             <ul class="chips list-unstyled m-0">
-                <li><a class="chip" href="@Url.Action(accion, new { modo = ModoUsuarioAsistido.Existente })" aria-current="@(esExistente ? "true" : null)">Usuario existente</a></li>
-                <li><a class="chip" href="@Url.Action(accion, new { modo = ModoUsuarioAsistido.Nuevo })" aria-current="@(esExistente ? null : "true")">Usuario nuevo</a></li>
+                <li><a class="chip" href="@Enlace(new { modo = ModoUsuarioAsistido.Existente })" aria-current="@(esExistente ? "true" : null)">Usuario existente</a></li>
+                <li><a class="chip" href="@Enlace(new { modo = ModoUsuarioAsistido.Nuevo })" aria-current="@(esExistente ? null : "true")">Usuario nuevo</a></li>
             </ul>
         </nav>
     </div>
@@ -23,6 +39,10 @@
     {
         <form method="get" action="@Url.Action(accion)" role="search" aria-label="Buscar usuario">
             <input type="hidden" name="modo" value="@ModoUsuarioAsistido.Existente" />
+            @foreach (var par in valoresExtra)
+            {
+                <input type="hidden" name="@par.Key" value="@par.Value" />
+            }
             <label class="form-label" for="busqueda">DNI o correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
             <div class="d-flex flex-wrap gap-2">
                 <input id="busqueda" name="busqueda" value="@Model.Busqueda" class="form-control flex-grow-1" style="min-width:220px;width:auto" autocomplete="off" maxlength="254" aria-describedby="busqueda-ayuda" />
@@ -76,8 +96,8 @@
             <span class="form-label" id="selector-tipo-etiqueta">¿Es una persona o una institución?</span>
             <nav aria-labelledby="selector-tipo-etiqueta">
                 <ul class="chips list-unstyled m-0">
-                    <li><a class="chip" href="@Url.Action(accion, new { modo = ModoUsuarioAsistido.Nuevo, tipoUsuario = TipoUsuario.Persona })" aria-current="@(esPersona ? "true" : null)">Persona</a></li>
-                    <li><a class="chip" href="@Url.Action(accion, new { modo = ModoUsuarioAsistido.Nuevo, tipoUsuario = TipoUsuario.Institucion })" aria-current="@(esPersona ? null : "true")">Institución (escuela u organización social)</a></li>
+                    <li><a class="chip" href="@Enlace(new { modo = ModoUsuarioAsistido.Nuevo, tipoUsuario = TipoUsuario.Persona })" aria-current="@(esPersona ? "true" : null)">Persona</a></li>
+                    <li><a class="chip" href="@Enlace(new { modo = ModoUsuarioAsistido.Nuevo, tipoUsuario = TipoUsuario.Institucion })" aria-current="@(esPersona ? null : "true")">Institución (escuela u organización social)</a></li>
                 </ul>
             </nav>
         </div>

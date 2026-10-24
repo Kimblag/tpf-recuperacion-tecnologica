@@ -26,23 +26,63 @@
         <partial name="_Icon" model="@("info")" />
         <div class="alert-body">
             <div class="alert-title">Esta solicitud se crea en nombre de un usuario externo</div>
-            <div>Queda registrada con origen Asistida y a nombre de la persona coordinadora. Si la persona todavía no tiene cuenta, se puede abrir una en el momento.</div>
+            <div>Queda registrada con origen Asistida y a nombre de la persona coordinadora. Si la persona todavía no tiene cuenta, se abre una en el momento con sus datos completos y se le envía una invitación por correo para que defina su contraseña.</div>
         </div>
     </div>
+
+    <section class="card" aria-labelledby="titulo-equipo">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="titulo-equipo">Equipo solicitado</h2>
+                <p class="card-sub">Primero se elige el equipo; después, a quién pertenece la solicitud</p>
+            </div>
+        </div>
+        <div class="card-body">
+            @{
+                ViewData["ValoresRuta"] = new Dictionary<string, string?>
+                {
+                    ["modo"] = Model.Usuario.Modo.ToString(),
+                    ["tipoUsuario"] = Model.Usuario.TipoUsuario.ToString(),
+                    ["busqueda"] = Model.Usuario.Busqueda
+                };
+            }
+            <partial name="_SelectorEquipo" for="Equipo" />
+        </div>
+    </section>
 
     <section class="card" aria-labelledby="titulo-solicitante">
         <div class="card-header">
             <div><h2 class="card-title" id="titulo-solicitante">Solicitante</h2></div>
         </div>
         <div class="card-body">
+            @{
+                ViewData["ValoresRuta"] = new Dictionary<string, string?>
+                {
+                    ["nroEquipo"] = Model.NroEquipo?.ToString()
+                };
+            }
             <partial name="_SelectorUsuario" for="Usuario" />
         </div>
     </section>
 
+    @if (Model.ImpedimentoMensaje is not null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">
+                <div class="alert-title">@Model.ImpedimentoTitulo</div>
+                <div>@Model.ImpedimentoMensaje</div>
+                <div>Elegir otro equipo u otro usuario para continuar.</div>
+            </div>
+        </div>
+    }
+    else
+    {
     <form class="card" method="post" asp-action="RegistrarAsistida" id="f-solicitud-asistida" novalidate aria-labelledby="titulo-datos">
         <input type="hidden" asp-for="Usuario.Modo" />
         <input type="hidden" asp-for="Usuario.TipoUsuario" />
         <input type="hidden" asp-for="Usuario.NroUsuario" />
+        <input type="hidden" asp-for="NroEquipo" />
 
         <div class="card-header">
             <div><h2 class="card-title" id="titulo-datos">Datos de la solicitud</h2></div>
@@ -69,16 +109,6 @@
                         <input id="OrigenVisible" class="form-control" value="@origenAsistida" disabled />
                     </div>
                     <div class="field span-2">
-                        <label class="form-label" for="NroEquipo">Equipo solicitado<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <div class="select">
-                            <select asp-for="NroEquipo" class="form-select" asp-items="@(Model.EquiposDisponibles.Select(e => new SelectListItem(e.Texto, e.NroEquipo.ToString())))">
-                                <option value="">Seleccione un equipo disponible…</option>
-                            </select>
-                            <partial name="_Icon" model="@("chevron-down")" />
-                        </div>
-                        <span asp-validation-for="NroEquipo"></span>
-                    </div>
-                    <div class="field span-2">
                         <label class="form-label" for="MotivoSolicitud">Motivo de la solicitud<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <textarea asp-for="MotivoSolicitud" class="form-control" rows="3" maxlength="500"></textarea>
                         <span asp-validation-for="MotivoSolicitud"></span>
@@ -96,10 +126,10 @@
         </div>
         <div class="form-actions">
             <a class="btn btn-secondary btn-lg" asp-action="Gestion">Cancelar</a>
-            @* TODO: habilitar el registro cuando exista la solicitud asistida (#121) *@
-            <button type="submit" class="btn btn-primary btn-lg" disabled>Registrar solicitud</button>
+            <button type="submit" class="btn btn-primary btn-lg">Registrar solicitud</button>
         </div>
     </form>
+    }
 </div>
 
 @section Scripts {
