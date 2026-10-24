@@ -37,6 +37,7 @@ public class EdicionPersonalViewModel
 
     public EstadoPersonal EstadoPersonal { get; set; }
 
+    public bool EsRaiz { get; set; }
     public string Codigo => $"PER-{CodigoPersonal:D4}";
 
     public string NombreCompleto => $"{Nombre} {Apellido}";

@@ -102,7 +102,8 @@ public class PersonalController : Controller
             Telefono = personal.Telefono,
             RolAsignado = personal.RolAsignado,
             CorreoElectronico = personal.CorreoElectronico,
-            EstadoPersonal = personal.EstadoPersonal
+            EstadoPersonal = personal.EstadoPersonal,
+            EsRaiz = personal.EsRaiz,
         });
     }
 

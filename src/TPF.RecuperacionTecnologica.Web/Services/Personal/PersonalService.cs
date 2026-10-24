@@ -108,7 +108,8 @@ public class PersonalService : IPersonalService
                 Telefono = p.Telefono,
                 CorreoElectronico = p.CorreoElectronico,
                 RolAsignado = p.RolAsignado,
-                EstadoPersonal = p.EstadoPersonal
+                EstadoPersonal = p.EstadoPersonal,
+                EsRaiz = p.EsRaiz,
             })
             .FirstOrDefaultAsync();
     }
@@ -130,6 +131,21 @@ public class PersonalService : IPersonalService
         {
             return Error("PersonalNoEncontrado",
                 "No se encontró el personal especificado.");
+        }
+
+        if (personal.EsRaiz)
+        {
+            if (modelo.RolAsignado != personal.RolAsignado)
+            {
+                return Error("AdministradorPrincipal",
+                    "No se puede cambiar el rol del Administrador principal.");
+            }
+
+            if (!string.Equals(modelo.CorreoElectronico.Trim(), personal.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
+            {
+                return Error("AdministradorPrincipal",
+                    "No se puede cambiar el correo del Administrador principal.");
+            }
         }
 
         var correo = modelo.CorreoElectronico.Trim();
