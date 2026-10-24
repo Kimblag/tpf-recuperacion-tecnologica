@@ -52,6 +52,7 @@ builder.Services.AddScoped<IImagenEquipoService, ImagenEquipoService>();
 builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
+builder.Services.AddScoped<ISolicitudConsultaService, SolicitudConsultaService>();
 
 builder.Services
     .AddIdentity<IdentityUser, IdentityRole>(options =>

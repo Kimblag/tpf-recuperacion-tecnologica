@@ -17,15 +17,21 @@ public class SolicitudesController : Controller
     private readonly IDonacionService _donacionService;
     private readonly IPersonalService _personalService;
     private readonly ISolicitudService _solicitudService;
+    private readonly ISolicitudConsultaService _consultaService;
+    private readonly ILogger<SolicitudesController> _logger;
 
     public SolicitudesController(
         IDonacionService donacionService,
         IPersonalService personalService,
-        ISolicitudService solicitudService)
+        ISolicitudService solicitudService,
+        ISolicitudConsultaService consultaService,
+        ILogger<SolicitudesController> logger)
     {
         _donacionService = donacionService;
         _personalService = personalService;
         _solicitudService = solicitudService;
+        _consultaService = consultaService;
+        _logger = logger;
     }
 
     private sealed record SolicitudEjemplo(
@@ -63,41 +69,47 @@ public class SolicitudesController : Controller
 
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]
-    public IActionResult Index(MisSolicitudesViewModel filtros)
+    public async Task<IActionResult> Index(MisSolicitudesViewModel filtros)
     {
-        // TODO: reemplazar por la consulta real con filtros y paginación (#149)
-        var texto = filtros.Busqueda?.Trim();
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        var filtradas = Ejemplos
-            .Where(s => s.Propia
-                && (filtros.Estado is null || s.Estado == filtros.Estado)
-                && (string.IsNullOrEmpty(texto)
-                    || $"SOL-{s.NroSolicitud:D6}".Contains(texto, StringComparison.OrdinalIgnoreCase)
-                    || s.NroEquipo.ToString("D6").Contains(texto)
-                    || s.MarcaYModelo.Contains(texto, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(s => s.Fecha)
-            .ThenByDescending(s => s.NroSolicitud)
-            .ToList();
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
 
-        filtros.Total = filtradas.Count;
-        filtros.Pagina = Math.Clamp(filtros.Pagina, 1, filtros.TotalPaginas);
-        filtros.Filas = filtradas
-            .Skip((filtros.Pagina - 1) * MisSolicitudesViewModel.TamanoPagina)
-            .Take(MisSolicitudesViewModel.TamanoPagina)
-            .Select(ArmarFila)
-            .ToList();
+        try
+        {
+            var resultado = await _consultaService.ListarPropiasAsync(
+                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Pagina, MisSolicitudesViewModel.TamanoPagina);
+
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el listado de solicitudes propias");
+            filtros.ErrorAlCargar = true;
+        }
 
         return View(filtros);
     }
 
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]
-    public IActionResult Detalle(int id)
+    public async Task<IActionResult> Detalle(int id)
     {
-        // TODO: reemplazar por la consulta real, limitada al Usuario propietario (#149)
-        var solicitud = Ejemplos.FirstOrDefault(s => s.Propia && s.NroSolicitud == id);
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        return solicitud is null ? NotFound() : View(ArmarDetalle(solicitud));
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        var detalle = await _consultaService.ObtenerDetallePropioAsync(identityUserId, id);
+
+        return detalle is null ? NotFound() : View(detalle);
     }
 
     [HttpGet]
@@ -248,30 +260,6 @@ public class SolicitudesController : Controller
             FechaSolicitud = solicitud.Fecha,
             EstadoSolicitud = solicitud.Estado
         });
-    }
-
-    [HttpGet]
-    [Authorize(Policy = "UsuarioExterno")]
-    public IActionResult Historial()
-    {
-        // TODO: reemplazar por los movimientos reales de todas las solicitudes propias (#149)
-        var movimientos = Ejemplos
-            .Where(s => s.Propia)
-            .SelectMany(s => ArmarHitos(s)
-                .Where(h => h.Estado != EstadoHito.Pendiente && h.Estado != EstadoHito.Actual && h.Fecha is not null)
-                .Select(h => (Solicitud: s, Hito: h)))
-            .OrderByDescending(x => x.Hito.Fecha)
-            .Select(x => new HitoViewModel
-            {
-                Titulo = $"{x.Hito.Titulo} · SOL-{x.Solicitud.NroSolicitud:D6}",
-                Fecha = x.Hito.Fecha,
-                Icono = x.Hito.Icono,
-                Estado = x.Hito.Estado,
-                Texto = x.Solicitud.MarcaYModelo
-            })
-            .ToList();
-
-        return View(new HistorialSolicitudesViewModel { Movimientos = movimientos });
     }
 
     [HttpGet]
