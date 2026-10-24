@@ -13,6 +13,7 @@ public class InicioService : IInicioService
     private const int CantidadReciente = 4;
     private const int CantidadActividad = 5;
     private const int CantidadPendientes = 5;
+    private const int DiasAvisoVencimiento = 3;
 
     private readonly ApplicationDbContext _context;
 
@@ -259,6 +260,168 @@ public class InicioService : IInicioService
             Pendientes = pendientes,
             ActividadReciente = actividad
         };
+    }
+
+    public async Task<CoordinadorInicioViewModel?> ObtenerInicioCoordinadorAsync(string identityUserId)
+    {
+        var esCoordinador = await _context.PersonalInterno
+            .AsNoTracking()
+            .AnyAsync(p => p.IdentityUserId == identityUserId
+                && p.RolAsignado == RolPersonal.Coordinador
+                && p.EstadoPersonal == EstadoPersonal.Activo);
+
+        if (!esCoordinador)
+        {
+            return null;
+        }
+
+        var ahora = DateTime.UtcNow;
+        var hoy = ahora.Date;
+        var limiteAviso = hoy.AddDays(DiasAvisoVencimiento);
+        var haceUnaSemana = ahora.AddDays(-7);
+        var inicioDeMes = new DateTime(ahora.Year, ahora.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var inicioDeMesAnterior = inicioDeMes.AddMonths(-1);
+
+        var disponibles = _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.EstadoEquipo == EstadoEquipo.Disponible);
+
+        var equiposDisponibles = await disponibles.CountAsync();
+        var disponiblesEstaSemana = await disponibles.CountAsync(e => e.FechaDisponibilidad >= haceUnaSemana);
+
+        var pendientes = _context.Solicitudes
+            .AsNoTracking()
+            .Where(s => s.EstadoSolicitud == EstadoSolicitud.Pendiente);
+
+        var solicitudesPendientes = await pendientes.CountAsync();
+        var pendientesInstitucionales = await pendientes.CountAsync(s => s.TipoSolicitante != TipoSolicitante.Particular);
+
+        var vigentes = _context.Asignaciones
+            .AsNoTracking()
+            .Where(a => a.EstadoAsignacion == EstadoAsignacion.Vigente);
+
+        var asignacionesVigentes = await vigentes.CountAsync();
+        var vencidas = await vigentes.CountAsync(a => a.FechaLimiteRetiro.Date < hoy);
+        var porVencer = await vigentes.CountAsync(a => a.FechaLimiteRetiro.Date >= hoy && a.FechaLimiteRetiro.Date <= limiteAviso);
+
+        var entregas = _context.Entregas.AsNoTracking();
+        var entregasDelMes = await entregas.CountAsync(e => e.FechaEntrega >= inicioDeMes);
+        var entregasDelMesAnterior = await entregas
+            .CountAsync(e => e.FechaEntrega >= inicioDeMesAnterior && e.FechaEntrega < inicioDeMes);
+
+        var cola = await pendientes
+            .OrderBy(s => s.TipoSolicitante == TipoSolicitante.Particular ? 1 : 0)
+            .ThenBy(s => s.FechaSolicitud)
+            .ThenBy(s => s.NroSolicitud)
+            .Take(CantidadPendientes)
+            .Select(s => new
+            {
+                s.NroSolicitud,
+                s.TipoSolicitante,
+                s.FechaSolicitud,
+                s.NroEquipoRequerido,
+                s.EquipoRequerido.TipoEquipo,
+                s.EquipoRequerido.Marca,
+                s.EquipoRequerido.Modelo,
+                s.Usuario.RazonSocial,
+                s.Usuario.Nombre,
+                s.Usuario.Apellido
+            })
+            .ToListAsync();
+
+        var conPlazo = await vigentes
+            .OrderBy(a => a.FechaLimiteRetiro)
+            .ThenBy(a => a.NroAsignacion)
+            .Take(CantidadPendientes)
+            .Select(a => new
+            {
+                a.NroAsignacion,
+                a.FechaLimiteRetiro,
+                a.Equipo.Marca,
+                a.Equipo.Modelo,
+                a.Solicitud.Usuario.RazonSocial,
+                a.Solicitud.Usuario.Nombre,
+                a.Solicitud.Usuario.Apellido
+            })
+            .ToListAsync();
+
+        var tiposDeActividad = new[]
+        {
+            TipoOperacionAuditoria.Donacion,
+            TipoOperacionAuditoria.Solicitud,
+            TipoOperacionAuditoria.Asignacion,
+            TipoOperacionAuditoria.Liberacion,
+            TipoOperacionAuditoria.Entrega
+        };
+
+        var registros = await _context.RegistrosAuditoria
+            .AsNoTracking()
+            .Where(r => tiposDeActividad.Contains(r.TipoOperacion))
+            .OrderByDescending(r => r.FechaHora)
+            .ThenByDescending(r => r.NroAuditoria)
+            .Take(CantidadActividad)
+            .Select(r => new { r.FechaHora, r.TipoOperacion, r.EntidadAfectada, r.IdEntidadAfectada, r.Detalle })
+            .ToListAsync();
+
+        return new CoordinadorInicioViewModel
+        {
+            EquiposDisponibles = equiposDisponibles,
+            DisponiblesEstaSemana = disponiblesEstaSemana,
+            SolicitudesPendientes = solicitudesPendientes,
+            PendientesInstitucionales = pendientesInstitucionales,
+            AsignacionesVigentes = asignacionesVigentes,
+            AsignacionesPorVencer = porVencer,
+            AsignacionesVencidas = vencidas,
+            EntregasDelMes = entregasDelMes,
+            EntregasDelMesAnterior = entregasDelMesAnterior,
+            ColaPrioritaria = cola.Select(s => new SolicitudPrioritariaViewModel
+            {
+                NroSolicitud = s.NroSolicitud,
+                Solicitante = NombreDe(s.RazonSocial, s.Nombre, s.Apellido),
+                TipoSolicitante = s.TipoSolicitante,
+                TipoEquipo = s.TipoEquipo,
+                NroEquipo = s.NroEquipoRequerido,
+                MarcaYModelo = $"{s.Marca} {s.Modelo}",
+                FechaSolicitud = s.FechaSolicitud
+            }).ToList(),
+            AsignacionesConPlazo = conPlazo.Select(a => new AsignacionConPlazoViewModel
+            {
+                NroAsignacion = a.NroAsignacion,
+                Solicitante = NombreDe(a.RazonSocial, a.Nombre, a.Apellido),
+                MarcaYModelo = $"{a.Marca} {a.Modelo}",
+                FechaLimiteRetiro = a.FechaLimiteRetiro,
+                DiasRestantes = (a.FechaLimiteRetiro.Date - hoy).Days
+            }).ToList(),
+            ActividadReciente = registros.Select(r => EventoDeAuditoria(
+                r.TipoOperacion, r.EntidadAfectada, r.IdEntidadAfectada, r.Detalle, r.FechaHora)).ToList()
+        };
+    }
+
+    private static string NombreDe(string? razonSocial, string? nombre, string? apellido) =>
+        !string.IsNullOrWhiteSpace(razonSocial) ? razonSocial : $"{nombre} {apellido}".Trim();
+
+    private static ActividadViewModel EventoDeAuditoria(
+        TipoOperacionAuditoria tipo, string entidad, int id, string? detalle, DateTime fecha)
+    {
+        var icono = tipo switch
+        {
+            TipoOperacionAuditoria.Donacion => "gift",
+            TipoOperacionAuditoria.Solicitud => "tray",
+            TipoOperacionAuditoria.Asignacion => "swap",
+            TipoOperacionAuditoria.Liberacion => "undo",
+            _ => "truck"
+        };
+
+        var codigo = entidad switch
+        {
+            "Solicitud" => $"SOL-{id:D6}",
+            "Asignacion" => $"ASG-{id:D6}",
+            "Entrega" => $"ENT-{id:D6}",
+            _ => id.ToString("D6")
+        };
+
+        return Evento(icono, $"{detalle ?? "Movimiento registrado"} ", codigo, "", fecha,
+            exito: tipo != TipoOperacionAuditoria.Liberacion);
     }
 
     private static string CodigoEquipo(int nroEquipo) => nroEquipo.ToString("D6");
