@@ -35,8 +35,7 @@
                 if (Model.EsVigente)
                 {
                     <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-liberar-asignacion"><partial name="_Icon" model="@("undo")" /><span>Liberar asignación</span></button>
-                    @* TODO: reemplazar por el enlace a Entregas/Registrar cuando exista la acción (#124) *@
-                    <button type="button" class="btn btn-primary" disabled><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></button>
+                    <a class="btn btn-primary" asp-controller="Entregas" asp-action="Registrar" asp-route-nroAsignacion="@Model.NroAsignacion"><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></a>
                 }
                 else
                 {

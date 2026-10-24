@@ -1,0 +1,94 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Entregas.EntregaDetalleViewModel
+@{
+    ViewData["Title"] = "Detalle de entrega";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Entregas</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Entrega <span class="mono">@Model.Codigo</span></h1></div>
+            <p class="page-sub">@Model.MarcaYModelo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+        </div>
+    </div>
+
+    <div class="grid-3-1">
+        <div class="stack">
+            <section class="card" aria-labelledby="titulo-datos">
+                <div class="card-header">
+                    <div><h2 class="card-title" id="titulo-datos">Datos de la entrega</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Entrega</dt>
+                        <dd><span class="mono">@Model.Codigo</span></dd>
+                        <dt>Fecha de entrega</dt>
+                        <dd>@Model.FechaEntrega.ToString("dd/MM/yyyy")</dd>
+                        <dt>Coordinador</dt>
+                        <dd>@Model.Coordinador</dd>
+                        <dt>Equipo</dt>
+                        <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
+                    </dl>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="titulo-origen">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title" id="titulo-origen">Asignación y solicitud</h2>
+                        <p class="card-sub">De dónde viene esta entrega</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Asignación</dt>
+                        <dd><a class="mono" asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@Model.NroAsignacion">@Model.CodigoAsignacion</a></dd>
+                        <dt>Solicitud</dt>
+                        <dd>
+                            @* TODO: enlazar a Solicitudes/DetalleInterno cuando las entregas sean reales (#152) *@
+                            <span class="mono">@Model.CodigoSolicitud</span>
+                        </dd>
+                        <dt>Solicitante</dt>
+                        <dd>@Model.Solicitante · @Html.DisplayFor(m => m.TipoSolicitante)</dd>
+                    </dl>
+                </div>
+            </section>
+        </div>
+
+        <div class="stack">
+            <section class="card" aria-labelledby="titulo-retiro">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title" id="titulo-retiro">Quién retiró el equipo</h2>
+                        <p class="card-sub">Dejado como constancia al registrar la entrega</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Nombre y apellido</dt>
+                        <dd>@Model.NombreQuienRetira</dd>
+                        <dt>Documento</dt>
+                        <dd><span class="mono">@Model.DocumentoQuienRetira</span></dd>
+                    </dl>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="titulo-recorrido">
+                <div class="card-header">
+                    <div><h2 class="card-title" id="titulo-recorrido">Recorrido</h2></div>
+                </div>
+                <div class="card-body">
+                    <partial name="_LineaDeTiempo" model="Model.Hitos" />
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

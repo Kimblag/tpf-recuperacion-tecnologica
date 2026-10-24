@@ -6,6 +6,7 @@
     var esEquipos = controlador == "Equipos";
     var esSolicitudes = controlador == "Solicitudes";
     var esAsignaciones = controlador == "Asignaciones";
+    var esEntregas = controlador == "Entregas";
 }
 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
     <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(esInicio ? "page" : null)">
@@ -32,6 +33,10 @@
         <a class="nav-link d-flex align-items-center gap-2@(esAsignaciones ? " active" : "")" asp-area="" asp-controller="Asignaciones" asp-action="Index" aria-current="@(esAsignaciones ? "page" : null)">
             <span class="nav-dot"></span>
             <partial name="_Icon" model="@("swap")" />Asignaciones
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esEntregas ? " active" : "")" asp-area="" asp-controller="Entregas" asp-action="Index" aria-current="@(esEntregas ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("truck")" />Entregas
         </a>
     </div>
 </nav>

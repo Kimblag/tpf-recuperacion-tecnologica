@@ -1,0 +1,139 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Entregas.EntregaListadoViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Entregas";
+
+    var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        FechaDesde = Model.FechaDesde?.ToString("yyyy-MM-dd"),
+        FechaHasta = Model.FechaHasta?.ToString("yyyy-MM-dd"),
+        Pagina = pagina
+    });
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Entregas</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Entregas</h1></div>
+            <p class="page-sub">Equipos entregados a quienes los solicitaron, del más reciente al más antiguo</p>
+        </div>
+        @if (esCoordinador)
+        {
+            <div class="page-actions">
+                <a class="btn btn-primary" asp-action="Registrar"><partial name="_Icon" model="@("plus")" /><span>Registrar entrega</span></a>
+            </div>
+        }
+    </div>
+
+    <section class="card overflow" aria-label="Entregas" data-listado data-filas-carga="5">
+        <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de entrega, asignación, solicitud o equipo, o quien retiró" maxlength="60" data-filtro-texto />
+            </div>
+            <div class="filter">
+                <label for="FechaDesde">Desde</label>
+                <input asp-for="FechaDesde" type="date" class="form-control sm" />
+            </div>
+            <div class="filter">
+                <label for="FechaHasta">Hasta</label>
+                <input asp-for="FechaHasta" type="date" class="form-control sm" />
+            </div>
+            <div class="filter" style="min-width:0">
+                <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
+            </div>
+            <div class="filter" style="min-width:0">
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
+            </div>
+        </form>
+
+        <div class="card-body flush">
+            @if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las entregas. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>No hay entregas que coincidan</h3>
+                    <p>Probar con otra búsqueda o con otro rango de fechas.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Ver todas</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("truck")" /></span>
+                    <h3>Todavía no hay entregas</h3>
+                    <p>Las entregas se registran desde una asignación vigente.</p>
+                    <a class="btn btn-secondary" asp-controller="Asignaciones" asp-action="Index"><partial name="_Icon" model="@("swap")" /><span>Ver asignaciones</span></a>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Entregas</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Entrega</th>
+                                <th scope="col">Solicitud</th>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Quién retiró</th>
+                                <th scope="col">Coordinador</th>
+                                <th scope="col">Fecha de entrega</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Entrega"><span class="mono">@fila.Codigo</span></td>
+                                    <td data-label="Solicitud">
+                                        @* TODO: enlazar a Solicitudes/DetalleInterno cuando las entregas sean reales (#152) *@
+                                        <span class="mono">@fila.CodigoSolicitud</span>
+                                        <div class="card-sub">@fila.Solicitante</div>
+                                    </td>
+                                    <td data-label="Equipo">
+                                        <div>@fila.MarcaYModelo</div>
+                                        <div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <span class="mono">@fila.CodigoEquipo</span></div>
+                                    </td>
+                                    <td data-label="Quién retiró">
+                                        <div>@fila.NombreQuienRetira</div>
+                                        <div class="card-sub">Documento <span class="mono">@fila.DocumentoQuienRetira</span></div>
+                                    </td>
+                                    <td data-label="Coordinador">@fila.Coordinador</td>
+                                    <td data-label="Fecha de entrega">@fila.FechaEntrega.ToString("dd/MM/yyyy")</td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEntrega" aria-label="Ver entrega @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
+            }
+        </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/filtros-listado.js" asp-append-version="true"></script>
+    <script src="~/js/listado-carga.js" asp-append-version="true"></script>
+}
