@@ -86,6 +86,8 @@ builder.Services.AddAuthorizationBuilder()
         policy.RequireRole(nameof(RolPersonal.Administrador)))
     .AddPolicy("SoloTecnico", policy =>
         policy.RequireRole(nameof(RolPersonal.Tecnico)))
+    .AddPolicy("SoloCoordinador", policy =>
+        policy.RequireRole(nameof(RolPersonal.Coordinador)))
     .AddPolicy("Coordinacion", policy =>
         policy.RequireRole(
             nameof(RolPersonal.Coordinador),

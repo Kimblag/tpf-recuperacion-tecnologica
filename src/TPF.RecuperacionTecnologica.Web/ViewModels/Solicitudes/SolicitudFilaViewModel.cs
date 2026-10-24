@@ -12,6 +12,8 @@ public class SolicitudFilaViewModel
 
     public string MarcaYModelo { get; set; } = string.Empty;
 
+    public string Solicitante { get; set; } = string.Empty;
+
     public TipoSolicitante TipoSolicitante { get; set; }
 
     public OrigenSolicitud OrigenSolicitud { get; set; }
