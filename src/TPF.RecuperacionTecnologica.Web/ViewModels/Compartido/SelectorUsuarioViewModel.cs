@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 
-namespace TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
+namespace TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 public enum ModoUsuarioAsistido
 {

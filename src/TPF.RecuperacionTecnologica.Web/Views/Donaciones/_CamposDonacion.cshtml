@@ -18,7 +18,7 @@
 <div class="field">
     <label class="form-label" for="Donante">Donante</label>
     <input id="Donante" class="form-control" value="@ViewData["Donante"]" disabled aria-describedby="Donante-hint" />
-    <div class="form-text" id="Donante-hint">Se completa con su cuenta.</div>
+    <div class="form-text" id="Donante-hint">@(ViewData["AyudaDonante"] ?? "Se completa con su cuenta.")</div>
 </div>
 <div class="field">
     <label class="form-label" for="NroEquipoVisible">Número de equipo</label>
