@@ -4,8 +4,6 @@
     ViewData["Title"] = "Nueva donación";
 
     ViewData["Donante"] = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
-    ViewData["NroEquipo"] = "Se asigna al registrar";
-    ViewData["AyudaNroEquipo"] = "Se asigna automáticamente al registrar.";
     ViewData["Fecha"] = DateTime.Today.ToString("dd/MM/yyyy");
 }
 
@@ -19,7 +17,7 @@
     <div class="page-head">
         <div>
             <div class="h-id"><h1 tabindex="-1">Nueva donación</h1></div>
-            <p class="page-sub">Cuéntenos qué equipo quiere donar. Después tendrá que llevarlo para que lo recibamos.</p>
+            <p class="page-sub">Indicar qué equipo se quiere donar. Después hay que llevarlo para que pueda recibirse.</p>
         </div>
     </div>
 

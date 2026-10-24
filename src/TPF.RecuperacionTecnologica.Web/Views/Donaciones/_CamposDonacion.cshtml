@@ -11,20 +11,9 @@
 
     string Tipos(params TipoEquipo[] tipos) => string.Join(",", tipos.Select(t => (int)t));
     var tipoBloqueado = Model is EdicionDonacionViewModel;
+    var codigoEquipo = ViewData["NroEquipo"] as string;
 }
 
-<h3 class="span-2 sec-title">Datos del equipo</h3>
-
-<div class="field">
-    <label class="form-label" for="Donante">Donante</label>
-    <input id="Donante" class="form-control" value="@ViewData["Donante"]" disabled aria-describedby="Donante-hint" />
-    <div class="form-text" id="Donante-hint">@(ViewData["AyudaDonante"] ?? "Se completa con su cuenta.")</div>
-</div>
-<div class="field">
-    <label class="form-label" for="NroEquipoVisible">Número de equipo</label>
-    <input id="NroEquipoVisible" class="form-control" value="@ViewData["NroEquipo"]" disabled aria-describedby="NroEquipo-hint" />
-    <div class="form-text" id="NroEquipo-hint">@ViewData["AyudaNroEquipo"]</div>
-</div>
 <div class="field">
     @if (tipoBloqueado)
     {
@@ -32,10 +21,9 @@
             .FirstOrDefault(i => i.Value == ((int)Model.TipoEquipo!.Value).ToString())?.Text;
 
         <label class="form-label" for="TipoEquipoVisible">Tipo de equipo</label>
-        @* el script del formulario necesita un elemento con id TipoEquipo para mostrar los campos del tipo *@
         <input type="hidden" id="TipoEquipo" name="TipoEquipo" value="@((int)Model.TipoEquipo!.Value)" />
         <input id="TipoEquipoVisible" class="form-control" value="@textoTipo" disabled aria-describedby="TipoEquipo-hint" />
-        <div class="form-text" id="TipoEquipo-hint">No se puede cambiar. Si se equivocó, cancele esta donación y registre una nueva.</div>
+        <div class="form-text" id="TipoEquipo-hint">No se puede cambiar. Si hubo un error, hay que cancelar esta donación y registrar una nueva.</div>
     }
     else
     {
@@ -50,17 +38,6 @@
     }
 </div>
 <div class="field">
-    <label class="form-label" for="EstadoInicialDeclarado">Estado del equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-    <div class="select">
-        <select asp-for="EstadoInicialDeclarado" class="form-select" asp-items="condiciones" aria-describedby="EstadoInicialDeclarado-hint">
-            <option value="">Seleccione…</option>
-        </select>
-        <partial name="_Icon" model="@("chevron-down")" />
-    </div>
-    <div class="form-text" id="EstadoInicialDeclarado-hint">¿Funciona? Elija lo que mejor lo describe. Un técnico lo va a revisar.</div>
-    <span asp-validation-for="EstadoInicialDeclarado"></span>
-</div>
-<div class="field">
     <label class="form-label" for="Marca">Marca<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
     <input asp-for="Marca" class="form-control" placeholder="Ej.: Lenovo" aria-describedby="Marca-hint" />
     <div class="form-text" id="Marca-hint">Suele estar escrita en el equipo. Por ejemplo: Lenovo, Dell, HP.</div>
@@ -72,14 +49,25 @@
     <div class="form-text" id="Modelo-hint">Suele estar en una etiqueta, atrás o debajo del equipo.</div>
     <span asp-validation-for="Modelo"></span>
 </div>
+<div class="field">
+    <label class="form-label" for="EstadoInicialDeclarado">Estado del equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+    <div class="select">
+        <select asp-for="EstadoInicialDeclarado" class="form-select" asp-items="condiciones" aria-describedby="EstadoInicialDeclarado-hint">
+            <option value="">Seleccione…</option>
+        </select>
+        <partial name="_Icon" model="@("chevron-down")" />
+    </div>
+    <div class="form-text" id="EstadoInicialDeclarado-hint">¿Funciona? Elegir la opción que mejor lo describe. Un técnico lo va a revisar.</div>
+    <span asp-validation-for="EstadoInicialDeclarado"></span>
+</div>
 
 <h3 class="span-2 sec-title">Características técnicas</h3>
-<p class="span-2 form-note" style="margin:-6px 0 0">Complete solo lo que sepa. Un técnico va a revisar estos datos antes de mostrar el equipo en el catálogo. Elija primero el tipo de equipo para ver qué datos pedimos.</p>
+<p class="span-2 form-note" style="margin:-6px 0 0">Completar solo lo que se sepa. Un técnico va a revisar estos datos antes de mostrar el equipo en el catálogo. Elegir primero el tipo de equipo para ver qué datos se piden.</p>
 
 <div class="field" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.PcEscritorio)" hidden>
     <label class="form-label" for="Procesador">Procesador</label>
     <input asp-for="Procesador" class="form-control" placeholder="Ej.: Intel Core i5" aria-describedby="Procesador-hint" />
-    <div class="form-text" id="Procesador-hint">Suele decir “Intel Core i5” o “AMD Ryzen 5”. Puede dejarlo vacío.</div>
+    <div class="form-text" id="Procesador-hint">Suele decir “Intel Core i5” o “AMD Ryzen 5”. Se puede dejar vacío.</div>
     <span asp-validation-for="Procesador"></span>
 </div>
 <div class="field" data-tipos="@Tipos(TipoEquipo.Notebook, TipoEquipo.PcEscritorio, TipoEquipo.Celular)" hidden>
@@ -116,6 +104,22 @@
     <div class="form-text" id="Observaciones-hint">Accesorios incluidos, golpes, fallas conocidas u otros detalles.</div>
     <span asp-validation-for="Observaciones"></span>
 </div>
+
+<h3 class="span-2 sec-title">Registro</h3>
+
+<div class="field">
+    <label class="form-label" for="Donante">Donante</label>
+    <input id="Donante" class="form-control" value="@ViewData["Donante"]" disabled aria-describedby="Donante-hint" />
+    <div class="form-text" id="Donante-hint">@(ViewData["AyudaDonante"] ?? "Se completa con la cuenta de la sesión.")</div>
+</div>
+@if (!string.IsNullOrEmpty(codigoEquipo))
+{
+    <div class="field">
+        <label class="form-label" for="NroEquipoVisible">Número de equipo</label>
+        <input id="NroEquipoVisible" class="form-control" value="@codigoEquipo" disabled aria-describedby="NroEquipo-hint" />
+        <div class="form-text" id="NroEquipo-hint">@ViewData["AyudaNroEquipo"]</div>
+    </div>
+}
 <div class="field">
     <label class="form-label" for="FechaRegistroVisible">Fecha de registro</label>
     <input id="FechaRegistroVisible" class="form-control" value="@ViewData["Fecha"]" disabled />
