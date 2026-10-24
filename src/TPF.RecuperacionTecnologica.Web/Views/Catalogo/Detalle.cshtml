@@ -34,8 +34,7 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al catálogo</span></a>
-            @* TODO: reemplazar por el enlace a Solicitudes/Registrar cuando exista la acción (#118) *@
-            <button type="button" class="btn btn-primary" disabled><partial name="_Icon" model="@("tray")" /><span>Solicitar este equipo</span></button>
+            <a class="btn btn-primary" asp-controller="Solicitudes" asp-action="Registrar" asp-route-nroEquipo="@Model.NroEquipo"><partial name="_Icon" model="@("tray")" /><span>Solicitar este equipo</span></a>
         </div>
     </div>
 
