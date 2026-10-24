@@ -1,0 +1,107 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.RegistroSolicitudAsistidaViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Nueva solicitud asistida";
+    ViewData["FormularioId"] = "f-solicitud-asistida";
+
+    var origenAsistida = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)OrigenSolicitud.Asistida).ToString()).Text;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Gestion">Solicitudes</a></li>
+    <li aria-current="page">Nueva solicitud asistida</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Nueva solicitud asistida</h1></div>
+            <p class="page-sub">Registrar una solicitud sobre un equipo específico para una persona que no puede hacerlo sola</p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="note">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body">
+            <div class="alert-title">Esta solicitud se crea en nombre de un usuario externo</div>
+            <div>Queda registrada con origen Asistida y a nombre de la persona coordinadora. Si la persona todavía no tiene cuenta, se puede abrir una en el momento.</div>
+        </div>
+    </div>
+
+    <section class="card" aria-labelledby="titulo-solicitante">
+        <div class="card-header">
+            <div><h2 class="card-title" id="titulo-solicitante">Solicitante</h2></div>
+        </div>
+        <div class="card-body">
+            <partial name="_SelectorUsuario" for="Usuario" />
+        </div>
+    </section>
+
+    <form class="card" method="post" asp-action="RegistrarAsistida" id="f-solicitud-asistida" novalidate aria-labelledby="titulo-datos">
+        <input type="hidden" asp-for="Usuario.Modo" />
+        <input type="hidden" asp-for="Usuario.TipoUsuario" />
+        <input type="hidden" asp-for="Usuario.NroUsuario" />
+
+        <div class="card-header">
+            <div><h2 class="card-title" id="titulo-datos">Datos de la solicitud</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label class="form-label" for="TipoSolicitante">Tipo de solicitante<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <div class="select">
+                            <select asp-for="TipoSolicitante" class="form-select" asp-items="Html.GetEnumSelectList<TipoSolicitante>()">
+                                <option value="">Seleccione…</option>
+                            </select>
+                            <partial name="_Icon" model="@("chevron-down")" />
+                        </div>
+                        <span asp-validation-for="TipoSolicitante"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="OrigenVisible">Origen</label>
+                        <input id="OrigenVisible" class="form-control" value="@origenAsistida" disabled />
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="NroEquipo">Equipo solicitado<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <div class="select">
+                            <select asp-for="NroEquipo" class="form-select" asp-items="@(Model.EquiposDisponibles.Select(e => new SelectListItem(e.Texto, e.NroEquipo.ToString())))">
+                                <option value="">Seleccione un equipo disponible…</option>
+                            </select>
+                            <partial name="_Icon" model="@("chevron-down")" />
+                        </div>
+                        <span asp-validation-for="NroEquipo"></span>
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="MotivoSolicitud">Motivo de la solicitud<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <textarea asp-for="MotivoSolicitud" class="form-control" rows="3" maxlength="500"></textarea>
+                        <span asp-validation-for="MotivoSolicitud"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="CoordinadorVisible">Coordinador</label>
+                        <input id="CoordinadorVisible" class="form-control" value="@Model.Coordinador" disabled />
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="FechaVisible">Fecha de solicitud</label>
+                        <input id="FechaVisible" class="form-control" value="@Model.FechaSolicitud.ToString("dd/MM/yyyy")" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Gestion">Cancelar</a>
+            @* TODO: habilitar el registro cuando exista la solicitud asistida (#121) *@
+            <button type="submit" class="btn btn-primary btn-lg" disabled>Registrar solicitud</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
