@@ -1,11 +1,24 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo.EquipoCatalogoDetalleViewModel
-@using TPF.RecuperacionTecnologica.Web.Services.Cuenta
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
     ViewData["Title"] = "Detalle del equipo";
-    var esUsuarioExterno = User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario);
+
+    var cantidadFotos = Model.Imagenes.Count;
+    var primeraFoto = cantidadFotos > 0 ? Model.Imagenes[0] : default;
+
+    string AltFoto((string UrlImagen, string? Angulo) imagen) =>
+        $"Foto de {Model.MarcaYModelo}" + (string.IsNullOrWhiteSpace(imagen.Angulo) ? string.Empty : $", vista {imagen.Angulo}");
+
+    var textoDemanda = Model.SolicitudesEnEspera switch
+    {
+        0 => "Nadie todavía",
+        1 => "1 persona",
+        var cantidad => $"{cantidad} personas"
+    };
 }
 
 @section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
     <li><a asp-action="Index">Catálogo</a></li>
     <li aria-current="page">Detalle</li>
 }
@@ -15,24 +28,88 @@
         <div>
             <div class="h-id">
                 <h1 tabindex="-1">@Model.MarcaYModelo</h1>
+                <partial name="_EstadoEquipoBadge" model="EstadoEquipo.Disponible" />
             </div>
             <p class="page-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · Equipo <span class="mono">@Model.CodigoEquipo</span></p>
         </div>
         <div class="page-actions">
-            @if (esUsuarioExterno)
-            {
-                @* TODO: reemplazar por el enlace a Solicitudes/Registrar cuando exista la acción (#118) *@
-                <button type="button" class="btn btn-primary" disabled><partial name="_Icon" model="@("tray")" /><span>Solicitar</span></button>
-            }
+            <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al catálogo</span></a>
+            @* TODO: reemplazar por el enlace a Solicitudes/Registrar cuando exista la acción (#118) *@
+            <button type="button" class="btn btn-primary" disabled><partial name="_Icon" model="@("tray")" /><span>Solicitar este equipo</span></button>
         </div>
     </div>
 
-    <div class="grid-3-1">
+    <div class="g-detail">
+        <section class="card" aria-label="Fotos del equipo">
+            <div class="card-body" data-galeria>
+                <div class="gallery-main">
+                    @if (cantidadFotos > 0)
+                    {
+                        <img src="@Url.Content(primeraFoto.UrlImagen)" alt="@AltFoto(primeraFoto)" data-galeria-principal />
+                    }
+                    else
+                    {
+                        <span class="eq-ilustracion"><partial name="_IlustracionEquipo" model="@((Model.TipoEquipo, Model.Modelo))" /></span>
+                    }
+                </div>
+                @if (cantidadFotos == 0)
+                {
+                    <p class="gallery-cap">Este equipo todavía no tiene fotos cargadas.</p>
+                }
+                else
+                {
+                    <p class="gallery-cap" role="status" aria-live="polite" data-galeria-leyenda>Foto 1 de @cantidadFotos@(string.IsNullOrWhiteSpace(primeraFoto.Angulo) ? string.Empty : $" · {primeraFoto.Angulo}")</p>
+                    @if (cantidadFotos > 1)
+                    {
+                        <ul class="gallery-thumbs" aria-label="Fotos del equipo">
+                            @for (var indice = 0; indice < cantidadFotos; indice++)
+                            {
+                                var foto = Model.Imagenes[indice];
+
+                                <li>
+                                    <a class="thumb" href="@Url.Content(foto.UrlImagen)" aria-label="Ver foto @(indice + 1) de @cantidadFotos" aria-current="@(indice == 0 ? "true" : null)"
+                                       data-miniatura data-src="@Url.Content(foto.UrlImagen)" data-alt="@AltFoto(foto)" data-numero="@(indice + 1)" data-angulo="@foto.Angulo">
+                                        <img src="@Url.Content(foto.UrlImagen)" alt="" loading="lazy" />
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                }
+            </div>
+        </section>
+
         <div class="stack">
-            <section class="card">
+            <section class="card" aria-labelledby="titulo-resumen">
+                <div class="card-header">
+                    <div><h2 class="card-title" id="titulo-resumen">Resumen</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Número de equipo</dt>
+                        <dd><span class="mono">@Model.CodigoEquipo</span></dd>
+                        <dt>Tipo</dt>
+                        <dd><partial name="_TipoEquipo" model="Model.TipoEquipo" /></dd>
+                        @if (Model.FechaDisponibilidad is not null)
+                        {
+                            <dt>Disponible desde</dt>
+                            <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                        }
+                        <dt>Revisión técnica</dt>
+                        <dd>
+                            <partial name="_DictamenBadge" model="Model.DictamenTecnico" />
+                            <span class="card-sub">evaluado el @Model.FechaRevision.ToString("dd/MM/yyyy")</span>
+                        </dd>
+                        <dt>Personas que ya lo pidieron</dt>
+                        <dd>@textoDemanda</dd>
+                    </dl>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="titulo-caracteristicas">
                 <div class="card-header">
                     <div>
-                        <h2 class="card-title">Características técnicas</h2>
+                        <h2 class="card-title" id="titulo-caracteristicas">Características técnicas</h2>
                         <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
                     </div>
                 </div>
@@ -74,60 +151,27 @@
                     }
                     else
                     {
-                        <p class="muted">Sin características técnicas registradas.</p>
+                        <p class="muted mb-0">Sin características técnicas registradas.</p>
                     }
                 </div>
             </section>
 
-            @if (Model.Imagenes.Count > 0)
-            {
-                <section class="card">
-                    <div class="card-header">
-                        <div><h2 class="card-title">Fotos del equipo</h2></div>
+            <section class="card" aria-labelledby="titulo-asignacion">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title" id="titulo-asignacion">Cómo se asigna</h2>
+                        <p class="card-sub">La solicitud se hace sobre este equipo</p>
                     </div>
-                    <div class="card-body">
-                        <ul class="grid-3 list-unstyled m-0">
-                            @foreach (var imagen in Model.Imagenes)
-                            {
-                                <li>
-                                    <figure class="m-0">
-                                        <div class="ratio ratio-4x3">
-                                            <img src="@Url.Content(imagen.UrlImagen)" class="object-fit-cover rounded" alt="Foto de @Model.MarcaYModelo@(string.IsNullOrWhiteSpace(imagen.Angulo) ? "" : $", vista {imagen.Angulo}")" loading="lazy" />
-                                        </div>
-                                        @if (!string.IsNullOrWhiteSpace(imagen.Angulo))
-                                        {
-                                            <figcaption class="card-sub">@imagen.Angulo</figcaption>
-                                        }
-                                    </figure>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </section>
-            }
+                </div>
+                <div class="card-body">
+                    <p class="form-text mb-2">Si varias personas piden el mismo equipo, una persona coordinadora lo asigna en este orden:</p>
+                    <partial name="_ReglaPrioridad" />
+                </div>
+            </section>
         </div>
-
-        <section class="card">
-            <div class="card-header">
-                <div><h2 class="card-title">Datos del equipo</h2></div>
-            </div>
-            <div class="card-body">
-                <dl class="dl">
-                    <dt>Número de equipo</dt>
-                    <dd><span class="mono">@Model.CodigoEquipo</span></dd>
-                    <dt>Tipo de equipo</dt>
-                    <dd><partial name="_TipoEquipo" model="Model.TipoEquipo" /></dd>
-                    <dt>Marca</dt>
-                    <dd>@Model.Marca</dd>
-                    <dt>Modelo</dt>
-                    <dd>@Model.Modelo</dd>
-                    @if (Model.FechaDisponibilidad is not null)
-                    {
-                        <dt>Disponible desde</dt>
-                        <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
-                    }
-                </dl>
-            </div>
-        </section>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
+}
