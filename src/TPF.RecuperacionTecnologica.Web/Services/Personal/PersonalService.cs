@@ -273,6 +273,92 @@ public class PersonalService : IPersonalService
         return IdentityResult.Success;
     }
 
+    public async Task<IdentityResult> InactivarAsync(
+        InactivarPersonalViewModel modelo,
+        int codigoAdministrador)
+    {
+        var personal = await _context.PersonalInterno
+            .FirstOrDefaultAsync(p => p.CodigoPersonal == modelo.CodigoPersonal);
+        if (personal is null)
+        {
+            return Error("PersonalNoEncontrado",
+                "No se encontró el personal especificado.");
+        }
+        if (personal.EstadoPersonal == EstadoPersonal.Inactivo)
+        {
+            return Error("YaInactivo",
+                "El personal ya se encuentra inactivo.");
+        }
+        // no se puede dejar al sistema sin ningún Administrador activo
+        if (personal.RolAsignado == RolPersonal.Administrador
+            && !await _context.PersonalInterno.AnyAsync(p =>
+                p.CodigoPersonal != personal.CodigoPersonal
+                && p.RolAsignado == RolPersonal.Administrador
+                && p.EstadoPersonal == EstadoPersonal.Activo))
+        {
+            return Error("UltimoAdministrador",
+                "No se puede inactivar al último Administrador activo.");
+        }
+        var identityUser = await _userManager.FindByIdAsync(personal.IdentityUserId);
+
+        if (identityUser is null)
+        {
+            return Error("CuentaNoEncontrada",
+                "No se encontró la cuenta de acceso asociada al personal.");
+        }
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            personal.EstadoPersonal = EstadoPersonal.Inactivo;
+            personal.FechaInactivacion = DateTime.UtcNow;
+            personal.MotivoInactivacion = modelo.MotivoInactivacion?.Trim();
+            personal.FechaUltimaModificacion = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex,
+                "Error al inactivar el personal con código {CodigoPersonal}",
+                modelo.CodigoPersonal);
+            return Error("InactivacionFallida",
+                "No se pudo completar la inactivación. Intente nuevamente.");
+        }
+        // Invalidar las sesiones existentes de Identity
+        
+        try
+        {
+            await _userManager.UpdateSecurityStampAsync(identityUser);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudieron invalidar las sesiones del personal {CodigoPersonal}",
+                personal.CodigoPersonal); 
+        }
+        // Regristar la operación en la auditoría
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+             TipoOperacionAuditoria.InactivacionPersonal,
+             codigoAdministrador,
+             nameof(Models.Personal),
+             personal.CodigoPersonal,
+             $"Inactivación de personal ({personal.RolAsignado}). Motivo: {personal.MotivoInactivacion}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "No se pudo auditar la inactivación del Personal {CodigoPersonal}",
+                personal.CodigoPersonal);
+        }
+        return IdentityResult.Success;
+    }
+
+
 
 
 

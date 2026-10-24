@@ -138,22 +138,42 @@ public class PersonalController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Inactivar(InactivarPersonalViewModel modelo)
+    public async Task<IActionResult> Inactivar(InactivarPersonalViewModel modelo)
     {
-        var personal = DatosDeEjemplo.FirstOrDefault(p => p.CodigoPersonal == modelo.CodigoPersonal);
-
+        var personal = await _personalService.ObtenerDetalleAsync(modelo.CodigoPersonal);
+        
         if (personal is null)
         {
             return NotFound();
         }
 
-        // TODO:InactivarAsync 
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError(string.Empty, "La inactivación de personal todavía no está implementada.");
+            return View(nameof(Detalle), personal);
+        }
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var codigoAdministrador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoAdministrador is null)
+        {
+            return Forbid();
+        }
+        var resultado = await _personalService.InactivarAsync(modelo, codigoAdministrador.Value);
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(nameof(Detalle), personal);
         }
 
-        return View(nameof(Detalle), personal);
+        TempData["Mensaje"] = "El integrante del personal se inactivó correctamente.";
+        return RedirectToAction(nameof(Detalle), new { id = modelo.CodigoPersonal });
+
     }
 
     private static PersonalDetalleViewModel Ejemplo(
