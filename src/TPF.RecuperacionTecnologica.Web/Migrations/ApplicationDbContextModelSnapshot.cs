@@ -604,6 +604,11 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("nvarchar(8)");
 
+                    b.Property<bool>("EsRaiz")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("EstadoPersonal")
                         .HasColumnType("int");
 
@@ -646,6 +651,10 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
 
                     b.HasIndex("Dni")
                         .IsUnique();
+
+                    b.HasIndex("EsRaiz")
+                        .IsUnique()
+                        .HasFilter("[EsRaiz] = 1");
 
                     b.HasIndex("IdentityUserId")
                         .IsUnique();

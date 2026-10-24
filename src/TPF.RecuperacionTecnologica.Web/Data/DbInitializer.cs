@@ -142,7 +142,8 @@ public static class DbInitializer
             Apellido = ApellidoInicial,
             CorreoElectronico = correo,
             RolAsignado = RolPersonal.Administrador,
-            EstadoPersonal = EstadoPersonal.Activo
+            EstadoPersonal = EstadoPersonal.Activo,
+            EsRaiz = true,
         };
 
         context.PersonalInterno.Add(administrador);

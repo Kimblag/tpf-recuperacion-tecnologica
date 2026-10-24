@@ -29,4 +29,5 @@ public class Personal
     public DateTime? FechaInactivacion { get; set; }
 
     public string? MotivoInactivacion { get; set; }
+    public bool EsRaiz { get; set; }
 }

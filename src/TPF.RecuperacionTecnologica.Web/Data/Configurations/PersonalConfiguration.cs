@@ -46,7 +46,14 @@ public class PersonalConfiguration : IEntityTypeConfiguration<Personal>
 
         builder.Property(p => p.MotivoInactivacion)
             .HasMaxLength(300);
-        
+
+        builder.Property(p => p.EsRaiz)
+            .HasDefaultValue(false);
+
+        builder.HasIndex(p => p.EsRaiz)
+            .IsUnique()
+            .HasFilter("[EsRaiz] = 1");
+
         builder.Property(p => p.FechaAlta)
             .HasDefaultValueSql("SYSUTCDATETIME()");
     }
