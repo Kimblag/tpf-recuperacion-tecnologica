@@ -764,7 +764,9 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
 
                     b.HasIndex("NroEquipoRequerido");
 
-                    b.HasIndex("NroUsuario");
+                    b.HasIndex("NroUsuario", "NroEquipoRequerido")
+                        .IsUnique()
+                        .HasFilter("[EstadoSolicitud] = 0");
 
                     b.ToTable("Solicitudes");
                 });

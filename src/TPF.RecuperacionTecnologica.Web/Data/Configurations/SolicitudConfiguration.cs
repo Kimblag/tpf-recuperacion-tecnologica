@@ -36,6 +36,10 @@ public class SolicitudConfiguration : IEntityTypeConfiguration<Solicitud>
         builder.Property(s => s.FechaSolicitud)
             .HasDefaultValueSql("SYSUTCDATETIME()");
 
+        builder.HasIndex(s => new { s.NroUsuario, s.NroEquipoRequerido })
+            .IsUnique()
+            .HasFilter("[EstadoSolicitud] = 0");
+
         builder.Property(s => s.RowVersion)
             .IsRowVersion();
     }

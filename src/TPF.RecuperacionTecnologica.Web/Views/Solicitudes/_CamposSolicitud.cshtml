@@ -2,6 +2,12 @@
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
     var textoOrigen = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)Model.OrigenSolicitud).ToString()).Text;
+
+    var valoresPermitidos = Model.TiposPermitidos.Select(t => ((int)t).ToString()).ToHashSet();
+
+    var tiposSolicitante = Html.GetEnumSelectList<TipoSolicitante>()
+        .Where(i => valoresPermitidos.Count == 0 || valoresPermitidos.Contains(i.Value))
+        .ToList();
 }
 <div class="span-2">
     <div class="card" style="background-color: var(--app-surface-low)">
@@ -23,7 +29,7 @@
 <div class="field">
     <label class="form-label" for="TipoSolicitante">Tipo de solicitante<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
     <div class="select">
-        <select asp-for="TipoSolicitante" class="form-select" asp-items="Html.GetEnumSelectList<TipoSolicitante>()" aria-describedby="TipoSolicitante-hint">
+        <select asp-for="TipoSolicitante" class="form-select" asp-items="tiposSolicitante" aria-describedby="TipoSolicitante-hint">
             <option value="">Seleccione…</option>
         </select>
         <partial name="_Icon" model="@("chevron-down")" />

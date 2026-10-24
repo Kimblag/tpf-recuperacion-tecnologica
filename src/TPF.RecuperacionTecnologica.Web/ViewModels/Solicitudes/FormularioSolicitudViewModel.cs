@@ -26,6 +26,10 @@ public class FormularioSolicitudViewModel
     public TipoEquipo TipoEquipo { get; set; }
 
     public string MarcaYModelo { get; set; } = string.Empty;
+    public IReadOnlyList<TipoSolicitante> TiposPermitidos { get; set; } = [];
+    public string? ImpedimentoTitulo { get; set; }
+
+    public string? ImpedimentoMensaje { get; set; }
 
     public OrigenSolicitud OrigenSolicitud { get; set; }
 

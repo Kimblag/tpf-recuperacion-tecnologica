@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
@@ -15,11 +16,16 @@ public class SolicitudesController : Controller
 {
     private readonly IDonacionService _donacionService;
     private readonly IPersonalService _personalService;
+    private readonly ISolicitudService _solicitudService;
 
-    public SolicitudesController(IDonacionService donacionService, IPersonalService personalService)
+    public SolicitudesController(
+        IDonacionService donacionService,
+        IPersonalService personalService,
+        ISolicitudService solicitudService)
     {
         _donacionService = donacionService;
         _personalService = personalService;
+        _solicitudService = solicitudService;
     }
 
     private sealed record SolicitudEjemplo(
@@ -98,19 +104,123 @@ public class SolicitudesController : Controller
     [Authorize(Policy = "UsuarioExterno")]
     public async Task<IActionResult> Registrar(int nroEquipo)
     {
-        var equipo = await _donacionService.ObtenerDetalleDisponibleAsync(nroEquipo);
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        return View(new FormularioSolicitudViewModel
+        if (identityUserId is null)
         {
-            NroEquipo = nroEquipo,
-            EquipoDisponible = equipo is not null,
-            TipoEquipo = equipo?.TipoEquipo ?? TipoEquipo.Notebook,
-            MarcaYModelo = equipo?.MarcaYModelo ?? string.Empty,
-            Solicitante = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty,
-            OrigenSolicitud = OrigenSolicitud.Autoservicio,
-            FechaSolicitud = DateTime.Today,
-            EstadoSolicitud = EstadoSolicitud.Pendiente
-        });
+            return Challenge();
+        }
+
+        var formulario = new FormularioSolicitudViewModel { NroEquipo = nroEquipo };
+
+        return View(await CompletarDatosVisiblesAsync(formulario, identityUserId));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "UsuarioExterno")]
+    public async Task<IActionResult> Registrar(
+        [Bind("NroEquipo,TipoSolicitante,MotivoSolicitud")] FormularioSolicitudViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        await CompletarDatosVisiblesAsync(formulario, identityUserId);
+
+        if (!formulario.EquipoDisponible || formulario.ImpedimentoMensaje is not null || !ModelState.IsValid)
+        {
+            return View(formulario);
+        }
+
+        var resultado = await _solicitudService.RegistrarAsync(identityUserId, formulario);
+
+        if (resultado.Exitoso)
+        {
+            TempData["Mensaje"] = "La solicitud se registró correctamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        switch (resultado.Error)
+        {
+            case ErrorRegistroSolicitud.EquipoNoDisponible:
+                formulario.EquipoDisponible = false;
+                break;
+
+            case ErrorRegistroSolicitud.TipoSolicitanteInvalido:
+                ModelState.AddModelError(nameof(formulario.TipoSolicitante), resultado.Mensaje!);
+                break;
+
+            case ErrorRegistroSolicitud.Fallido:
+                ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+                break;
+
+            default:
+                AplicarImpedimento(formulario, resultado.Error!.Value, resultado.Mensaje!);
+                break;
+        }
+
+        return View(formulario);
+    }
+
+    private async Task<FormularioSolicitudViewModel> CompletarDatosVisiblesAsync(
+        FormularioSolicitudViewModel formulario, string identityUserId)
+    {
+        var equipo = await _donacionService.ObtenerDetalleDisponibleAsync(formulario.NroEquipo);
+
+        formulario.EquipoDisponible = equipo is not null;
+        formulario.TipoEquipo = equipo?.TipoEquipo ?? TipoEquipo.Notebook;
+        formulario.MarcaYModelo = equipo?.MarcaYModelo ?? string.Empty;
+        formulario.Solicitante = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+        formulario.OrigenSolicitud = OrigenSolicitud.Autoservicio;
+        formulario.FechaSolicitud = DateTime.Today;
+        formulario.EstadoSolicitud = EstadoSolicitud.Pendiente;
+        formulario.TiposPermitidos = TiposPermitidosDeLaSesion();
+
+        if (formulario.TiposPermitidos.Count == 1)
+        {
+            formulario.TipoSolicitante ??= formulario.TiposPermitidos[0];
+        }
+
+        if (equipo is not null)
+        {
+            var impedimento = await _solicitudService.ObtenerImpedimentoAsync(identityUserId, formulario.NroEquipo);
+
+            if (impedimento is not null)
+            {
+                AplicarImpedimento(formulario, impedimento.Error, impedimento.Mensaje);
+            }
+        }
+
+        return formulario;
+    }
+
+    private static void AplicarImpedimento(FormularioSolicitudViewModel formulario, ErrorRegistroSolicitud error, string mensaje)
+    {
+        formulario.ImpedimentoTitulo = error switch
+        {
+            ErrorRegistroSolicitud.SolicitudDuplicada => "Ya hay una solicitud pendiente para este equipo",
+            ErrorRegistroSolicitud.EquipoPropio => "Este equipo no se puede solicitar",
+            ErrorRegistroSolicitud.LimiteAlcanzado => "Se alcanzó el máximo de solicitudes pendientes",
+            _ => "No se puede registrar la solicitud"
+        };
+        formulario.ImpedimentoMensaje = mensaje;
+    }
+
+    private IReadOnlyList<TipoSolicitante> TiposPermitidosDeLaSesion()
+    {
+        var esInstitucion = Enum.TryParse<TipoUsuario>(User.FindFirstValue(ClaimsSesion.TipoUsuario), out var tipoUsuario)
+            && tipoUsuario == TipoUsuario.Institucion;
+
+        if (esInstitucion)
+        {
+            return [TipoSolicitante.Escuela, TipoSolicitante.OrganizacionSocial];
+        }
+
+        return [TipoSolicitante.Particular];
     }
 
     [HttpGet]
