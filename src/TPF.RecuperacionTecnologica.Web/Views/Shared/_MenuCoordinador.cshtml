@@ -2,23 +2,31 @@
     var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
     var accion = ViewContext.RouteData.Values["action"]?.ToString();
     var esInicio = controlador == "Home" && accion == "Index";
-    var esEquipos = controlador == "Equipos";
     var esDonaciones = controlador == "Donaciones";
+    var esEquipos = controlador == "Equipos";
+    var esSolicitudes = controlador == "Solicitudes";
 }
 <nav id="sidebarNav" class="nav flex-column mb-auto" aria-label="Menú principal">
     <a class="nav-link d-flex align-items-center gap-2@(esInicio ? " active" : "")" asp-area="" asp-controller="Home" asp-action="Index" aria-current="@(esInicio ? "page" : null)">
         <span class="nav-dot"></span>
         <partial name="_Icon" model="@("grid")" />Inicio
     </a>
-    <div class="nav-group" role="group" aria-labelledby="nav-grupo-gestion">
-        <div class="nav-heading" id="nav-grupo-gestion">Gestión</div>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-recepcion">
+        <div class="nav-heading" id="nav-grupo-recepcion">Recepción de equipos</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Gestion" aria-current="@(esDonaciones ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("gift")" />Donaciones
+        </a>
         <a class="nav-link d-flex align-items-center gap-2@(esEquipos ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Index" aria-current="@(esEquipos ? "page" : null)">
             <span class="nav-dot"></span>
             <partial name="_Icon" model="@("laptop")" />Equipos
         </a>
-        <a class="nav-link d-flex align-items-center gap-2@(esDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Gestion" aria-current="@(esDonaciones ? "page" : null)">
+    </div>
+    <div class="nav-group" role="group" aria-labelledby="nav-grupo-entrega">
+        <div class="nav-heading" id="nav-grupo-entrega">Entrega a beneficiarios</div>
+        <a class="nav-link d-flex align-items-center gap-2@(esSolicitudes ? " active" : "")" asp-area="" asp-controller="Solicitudes" asp-action="Gestion" aria-current="@(esSolicitudes ? "page" : null)">
             <span class="nav-dot"></span>
-            <partial name="_Icon" model="@("gift")" />Donaciones
+            <partial name="_Icon" model="@("tray")" />Solicitudes
         </a>
     </div>
 </nav>

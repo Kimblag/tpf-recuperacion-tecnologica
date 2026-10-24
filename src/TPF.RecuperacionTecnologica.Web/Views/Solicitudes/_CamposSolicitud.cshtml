@@ -1,5 +1,8 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.FormularioSolicitudViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var textoOrigen = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)Model.OrigenSolicitud).ToString()).Text;
+}
 <div class="span-2">
     <div class="card" style="background-color: var(--app-surface-low)">
         <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2" style="padding: 12px 16px">
@@ -36,7 +39,7 @@
 </div>
 <div class="field">
     <label class="form-label" for="OrigenVisible">Origen</label>
-    <input id="OrigenVisible" class="form-control" value="@Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)Model.OrigenSolicitud).ToString()).Text" disabled aria-describedby="Origen-hint" />
+    <input id="OrigenVisible" class="form-control" value="@textoOrigen" disabled aria-describedby="Origen-hint" />
     <div class="form-text" id="Origen-hint">Se completa solo. "Autoservicio" quiere decir que la solicitud se hizo desde la propia cuenta.</div>
 </div>
 <div class="field">
