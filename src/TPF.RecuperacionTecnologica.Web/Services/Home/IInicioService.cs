@@ -13,4 +13,11 @@ public interface IInicioService
     /// </summary>
     /// <returns>El resumen, o null si la cuenta no corresponde a un integrante del personal.</returns>
     Task<TecnicoInicioViewModel?> ObtenerInicioTecnicoAsync(string identityUserId);
+
+    /// <summary>
+    /// Arma el resumen de inicio del Coordinador: contadores de equipos, solicitudes, asignaciones y entregas,
+    /// las solicitudes pendientes por prioridad, las asignaciones con plazo de retiro más próximo y la actividad reciente.
+    /// </summary>
+    /// <returns>El resumen, o null si la cuenta no corresponde a un Coordinador activo.</returns>
+    Task<CoordinadorInicioViewModel?> ObtenerInicioCoordinadorAsync(string identityUserId);
 }

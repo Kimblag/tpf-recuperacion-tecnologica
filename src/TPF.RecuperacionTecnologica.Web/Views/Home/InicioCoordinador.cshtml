@@ -1,0 +1,225 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Home.CoordinadorInicioViewModel
+@{
+    ViewData["Title"] = "Inicio";
+
+    var chipDisponibles = Model.DisponiblesEstaSemana > 0 ? $"+{Model.DisponiblesEstaSemana} esta semana" : "";
+
+    var chipPendientes = Model.PendientesInstitucionales > 0 ? $"{Model.PendientesInstitucionales} Escuela / Org. social" : "";
+
+    var chipVigentes = Model.AsignacionesVencidas > 0
+        ? (Model.AsignacionesVencidas == 1 ? "1 vencida" : $"{Model.AsignacionesVencidas} vencidas")
+        : Model.AsignacionesPorVencer > 0
+            ? (Model.AsignacionesPorVencer == 1 ? "1 vence pronto" : $"{Model.AsignacionesPorVencer} vencen pronto")
+            : "";
+
+    var chipEntregas = "";
+    var claseChipEntregas = "";
+
+    if (Model.EntregasDelMesAnterior > 0)
+    {
+        var variacion = (int)Math.Round((Model.EntregasDelMes - Model.EntregasDelMesAnterior) * 100.0 / Model.EntregasDelMesAnterior);
+        chipEntregas = variacion >= 0 ? $"+{variacion}%" : $"{variacion}%";
+        claseChipEntregas = variacion >= 0 ? "ok" : "warn";
+    }
+
+    var detalleEntregas = Model.EntregasDelMesAnterior > 0 ? "Respecto del mes anterior" : "Sin entregas el mes anterior";
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Inicio</h1></div>
+            <p class="page-sub">Resumen de la entrega de equipos a quienes los necesitan</p>
+        </div>
+    </div>
+
+    @if (Model.ErrorAlCargar)
+    {
+        <section class="card">
+            <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener el resumen. Se puede intentar de nuevo en unos minutos.")" />
+        </section>
+    }
+    else
+    {
+        <section class="grid-3" aria-label="Acciones principales">
+            <a class="card action-card" asp-controller="Donaciones" asp-action="RegistrarAsistida">
+                <span class="act-ic ok action-ic"><partial name="_Icon" model="@("gift")" /></span>
+                <span class="action-text">
+                    <span class="card-title d-block">Registrar donación asistida</span>
+                    <span class="card-sub d-block">Para una persona que llamó o se presentó en la sede y no pudo hacerlo sola.</span>
+                </span>
+                <span class="link nowrap"><partial name="_Icon" model="@("arrow-right")" /></span>
+            </a>
+            <a class="card action-card" asp-controller="Solicitudes" asp-action="RegistrarAsistida">
+                <span class="act-ic ok action-ic"><partial name="_Icon" model="@("tray")" /></span>
+                <span class="action-text">
+                    <span class="card-title d-block">Nueva solicitud asistida</span>
+                    <span class="card-sub d-block">Cargar una solicitud en nombre de una persona que llamó o se acercó a la sede.</span>
+                </span>
+                <span class="link nowrap"><partial name="_Icon" model="@("arrow-right")" /></span>
+            </a>
+            <a class="card action-card" asp-controller="Entregas" asp-action="Registrar">
+                <span class="act-ic ok action-ic"><partial name="_Icon" model="@("truck")" /></span>
+                <span class="action-text">
+                    <span class="card-title d-block">Registrar entrega</span>
+                    <span class="card-sub d-block">Confirmar que una persona retiró el equipo que tenía asignado.</span>
+                </span>
+                <span class="link nowrap"><partial name="_Icon" model="@("arrow-right")" /></span>
+            </a>
+        </section>
+
+        <div class="g-metrics">
+            <partial name="_Metrica" model="@(("Equipos disponibles", "check-circle", "i-ok", Model.EquiposDisponibles.ToString(), chipDisponibles, "ok", "Listos para asignar"))" />
+            <partial name="_Metrica" model="@(("Solicitudes pendientes", "tray", "i-info", Model.SolicitudesPendientes.ToString(), chipPendientes, "", "Esperando asignación"))" />
+            <partial name="_Metrica" model="@(("Asignaciones vigentes", "swap", "i-warn", Model.AsignacionesVigentes.ToString(), chipVigentes, "warn", "Con plazo de retiro abierto"))" />
+            <partial name="_Metrica" model="@(("Entregas del mes", "truck", "i-ok", Model.EntregasDelMes.ToString(), chipEntregas, claseChipEntregas, detalleEntregas))" />
+        </div>
+
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Solicitudes pendientes por prioridad</h2>
+                    <p class="card-sub">Escuela y Organización social primero, después Particular; dentro de cada grupo, la más antigua primero</p>
+                </div>
+                <a class="link" asp-controller="Solicitudes" asp-action="Gestion" asp-route-Estado="Pendiente">Ver todas</a>
+            </div>
+            <div class="card-body flush">
+                @if (Model.ColaPrioritaria.Count == 0)
+                {
+                    <div class="state">
+                        <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
+                        <h3>No hay solicitudes pendientes</h3>
+                        <p>Las nuevas solicitudes aparecen aquí mientras esperan una asignación.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-wrap">
+                        <table class="table table-stack">
+                            <caption class="visually-hidden">Solicitudes pendientes por prioridad</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Solicitud</th>
+                                    <th scope="col">Solicitante</th>
+                                    <th scope="col">Equipo</th>
+                                    <th scope="col">Fecha</th>
+                                    <th scope="col" class="col-actions">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var solicitud in Model.ColaPrioritaria)
+                                {
+                                    <tr>
+                                        <td data-label="Solicitud"><span class="mono">@solicitud.Codigo</span></td>
+                                        <td data-label="Solicitante">
+                                            <div>@solicitud.Solicitante</div>
+                                            <div class="card-sub">@Html.DisplayFor(m => solicitud.TipoSolicitante)</div>
+                                        </td>
+                                        <td data-label="Equipo">
+                                            <div>@solicitud.MarcaYModelo</div>
+                                            <div class="card-sub"><partial name="_TipoEquipo" model="solicitud.TipoEquipo" /> · <span class="mono">@solicitud.CodigoEquipo</span></div>
+                                        </td>
+                                        <td data-label="Fecha">@solicitud.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                        <td class="col-actions" data-label="Acciones">
+                                            <a class="btn btn-ghost btn-sm" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@solicitud.NroSolicitud" aria-label="Ver solicitud @solicitud.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div class="grid-3-1">
+            <section class="card overflow">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Asignaciones con plazo de retiro</h2>
+                        <p class="card-sub">Vigentes, las que vencen antes primero</p>
+                    </div>
+                    <a class="link" asp-controller="Asignaciones" asp-action="Index">Ver todas</a>
+                </div>
+                <div class="card-body flush">
+                    @if (Model.AsignacionesConPlazo.Count == 0)
+                    {
+                        <div class="state">
+                            <span class="state-ic"><partial name="_Icon" model="@("swap")" /></span>
+                            <h3>No hay asignaciones vigentes</h3>
+                            <p>Cuando se asigne un equipo, su plazo de retiro aparece aquí.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-wrap">
+                            <table class="table table-stack">
+                                <caption class="visually-hidden">Asignaciones con plazo de retiro</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Asignación</th>
+                                        <th scope="col">Solicitante</th>
+                                        <th scope="col">Equipo</th>
+                                        <th scope="col">Retiro hasta</th>
+                                        <th scope="col" class="col-actions">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var asignacion in Model.AsignacionesConPlazo)
+                                    {
+                                        <tr>
+                                            <td data-label="Asignación"><span class="mono">@asignacion.Codigo</span></td>
+                                            <td data-label="Solicitante">@asignacion.Solicitante</td>
+                                            <td data-label="Equipo">@asignacion.MarcaYModelo</td>
+                                            <td data-label="Retiro hasta">
+                                                <div>@asignacion.FechaLimiteRetiro.ToString("dd/MM/yyyy")</div>
+                                                @if (asignacion.PlazoVencido)
+                                                {
+                                                    <partial name="_Badge" model="@(("Vencida", "danger"))" />
+                                                }
+                                                else if (asignacion.DiasRestantes == 0)
+                                                {
+                                                    <partial name="_Badge" model="@(("Vence hoy", "warn"))" />
+                                                }
+                                                else if (asignacion.DiasRestantes <= 3)
+                                                {
+                                                    <partial name="_Badge" model="@((asignacion.DiasRestantes == 1 ? "Vence mañana" : $"Vence en {asignacion.DiasRestantes} días", "warn"))" />
+                                                }
+                                            </td>
+                                            <td class="col-actions" data-label="Acciones">
+                                                <a class="btn btn-ghost btn-sm" asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@asignacion.NroAsignacion" aria-label="Ver asignación @asignacion.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Actividad reciente</h2>
+                        <p class="card-sub">Donaciones, solicitudes, asignaciones y entregas</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.ActividadReciente.Count == 0)
+                    {
+                        <div class="state">
+                            <span class="state-ic"><partial name="_Icon" model="@("history")" /></span>
+                            <h3>Sin actividad reciente</h3>
+                            <p>Los movimientos aparecen aquí a medida que ocurren.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <partial name="_ActividadReciente" model="Model.ActividadReciente" />
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</div>
