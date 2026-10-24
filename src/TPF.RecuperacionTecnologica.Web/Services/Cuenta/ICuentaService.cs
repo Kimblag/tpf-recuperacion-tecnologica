@@ -23,6 +23,8 @@ public interface ICuentaService
     /// <param name="urlBaseSolicitud">Dominio de la solicitud actual (por ejemplo https://localhost:7127), este solo se usa en desarrollo, ya queen producción el dominio sale de la configuración.</param>
     Task SolicitarRestablecimientoAsync(string correoElectronico, Func<string, string, string> construirRuta, string urlBaseSolicitud);
 
+    Task EnviarInvitacionAsync(string identityUserId, Func<string, string, string> construirRuta, string urlBaseSolicitud);
+
     /// <summary>
     /// Restablece la contraseña con el token recibido por correo. Si el enlace no es válido,
     /// devuelve siempre el mismo error. Al restablecer también se levanta el bloqueo por intentos fallidos.

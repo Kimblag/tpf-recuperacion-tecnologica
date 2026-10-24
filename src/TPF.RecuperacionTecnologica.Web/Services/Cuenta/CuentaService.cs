@@ -195,6 +195,56 @@ public class CuentaService : ICuentaService
         }
     }
 
+    public async Task EnviarInvitacionAsync(string identityUserId, Func<string, string, string> construirRuta, string urlBaseSolicitud)
+    {
+        var identityUser = await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null || string.IsNullOrWhiteSpace(identityUser.Email))
+        {
+            return;
+        }
+
+        var urlBase = _entorno.IsDevelopment()
+            ? urlBaseSolicitud
+            : _configuration["Aplicacion:UrlBase"];
+
+        if (string.IsNullOrWhiteSpace(urlBase))
+        {
+            _logger.LogError("No se envió la invitación: falta configurar Aplicacion:UrlBase (variable de entorno Aplicacion__UrlBase)");
+            return;
+        }
+
+        try
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(identityUser);
+            var tokenCodificado = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var enlace = urlBase.TrimEnd('/') + construirRuta(identityUser.Id, tokenCodificado);
+
+            var organizacion = await ObtenerNombreOrganizacionAsync();
+
+            var destinatario = identityUser.Email;
+            var asunto = $"Activar la cuenta - {organizacion}";
+            var cuerpo = PlantillaInvitacionCuenta.Armar(enlace, organizacion);
+            var idCuenta = identityUser.Id;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailSender.SendEmailAsync(destinatario, asunto, cuerpo);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "No se pudo enviar la invitación a la cuenta {IdentityUserId}", idCuenta);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo preparar la invitación de la cuenta {IdentityUserId}", identityUser.Id);
+        }
+    }
+
     public async Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena)
     {
         var enlaceInvalido = IdentityResult.Failed(new IdentityError

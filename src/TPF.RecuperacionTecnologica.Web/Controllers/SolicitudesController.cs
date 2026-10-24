@@ -6,6 +6,7 @@ using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
@@ -18,6 +19,7 @@ public class SolicitudesController : Controller
     private readonly IPersonalService _personalService;
     private readonly ISolicitudService _solicitudService;
     private readonly ISolicitudConsultaService _consultaService;
+    private readonly IUsuarioService _usuarioService;
     private readonly ILogger<SolicitudesController> _logger;
 
     public SolicitudesController(
@@ -25,47 +27,16 @@ public class SolicitudesController : Controller
         IPersonalService personalService,
         ISolicitudService solicitudService,
         ISolicitudConsultaService consultaService,
+        IUsuarioService usuarioService,
         ILogger<SolicitudesController> logger)
     {
         _donacionService = donacionService;
         _personalService = personalService;
         _solicitudService = solicitudService;
         _consultaService = consultaService;
+        _usuarioService = usuarioService;
         _logger = logger;
     }
-
-    private sealed record SolicitudEjemplo(
-        int NroSolicitud, int NroEquipo, TipoEquipo TipoEquipo, string MarcaYModelo, string Solicitante, bool Propia,
-        TipoSolicitante TipoSolicitante, OrigenSolicitud OrigenSolicitud, DateTime Fecha,
-        EstadoSolicitud Estado, string Motivo, DateTime? FechaAsignacion = null,
-        DateTime? LimiteRetiro = null, DateTime? FechaEntrega = null);
-
-    // TODO: reemplazar estos datos de ejemplo por las solicitudes reales (#149 y #151)
-    private static readonly IReadOnlyList<SolicitudEjemplo> Ejemplos =
-    [
-        new(31, 126, TipoEquipo.Monitor, "Samsung S24F350", "Valeria Acosta", true, TipoSolicitante.Particular, OrigenSolicitud.Autoservicio,
-            new DateTime(2026, 9, 8), EstadoSolicitud.Pendiente, "Necesito un monitor para el estudio de mi hija."),
-        new(30, 123, TipoEquipo.Notebook, "Dell Latitude E6440", "Roberto Quiroga", false, TipoSolicitante.OrganizacionSocial, OrigenSolicitud.Asistida,
-            new DateTime(2026, 9, 5), EstadoSolicitud.Pendiente, "Equipamiento para el taller de computación del comedor barrial."),
-        new(29, 123, TipoEquipo.Notebook, "Dell Latitude E6440", "Laura Pereyra", false, TipoSolicitante.Escuela, OrigenSolicitud.Autoservicio,
-            new DateTime(2026, 9, 3), EstadoSolicitud.Pendiente, "Renovar una computadora del laboratorio de informática."),
-        new(28, 123, TipoEquipo.Notebook, "Dell Latitude E6440", "Julieta Sosa", false, TipoSolicitante.Particular, OrigenSolicitud.Autoservicio,
-            new DateTime(2026, 9, 1), EstadoSolicitud.Pendiente, "Uso para estudiar y buscar trabajo."),
-        new(27, 135, TipoEquipo.Celular, "Samsung Galaxy A10", "Marcela Bustos", false, TipoSolicitante.Escuela, OrigenSolicitud.Asistida,
-            new DateTime(2026, 8, 30), EstadoSolicitud.Asignada, "Comunicación entre la escuela y las familias.",
-            new DateTime(2026, 9, 2), new DateTime(2026, 9, 12)),
-        new(25, 125, TipoEquipo.Notebook, "HP ProBook 450 G5", "Valeria Acosta", true, TipoSolicitante.Particular, OrigenSolicitud.Autoservicio,
-            new DateTime(2026, 8, 28), EstadoSolicitud.Asignada, "Trabajo remoto y clases de mis hijos.",
-            new DateTime(2026, 9, 15), new DateTime(2026, 9, 25)),
-        new(20, 136, TipoEquipo.Monitor, "Dell E2216H", "Valeria Acosta", true, TipoSolicitante.Particular, OrigenSolicitud.Autoservicio,
-            new DateTime(2026, 8, 20), EstadoSolicitud.Cancelada, "Ya no lo necesito."),
-        new(19, 129, TipoEquipo.PcEscritorio, "Lenovo ThinkCentre M710", "Valeria Acosta", true, TipoSolicitante.Particular, OrigenSolicitud.Asistida,
-            new DateTime(2026, 8, 12), EstadoSolicitud.Completada, "Computadora para el hogar.",
-            new DateTime(2026, 8, 14), new DateTime(2026, 8, 24), new DateTime(2026, 8, 21)),
-        new(17, 128, TipoEquipo.Periferico, "Logitech K120", "Valeria Acosta", true, TipoSolicitante.Particular, OrigenSolicitud.Autoservicio,
-            new DateTime(2026, 8, 5), EstadoSolicitud.Cerrada, "Teclado para la PC de casa.",
-            new DateTime(2026, 8, 8), new DateTime(2026, 8, 18))
-    ];
 
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]
@@ -210,16 +181,38 @@ public class SolicitudesController : Controller
         return formulario;
     }
 
+    private static string TituloDelImpedimento(ErrorRegistroSolicitud error) => error switch
+    {
+        ErrorRegistroSolicitud.SolicitudDuplicada => "Ya hay una solicitud pendiente para este equipo",
+        ErrorRegistroSolicitud.EquipoPropio => "Este equipo no se puede solicitar",
+        ErrorRegistroSolicitud.LimiteAlcanzado => "Se alcanzó el máximo de solicitudes pendientes",
+        ErrorRegistroSolicitud.UsuarioNoHabilitado => "El usuario no está habilitado",
+        _ => "No se puede registrar la solicitud"
+    };
+
     private static void AplicarImpedimento(FormularioSolicitudViewModel formulario, ErrorRegistroSolicitud error, string mensaje)
     {
-        formulario.ImpedimentoTitulo = error switch
-        {
-            ErrorRegistroSolicitud.SolicitudDuplicada => "Ya hay una solicitud pendiente para este equipo",
-            ErrorRegistroSolicitud.EquipoPropio => "Este equipo no se puede solicitar",
-            ErrorRegistroSolicitud.LimiteAlcanzado => "Se alcanzó el máximo de solicitudes pendientes",
-            _ => "No se puede registrar la solicitud"
-        };
+        formulario.ImpedimentoTitulo = TituloDelImpedimento(error);
         formulario.ImpedimentoMensaje = mensaje;
+    }
+
+    private async Task AplicarImpedimentoAsistidoAsync(RegistroSolicitudAsistidaViewModel formulario)
+    {
+        if (formulario.Usuario.Modo != ModoUsuarioAsistido.Existente
+            || formulario.Usuario.NroUsuario is null
+            || formulario.NroEquipo is null)
+        {
+            return;
+        }
+
+        var impedimento = await _solicitudService.ObtenerImpedimentoParaUsuarioAsync(
+            formulario.Usuario.NroUsuario.Value, formulario.NroEquipo.Value);
+
+        if (impedimento is not null)
+        {
+            formulario.ImpedimentoTitulo = TituloDelImpedimento(impedimento.Error);
+            formulario.ImpedimentoMensaje = impedimento.Mensaje;
+        }
     }
 
     private IReadOnlyList<TipoSolicitante> TiposPermitidosDeLaSesion()
@@ -335,185 +328,172 @@ public class SolicitudesController : Controller
 
     [HttpGet]
     [Authorize(Policy = "Coordinacion")]
-    public IActionResult Gestion(SolicitudListadoViewModel filtros)
+    public async Task<IActionResult> Gestion(SolicitudListadoViewModel filtros)
     {
-        // TODO: reemplazar por la consulta real con filtros y paginación (#151)
-        var texto = filtros.Busqueda?.Trim();
+        try
+        {
+            var resultado = await _consultaService.ListarTodasAsync(
+                filtros.Busqueda, filtros.Tipo, filtros.Origen, filtros.Estado,
+                filtros.Pagina, SolicitudListadoViewModel.TamanoPagina);
 
-        var filtradas = Ejemplos
-            .Where(s => (filtros.Tipo is null || s.TipoSolicitante == filtros.Tipo)
-                && (filtros.Origen is null || s.OrigenSolicitud == filtros.Origen)
-                && (filtros.Estado is null || s.Estado == filtros.Estado)
-                && (string.IsNullOrEmpty(texto)
-                    || $"SOL-{s.NroSolicitud:D6}".Contains(texto, StringComparison.OrdinalIgnoreCase)
-                    || s.NroEquipo.ToString("D6").Contains(texto)
-                    || s.Solicitante.Contains(texto, StringComparison.OrdinalIgnoreCase)
-                    || s.MarcaYModelo.Contains(texto, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(s => s.Fecha)
-            .ThenByDescending(s => s.NroSolicitud)
-            .ToList();
-
-        filtros.Total = filtradas.Count;
-        filtros.Pagina = Math.Clamp(filtros.Pagina, 1, filtros.TotalPaginas);
-        filtros.Filas = filtradas
-            .Skip((filtros.Pagina - 1) * SolicitudListadoViewModel.TamanoPagina)
-            .Take(SolicitudListadoViewModel.TamanoPagina)
-            .Select(ArmarFila)
-            .ToList();
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el listado de solicitudes");
+            filtros.ErrorAlCargar = true;
+        }
 
         return View(filtros);
     }
 
     [HttpGet]
     [Authorize(Policy = "Coordinacion")]
-    public IActionResult DetalleInterno(int id)
+    public async Task<IActionResult> DetalleInterno(int id)
     {
-        // TODO: reemplazar por la consulta real de cualquier solicitud (#151)
-        var solicitud = Ejemplos.FirstOrDefault(s => s.NroSolicitud == id);
+        var detalle = await _consultaService.ObtenerDetalleInternoAsync(id);
 
-        return solicitud is null ? NotFound() : View(ArmarDetalle(solicitud));
+        return detalle is null ? NotFound() : View(detalle);
     }
 
     [HttpGet]
     [Authorize(Policy = "SoloCoordinador")]
-    public async Task<IActionResult> RegistrarAsistida(ModoUsuarioAsistido modo, TipoUsuario tipoUsuario, string? busqueda)
+    public async Task<IActionResult> RegistrarAsistida(
+        ModoUsuarioAsistido modo, TipoUsuario tipoUsuario, string? busqueda, string? busquedaEquipo, int? nroEquipo)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var codigoPersonal = identityUserId is null ? null : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
-        var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
 
         var formulario = new RegistroSolicitudAsistidaViewModel
         {
             Usuario = new SelectorUsuarioViewModel { Modo = modo, TipoUsuario = tipoUsuario, Busqueda = busqueda?.Trim() },
-            Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}",
-            FechaSolicitud = DateTime.Today
+            NroEquipo = nroEquipo
         };
 
-        var disponibles = await _donacionService.ObtenerDisponiblesAsync(null, null, null, OrdenCatalogo.Recientes, 1, 50);
+        formulario.Equipo.Busqueda = busquedaEquipo?.Trim();
 
-        formulario.EquiposDisponibles = disponibles.Elementos
-            .Select(e => (e.NroEquipo, $"{e.CodigoEquipo} · {e.MarcaYModelo}"))
-            .ToList();
+        await CompletarFormularioAsistidoAsync(formulario, identityUserId);
 
-        UsuariosDeEjemplo.Buscar(formulario.Usuario);
+        if (modo == ModoUsuarioAsistido.Existente && !string.IsNullOrWhiteSpace(formulario.Usuario.Busqueda))
+        {
+            var encontrado = await _usuarioService.BuscarPorDocumentoOCorreoAsync(formulario.Usuario.Busqueda);
+
+            AplicarUsuarioEncontrado(formulario.Usuario, encontrado);
+            formulario.Usuario.BusquedaRealizada = true;
+        }
+
+        await AplicarImpedimentoAsistidoAsync(formulario);
 
         return View(formulario);
     }
 
-    private static SolicitudFilaViewModel ArmarFila(SolicitudEjemplo solicitud) => new()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> RegistrarAsistida(
+        [Bind("Usuario,TipoSolicitante,NroEquipo,MotivoSolicitud")] RegistroSolicitudAsistidaViewModel formulario)
     {
-        NroSolicitud = solicitud.NroSolicitud,
-        NroEquipo = solicitud.NroEquipo,
-        TipoEquipo = solicitud.TipoEquipo,
-        MarcaYModelo = solicitud.MarcaYModelo,
-        Solicitante = solicitud.Solicitante,
-        TipoSolicitante = solicitud.TipoSolicitante,
-        OrigenSolicitud = solicitud.OrigenSolicitud,
-        FechaSolicitud = solicitud.Fecha,
-        EstadoSolicitud = solicitud.Estado
-    };
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    private static SolicitudDetalleViewModel ArmarDetalle(SolicitudEjemplo solicitud) => new()
-    {
-        NroSolicitud = solicitud.NroSolicitud,
-        NroEquipo = solicitud.NroEquipo,
-        TipoEquipo = solicitud.TipoEquipo,
-        MarcaYModelo = solicitud.MarcaYModelo,
-        Solicitante = solicitud.Solicitante,
-        TipoSolicitante = solicitud.TipoSolicitante,
-        MotivoSolicitud = solicitud.Motivo,
-        OrigenSolicitud = solicitud.OrigenSolicitud,
-        FechaSolicitud = solicitud.Fecha,
-        EstadoSolicitud = solicitud.Estado,
-        Hitos = ArmarHitos(solicitud)
-    };
-
-    private static IReadOnlyList<HitoViewModel> ArmarHitos(SolicitudEjemplo solicitud)
-    {
-        var hitos = new List<HitoViewModel>
+        if (identityUserId is null)
         {
-            new()
-            {
-                Titulo = "Solicitud registrada",
-                Fecha = solicitud.Fecha,
-                Icono = "tray",
-                Estado = EstadoHito.Completado,
-                Texto = solicitud.OrigenSolicitud == OrigenSolicitud.Asistida ? "Registrada con ayuda de una persona coordinadora." : "Registrada por la propia persona."
-            }
-        };
-
-        switch (solicitud.Estado)
-        {
-            case EstadoSolicitud.Cancelada:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Solicitud cancelada",
-                    Fecha = solicitud.Fecha.AddDays(2),
-                    Icono = "x",
-                    Estado = EstadoHito.Cancelado,
-                    Texto = "Cancelada por la persona solicitante."
-                });
-                break;
-
-            case EstadoSolicitud.Cerrada:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Equipo asignado",
-                    Fecha = solicitud.FechaAsignacion,
-                    Icono = "swap",
-                    Estado = EstadoHito.Completado
-                });
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Solicitud cerrada",
-                    Fecha = solicitud.LimiteRetiro?.AddDays(1),
-                    Icono = "clock",
-                    Estado = EstadoHito.Cancelado,
-                    Texto = "Venció el plazo de retiro. La asignación fue liberada."
-                });
-                break;
-
-            case EstadoSolicitud.Pendiente:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Asignación de equipo",
-                    Icono = "swap",
-                    Estado = EstadoHito.Actual,
-                    Texto = "En espera de una persona coordinadora."
-                });
-                hitos.Add(new HitoViewModel { Titulo = "Entrega del equipo", Icono = "truck", Estado = EstadoHito.Pendiente });
-                break;
-
-            case EstadoSolicitud.Asignada:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Equipo asignado",
-                    Fecha = solicitud.FechaAsignacion,
-                    Icono = "swap",
-                    Estado = EstadoHito.Completado,
-                    Texto = $"Hay que retirarlo hasta el {solicitud.LimiteRetiro:dd/MM/yyyy}."
-                });
-                hitos.Add(new HitoViewModel { Titulo = "Entrega del equipo", Icono = "truck", Estado = EstadoHito.Pendiente });
-                break;
-
-            default:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Equipo asignado",
-                    Fecha = solicitud.FechaAsignacion,
-                    Icono = "swap",
-                    Estado = EstadoHito.Completado
-                });
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Entrega completada",
-                    Fecha = solicitud.FechaEntrega,
-                    Icono = "truck",
-                    Estado = EstadoHito.Completado
-                });
-                break;
+            return Challenge();
         }
 
-        return hitos;
+        if (ModelState.IsValid)
+        {
+            var resultado = await _solicitudService.RegistrarAsistidaAsync(
+                identityUserId,
+                formulario,
+                (idUsuario, token) => Url.Action("RestablecerContrasena", "Cuenta", new { idUsuario, token })!,
+                $"{Request.Scheme}://{Request.Host}");
+
+            if (resultado.Exitoso)
+            {
+                TempData["Mensaje"] = formulario.Usuario.Modo == ModoUsuarioAsistido.Nuevo
+                    ? $"La solicitud asistida se registró y se envió una invitación a {formulario.Usuario.CorreoElectronico!.Trim()} para que la persona defina su contraseña."
+                    : "La solicitud asistida se registró correctamente.";
+
+                return RedirectToAction(nameof(Gestion));
+            }
+
+            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+        }
+
+        await CompletarFormularioAsistidoAsync(formulario, identityUserId);
+
+        if (formulario.Usuario.Modo == ModoUsuarioAsistido.Existente && formulario.Usuario.NroUsuario is not null)
+        {
+            var encontrado = await _usuarioService.ObtenerUsuarioEncontradoAsync(formulario.Usuario.NroUsuario.Value);
+
+            AplicarUsuarioEncontrado(formulario.Usuario, encontrado);
+            formulario.Usuario.BusquedaRealizada = true;
+            ModelState.Remove("Usuario.NroUsuario");
+        }
+
+        await AplicarImpedimentoAsistidoAsync(formulario);
+
+        return View(formulario);
+    }
+
+    private const int MaximoResultadosEquipo = 10;
+
+    private async Task CompletarFormularioAsistidoAsync(RegistroSolicitudAsistidaViewModel formulario, string identityUserId)
+    {
+        var codigoPersonal = await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+        var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+
+        formulario.Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}";
+        formulario.FechaSolicitud = DateTime.Today;
+
+        var selector = formulario.Equipo;
+
+        if (formulario.NroEquipo is not null)
+        {
+            var equipo = await _donacionService.ObtenerDetalleDisponibleAsync(formulario.NroEquipo.Value);
+
+            if (equipo is null)
+            {
+                formulario.NroEquipo = null;
+                ModelState.Remove(nameof(formulario.NroEquipo));
+            }
+            else
+            {
+                selector.Seleccionado = new EquipoSeleccionableViewModel
+                {
+                    NroEquipo = equipo.NroEquipo,
+                    TipoEquipo = equipo.TipoEquipo,
+                    MarcaYModelo = equipo.MarcaYModelo
+                };
+            }
+        }
+
+        if (selector.Seleccionado is null && !string.IsNullOrWhiteSpace(selector.Busqueda))
+        {
+            var resultado = await _donacionService.ObtenerDisponiblesAsync(
+                selector.Busqueda, null, null, OrdenCatalogo.Recientes, 1, MaximoResultadosEquipo);
+
+            selector.BusquedaRealizada = true;
+            selector.Resultados = resultado.Elementos
+                .Select(e => new EquipoSeleccionableViewModel
+                {
+                    NroEquipo = e.NroEquipo,
+                    TipoEquipo = e.TipoEquipo,
+                    MarcaYModelo = e.MarcaYModelo
+                })
+                .ToList();
+        }
+    }
+
+    private static void AplicarUsuarioEncontrado(SelectorUsuarioViewModel selector, UsuarioEncontradoViewModel? encontrado)
+    {
+        selector.Encontrado = encontrado;
+        selector.NroUsuario = encontrado is { EstadoUsuario: EstadoUsuario.Activo } ? encontrado.NroUsuario : null;
     }
 }

@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
@@ -268,6 +269,99 @@ public class UsuarioService : IUsuarioService
         }
 
         return IdentityResult.Success;
+    }
+
+    private static IQueryable<UsuarioEncontradoViewModel> ProyectarEncontrado(IQueryable<Usuario> consulta) =>
+        consulta.Select(u => new UsuarioEncontradoViewModel
+        {
+            NroUsuario = u.NroUsuario,
+            Nombre = u.RazonSocial ?? (u.Nombre + " " + u.Apellido),
+            Documento = u.NroDocumento,
+            CorreoElectronico = u.CorreoElectronico,
+            EstadoUsuario = u.EstadoUsuario
+        });
+
+    public async Task<UsuarioEncontradoViewModel?> BuscarPorDocumentoOCorreoAsync(string texto)
+    {
+        var buscado = texto.Trim();
+
+        if (buscado.Length == 0)
+        {
+            return null;
+        }
+
+        var consulta = _context.Usuarios.AsNoTracking();
+
+        if (buscado.Contains('@'))
+        {
+            consulta = consulta.Where(u => u.CorreoElectronico == buscado);
+        }
+        else
+        {
+            var digitos = new string(buscado.Where(char.IsAsciiDigit).ToArray());
+
+            if (digitos.Length == 0)
+            {
+                return null;
+            }
+
+            consulta = consulta.Where(u => u.NroDocumento == digitos);
+        }
+
+        return await ProyectarEncontrado(consulta).FirstOrDefaultAsync();
+    }
+
+    public async Task<UsuarioEncontradoViewModel?> ObtenerUsuarioEncontradoAsync(int nroUsuario) =>
+        await ProyectarEncontrado(_context.Usuarios.AsNoTracking().Where(u => u.NroUsuario == nroUsuario))
+            .FirstOrDefaultAsync();
+
+    public async Task<ResultadoAltaAsistida> AltaAsistidaAsync(SelectorUsuarioViewModel datos)
+    {
+        var correo = datos.CorreoElectronico!.Trim();
+
+        var existeFicha = await _context.Usuarios
+            .AnyAsync(u => u.NroDocumento == datos.NroDocumento || u.CorreoElectronico == correo);
+        var existeCuenta = await _userManager.FindByEmailAsync(correo) is not null;
+
+        if (existeFicha || existeCuenta)
+        {
+            return ResultadoAltaAsistida.Existente();
+        }
+
+        var identityUser = new IdentityUser { UserName = correo, Email = correo };
+        var resultado = await _userManager.CreateAsync(identityUser);
+
+        if (!resultado.Succeeded)
+        {
+            var duplicado = resultado.Errors.Any(e => e.Code is "DuplicateUserName" or "DuplicateEmail");
+
+            return duplicado
+                ? ResultadoAltaAsistida.Existente()
+                : ResultadoAltaAsistida.Fallo("No se pudo crear la cuenta de la persona.");
+        }
+
+        var esPersona = datos.TipoUsuario == TipoUsuario.Persona;
+
+        var usuario = new Usuario
+        {
+            IdentityUserId = identityUser.Id,
+            TipoUsuario = datos.TipoUsuario,
+            Nombre = esPersona ? datos.Nombre?.Trim() : null,
+            Apellido = esPersona ? datos.Apellido?.Trim() : null,
+            RazonSocial = esPersona ? null : datos.RazonSocial?.Trim(),
+            TipoDocumento = esPersona ? TipoDocumento.Dni : TipoDocumento.Cuit,
+            NroDocumento = datos.NroDocumento!,
+            Direccion = datos.Direccion?.Trim(),
+            Telefono = datos.Telefono?.Trim(),
+            CorreoElectronico = correo,
+            EstadoUsuario = EstadoUsuario.Activo,
+            FechaAlta = DateTime.UtcNow
+        };
+
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
+
+        return ResultadoAltaAsistida.Ok(usuario, identityUser.Id);
     }
 
     public async Task<IdentityResult> DarDeBajaAsync(string identityUserId, BajaUsuarioViewModel modelo)

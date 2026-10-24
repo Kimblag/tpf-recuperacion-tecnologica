@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
+using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
@@ -38,16 +39,64 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             consulta = consulta.Where(s => s.EstadoSolicitud == estado);
         }
 
-        var texto = busqueda?.Trim();
+        consulta = FiltrarPorTexto(consulta, busqueda, incluirSolicitante: false);
 
-        if (!string.IsNullOrEmpty(texto))
+        return await PaginarAsync(consulta, pagina, tamanoPagina);
+    }
+
+    public async Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarTodasAsync(
+        string? busqueda, TipoSolicitante? tipo, OrigenSolicitud? origen, EstadoSolicitud? estado,
+        int pagina, int tamanoPagina)
+    {
+        var consulta = _context.Solicitudes.AsNoTracking();
+
+        if (tipo is not null)
         {
-            consulta = consulta.Where(s =>
-                ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
-                || (1000000 + s.NroEquipoRequerido).ToString().Substring(1).Contains(texto)
-                || (s.EquipoRequerido.Marca + " " + s.EquipoRequerido.Modelo).Contains(texto));
+            consulta = consulta.Where(s => s.TipoSolicitante == tipo);
         }
 
+        if (origen is not null)
+        {
+            consulta = consulta.Where(s => s.OrigenSolicitud == origen);
+        }
+
+        if (estado is not null)
+        {
+            consulta = consulta.Where(s => s.EstadoSolicitud == estado);
+        }
+
+        consulta = FiltrarPorTexto(consulta, busqueda, incluirSolicitante: true);
+
+        return await PaginarAsync(consulta, pagina, tamanoPagina);
+    }
+
+    private static IQueryable<Solicitud> FiltrarPorTexto(IQueryable<Solicitud> consulta, string? busqueda, bool incluirSolicitante)
+    {
+        var texto = busqueda?.Trim();
+
+        if (string.IsNullOrEmpty(texto))
+        {
+            return consulta;
+        }
+
+        if (incluirSolicitante)
+        {
+            return consulta.Where(s =>
+                ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
+                || (1000000 + s.NroEquipoRequerido).ToString().Substring(1).Contains(texto)
+                || (s.EquipoRequerido.Marca + " " + s.EquipoRequerido.Modelo).Contains(texto)
+                || (s.Usuario.RazonSocial ?? (s.Usuario.Nombre + " " + s.Usuario.Apellido)).Contains(texto));
+        }
+
+        return consulta.Where(s =>
+            ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
+            || (1000000 + s.NroEquipoRequerido).ToString().Substring(1).Contains(texto)
+            || (s.EquipoRequerido.Marca + " " + s.EquipoRequerido.Modelo).Contains(texto));
+    }
+
+    private async Task<ResultadoPaginado<SolicitudFilaViewModel>> PaginarAsync(
+        IQueryable<Solicitud> consulta, int pagina, int tamanoPagina)
+    {
         var total = await consulta.CountAsync();
         var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
         pagina = Math.Clamp(pagina, 1, totalPaginas);
@@ -93,11 +142,21 @@ public class SolicitudConsultaService : ISolicitudConsultaService
         };
     }
 
-    public async Task<SolicitudDetalleViewModel?> ObtenerDetallePropioAsync(string identityUserId, int nroSolicitud)
+    public Task<SolicitudDetalleViewModel?> ObtenerDetallePropioAsync(string identityUserId, int nroSolicitud) =>
+        ObtenerDetalleAsync(
+            _context.Solicitudes
+                .AsNoTracking()
+                .Where(s => s.NroSolicitud == nroSolicitud && s.Usuario.IdentityUserId == identityUserId),
+            nroSolicitud);
+
+    public Task<SolicitudDetalleViewModel?> ObtenerDetalleInternoAsync(int nroSolicitud) =>
+        ObtenerDetalleAsync(
+            _context.Solicitudes.AsNoTracking().Where(s => s.NroSolicitud == nroSolicitud),
+            nroSolicitud);
+
+    private async Task<SolicitudDetalleViewModel?> ObtenerDetalleAsync(IQueryable<Solicitud> consulta, int nroSolicitud)
     {
-        var datos = await _context.Solicitudes
-            .AsNoTracking()
-            .Where(s => s.NroSolicitud == nroSolicitud && s.Usuario.IdentityUserId == identityUserId)
+        var datos = await consulta
             .Select(s => new
             {
                 s.NroEquipoRequerido,
@@ -114,7 +173,9 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 s.FechaCierre,
                 s.Usuario.RazonSocial,
                 s.Usuario.Nombre,
-                s.Usuario.Apellido
+                s.Usuario.Apellido,
+                s.Usuario.TipoUsuario,
+                s.Usuario.CorreoElectronico
             })
             .FirstOrDefaultAsync();
 
@@ -147,6 +208,8 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             TipoEquipo = datos.TipoEquipo,
             MarcaYModelo = $"{datos.Marca} {datos.Modelo}",
             Solicitante = NombreSolicitante(datos.RazonSocial, datos.Nombre, datos.Apellido),
+            TipoCuenta = datos.TipoUsuario,
+            CorreoSolicitante = datos.CorreoElectronico,
             TipoSolicitante = datos.TipoSolicitante,
             MotivoSolicitud = datos.MotivoSolicitud,
             OrigenSolicitud = datos.OrigenSolicitud,

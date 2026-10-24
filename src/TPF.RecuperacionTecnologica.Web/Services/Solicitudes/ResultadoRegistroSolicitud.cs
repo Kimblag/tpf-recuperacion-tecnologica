@@ -8,6 +8,8 @@ public enum ErrorRegistroSolicitud
     EquipoPropio,
     SolicitudDuplicada,
     LimiteAlcanzado,
+    CoordinadorNoHabilitado,
+    UsuarioYaExiste,
     Fallido
 }
 

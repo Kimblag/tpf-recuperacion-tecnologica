@@ -5,6 +5,9 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
@@ -22,15 +25,21 @@ public class SolicitudService : ISolicitudService
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
     private readonly ApplicationDbContext _context;
+    private readonly IUsuarioService _usuarioService;
+    private readonly ICuentaService _cuentaService;
     private readonly IAuditoriaService _auditoriaService;
     private readonly ILogger<SolicitudService> _logger;
 
     public SolicitudService(
         ApplicationDbContext context,
+        IUsuarioService usuarioService,
+        ICuentaService cuentaService,
         IAuditoriaService auditoriaService,
         ILogger<SolicitudService> logger)
     {
         _context = context;
+        _usuarioService = usuarioService;
+        _cuentaService = cuentaService;
         _auditoriaService = auditoriaService;
         _logger = logger;
     }
@@ -52,7 +61,7 @@ public class SolicitudService : ISolicitudService
         return usuario is not null && usuario.EstadoUsuario == EstadoUsuario.Activo ? usuario : null;
     }
 
-    private async Task<ImpedimentoSolicitud?> EvaluarAsync(Usuario usuario, int nroEquipo)
+    private async Task<ImpedimentoSolicitud?> EvaluarAsync(Usuario? usuario, int nroEquipo)
     {
         var equipo = await _context.Equipos
             .AsNoTracking()
@@ -64,6 +73,11 @@ public class SolicitudService : ISolicitudService
         {
             return new ImpedimentoSolicitud(ErrorRegistroSolicitud.EquipoNoDisponible,
                 "El equipo ya no está disponible.");
+        }
+
+        if (usuario is null)
+        {
+            return null;
         }
 
         if (equipo.NroUsuarioDonante == usuario.NroUsuario)
@@ -90,6 +104,21 @@ public class SolicitudService : ISolicitudService
         }
 
         return null;
+    }
+
+    public async Task<ImpedimentoSolicitud?> ObtenerImpedimentoParaUsuarioAsync(int nroUsuario, int nroEquipo)
+    {
+        var usuario = await _context.Usuarios
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.NroUsuario == nroUsuario);
+
+        if (usuario is null || usuario.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return new ImpedimentoSolicitud(ErrorRegistroSolicitud.UsuarioNoHabilitado,
+                "El usuario no existe o no está activo, por eso no se puede registrar una solicitud a su nombre.");
+        }
+
+        return await EvaluarAsync(usuario, nroEquipo);
     }
 
     public async Task<ImpedimentoSolicitud?> ObtenerImpedimentoAsync(string identityUserId, int nroEquipo)
@@ -279,5 +308,166 @@ public class SolicitudService : ISolicitudService
         }
 
         return IdentityResult.Success;
+    }
+
+    public async Task<ResultadoRegistroSolicitud> RegistrarAsistidaAsync(
+        string identityUserIdCoordinador, RegistroSolicitudAsistidaViewModel modelo,
+        Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud)
+    {
+        var codigoCoordinador = await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.IdentityUserId == identityUserIdCoordinador
+                && p.RolAsignado == RolPersonal.Coordinador
+                && p.EstadoPersonal == EstadoPersonal.Activo)
+            .Select(p => (int?)p.CodigoPersonal)
+            .FirstOrDefaultAsync();
+
+        if (codigoCoordinador is null)
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.CoordinadorNoHabilitado,
+                "La cuenta no está habilitada para registrar solicitudes asistidas.");
+        }
+
+        if (modelo.TipoSolicitante is null || modelo.NroEquipo is null)
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido, "Faltan datos de la solicitud.");
+        }
+
+        return modelo.Usuario.Modo == ModoUsuarioAsistido.Existente
+            ? await RegistrarAsistidaParaExistenteAsync(codigoCoordinador.Value, modelo)
+            : await RegistrarAsistidaParaNuevoAsync(codigoCoordinador.Value, modelo, construirRutaInvitacion, urlBaseSolicitud);
+    }
+
+    private static Solicitud NuevaSolicitudAsistida(int nroUsuario, RegistroSolicitudAsistidaViewModel modelo, int codigoCoordinador) => new()
+    {
+        NroUsuario = nroUsuario,
+        TipoSolicitante = modelo.TipoSolicitante!.Value,
+        NroEquipoRequerido = modelo.NroEquipo!.Value,
+        MotivoSolicitud = modelo.MotivoSolicitud.Trim(),
+        OrigenSolicitud = OrigenSolicitud.Asistida,
+        CodigoCoordinador = codigoCoordinador,
+        FechaSolicitud = DateTime.UtcNow,
+        EstadoSolicitud = EstadoSolicitud.Pendiente
+    };
+
+    private async Task AuditarAsync(TipoOperacionAuditoria tipo, int codigoPersonal, string entidad, int id, string detalle)
+    {
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(tipo, codigoPersonal, entidad, id, detalle);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar el evento {Tipo} de la entidad {Entidad} {Id}", tipo, entidad, id);
+        }
+    }
+
+    private async Task<ResultadoRegistroSolicitud> RegistrarAsistidaParaExistenteAsync(
+        int codigoCoordinador, RegistroSolicitudAsistidaViewModel modelo)
+    {
+        var usuario = await _context.Usuarios
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.NroUsuario == modelo.Usuario.NroUsuario);
+
+        if (usuario is null || usuario.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.UsuarioNoHabilitado,
+                "El usuario no existe o no está activo, por eso no se puede registrar una solicitud a su nombre.");
+        }
+
+        var impedimento = await EvaluarAsync(usuario, modelo.NroEquipo!.Value);
+
+        if (impedimento is not null)
+        {
+            return ResultadoRegistroSolicitud.Fallo(impedimento.Error, impedimento.Mensaje);
+        }
+
+        var solicitud = NuevaSolicitudAsistida(usuario.NroUsuario, modelo, codigoCoordinador);
+        _context.Solicitudes.Add(solicitud);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicada);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló el registro asistido de la solicitud del Usuario {NroUsuario}", usuario.NroUsuario);
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido,
+                "No se pudo registrar la solicitud. Intentar nuevamente.");
+        }
+
+        await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
+            solicitud.NroSolicitud, "Registro de solicitud asistida");
+
+        return ResultadoRegistroSolicitud.Ok(solicitud.NroSolicitud);
+    }
+
+    private async Task<ResultadoRegistroSolicitud> RegistrarAsistidaParaNuevoAsync(
+        int codigoCoordinador, RegistroSolicitudAsistidaViewModel modelo,
+        Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud)
+    {
+        var impedimento = await EvaluarAsync(null, modelo.NroEquipo!.Value);
+
+        if (impedimento is not null)
+        {
+            return ResultadoRegistroSolicitud.Fallo(impedimento.Error, impedimento.Mensaje);
+        }
+
+        string identityUserId;
+        Usuario usuario;
+        Solicitud solicitud;
+
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var alta = await _usuarioService.AltaAsistidaAsync(modelo.Usuario);
+
+            if (!alta.Exitoso)
+            {
+                return alta.YaExiste
+                    ? ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.UsuarioYaExiste, alta.Mensaje!)
+                    : ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido, alta.Mensaje ?? "No se pudo crear la cuenta de la persona.");
+            }
+
+            usuario = alta.Usuario!;
+            identityUserId = alta.IdentityUserId!;
+
+            solicitud = NuevaSolicitudAsistida(usuario.NroUsuario, modelo, codigoCoordinador);
+            _context.Solicitudes.Add(solicitud);
+            await _context.SaveChangesAsync();
+
+            await transaccion.CommitAsync();
+        }
+        catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.UsuarioYaExiste, ResultadoAltaAsistida.MensajeYaExiste);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló el alta asistida del usuario y su solicitud; se revirtió la transacción");
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido,
+                "No se pudo completar el registro. No se guardó nada. Intentar nuevamente.");
+        }
+
+        await AuditarAsync(TipoOperacionAuditoria.AltaUsuario, codigoCoordinador, nameof(Usuario),
+            usuario.NroUsuario, $"Alta asistida de usuario ({usuario.TipoUsuario})");
+        await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
+            solicitud.NroSolicitud, "Registro de solicitud asistida");
+
+        try
+        {
+            await _cuentaService.EnviarInvitacionAsync(identityUserId, construirRutaInvitacion, urlBaseSolicitud);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo enviar la invitación al Usuario {NroUsuario}", usuario.NroUsuario);
+        }
+
+        return ResultadoRegistroSolicitud.Ok(solicitud.NroSolicitud);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
@@ -55,24 +56,11 @@ public class RegistroUsuarioViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        // se agregan reglas que no podemos usar con Data annotations, por ejemplo,
-        // que el nombre y apellido sean obligatorios si es persona,
-        // o que la razón social sea obligatoria si es empresa.
-        if (TipoUsuario == TipoUsuario.Persona)
+        foreach (var resultado in ValidacionesDatosUsuario.Validar(TipoUsuario, Nombre, Apellido, RazonSocial, NroDocumento))
         {
-            if (string.IsNullOrWhiteSpace(Nombre))
-                // se usa yield return para devolver múltiples resultados de validación
-                yield return new ValidationResult("El nombre es obligatorio.", [nameof(Nombre)]);
-
-            if (string.IsNullOrWhiteSpace(Apellido))
-                yield return new ValidationResult("El apellido es obligatorio.", [nameof(Apellido)]);
-        }
-        else if (string.IsNullOrWhiteSpace(RazonSocial))
-        {
-            yield return new ValidationResult("La razón social es obligatoria.", [nameof(RazonSocial)]);
+            yield return resultado;
         }
 
-        // el tipo de documento llega desde el navegador, por eso se valida que corresponda al tipo de usuario
         var documentoEsperado = TipoUsuario == TipoUsuario.Persona ? TipoDocumento.Dni : TipoDocumento.Cuit;
 
         if (TipoDocumento != documentoEsperado)
@@ -80,15 +68,6 @@ public class RegistroUsuarioViewModel : IValidatableObject
             yield return new ValidationResult(
                 "El tipo de documento no corresponde al tipo de usuario.",
                 [nameof(TipoDocumento)]);
-        }
-
-        var largoEsperado = TipoDocumento == TipoDocumento.Dni ? 8 : 11;
-
-        if (NroDocumento.Length != largoEsperado || !NroDocumento.All(char.IsAsciiDigit))
-        {
-            yield return new ValidationResult(
-                $"El documento debe tener {largoEsperado} dígitos numéricos.",
-                [nameof(NroDocumento)]);
         }
     }
 }

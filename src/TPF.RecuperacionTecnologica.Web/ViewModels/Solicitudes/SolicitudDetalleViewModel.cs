@@ -15,6 +15,10 @@ public class SolicitudDetalleViewModel
 
     public string Solicitante { get; set; } = string.Empty;
 
+    public TipoUsuario TipoCuenta { get; set; }
+
+    public string CorreoSolicitante { get; set; } = string.Empty;
+
     public TipoSolicitante TipoSolicitante { get; set; }
 
     public string MotivoSolicitud { get; set; } = string.Empty;

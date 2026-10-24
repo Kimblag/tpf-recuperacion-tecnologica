@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
@@ -47,4 +48,10 @@ public interface IUsuarioService
     /// </summary>
     /// <returns>Éxito, o los motivos por los que no se pudo dar de baja.</returns>
     Task<IdentityResult> DarDeBajaAsync(string identityUserId, BajaUsuarioViewModel modelo);
+
+    Task<UsuarioEncontradoViewModel?> BuscarPorDocumentoOCorreoAsync(string texto);
+
+    Task<UsuarioEncontradoViewModel?> ObtenerUsuarioEncontradoAsync(int nroUsuario);
+
+    Task<ResultadoAltaAsistida> AltaAsistidaAsync(SelectorUsuarioViewModel datos);
 }

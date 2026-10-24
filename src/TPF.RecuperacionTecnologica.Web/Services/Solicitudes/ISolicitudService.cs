@@ -7,9 +7,15 @@ public interface ISolicitudService
 {
     Task<ImpedimentoSolicitud?> ObtenerImpedimentoAsync(string identityUserId, int nroEquipo);
 
+    Task<ImpedimentoSolicitud?> ObtenerImpedimentoParaUsuarioAsync(int nroUsuario, int nroEquipo);
+
     Task<ResultadoRegistroSolicitud> RegistrarAsync(string identityUserId, FormularioSolicitudViewModel modelo);
 
     Task<IdentityResult> EditarMotivoAsync(string identityUserId, int nroSolicitud, string motivo);
 
     Task<IdentityResult> CancelarAsync(string identityUserId, int nroSolicitud);
+
+    Task<ResultadoRegistroSolicitud> RegistrarAsistidaAsync(
+        string identityUserIdCoordinador, RegistroSolicitudAsistidaViewModel modelo,
+        Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud);
 }
