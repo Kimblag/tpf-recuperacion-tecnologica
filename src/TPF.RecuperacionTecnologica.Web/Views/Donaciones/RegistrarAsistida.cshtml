@@ -1,0 +1,79 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.RegistroDonacionAsistidaViewModel
+@{
+    ViewData["Title"] = "Registrar donación asistida";
+    ViewData["FormularioId"] = "f-donacion-asistida";
+
+    ViewData["Donante"] = "La persona seleccionada arriba";
+    ViewData["AyudaDonante"] = "Se completa con el usuario elegido en la sección anterior.";
+    ViewData["NroEquipo"] = "Se asigna al registrar";
+    ViewData["AyudaNroEquipo"] = "Se asigna automáticamente al registrar.";
+    ViewData["Fecha"] = DateTime.Today.ToString("dd/MM/yyyy");
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Gestion">Donaciones</a></li>
+    <li aria-current="page">Registrar donación asistida</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Registrar donación asistida</h1></div>
+            <p class="page-sub">Para cuando la persona donante llama o se presenta en la sede y no puede hacerlo sola</p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="note">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body">
+            <div class="alert-title">Esta donación se registra en nombre de la persona donante</div>
+            <div>Si todavía no tiene cuenta, se puede abrir una en este mismo paso, con sus datos completos.</div>
+        </div>
+    </div>
+
+    <section class="card" aria-labelledby="titulo-donante">
+        <div class="card-header">
+            <div><h2 class="card-title" id="titulo-donante">Donante</h2></div>
+        </div>
+        <div class="card-body">
+            <partial name="_SelectorUsuario" for="Usuario" />
+        </div>
+    </section>
+
+    <form class="card" method="post" asp-action="RegistrarAsistida" id="f-donacion-asistida" data-formulario-donacion novalidate aria-labelledby="titulo-equipo">
+        <input type="hidden" asp-for="Usuario.Modo" />
+        <input type="hidden" asp-for="Usuario.TipoUsuario" />
+        <input type="hidden" asp-for="Usuario.NroUsuario" />
+
+        <div class="card-header">
+            <div><h2 class="card-title" id="titulo-equipo">Datos del equipo</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <partial name="~/Views/Donaciones/_CamposDonacion.cshtml" model="Model" />
+
+                    <div class="field span-2">
+                        <label class="form-label" for="CoordinadorVisible">Coordinador</label>
+                        <input id="CoordinadorVisible" class="form-control" value="@Model.Coordinador" disabled />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" asp-action="Gestion">Cancelar</a>
+            @* TODO: habilitar el registro cuando exista la donación asistida *@
+            <button type="submit" class="btn btn-primary btn-lg" disabled>Registrar donación</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/donacion-formulario.js" asp-append-version="true"></script>
+}

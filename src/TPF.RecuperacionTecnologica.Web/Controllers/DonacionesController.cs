@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
@@ -10,12 +13,34 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 public class DonacionesController : Controller
 {
     private readonly IDonacionService _donacionService;
+    private readonly IPersonalService _personalService;
     private readonly ILogger<DonacionesController> _logger;
 
-    public DonacionesController(IDonacionService donacionService, ILogger<DonacionesController> logger)
+    public DonacionesController(
+        IDonacionService donacionService, IPersonalService personalService, ILogger<DonacionesController> logger)
     {
         _donacionService = donacionService;
+        _personalService = personalService;
         _logger = logger;
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> RegistrarAsistida(ModoUsuarioAsistido modo, TipoUsuario tipoUsuario, string? busqueda)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var codigoPersonal = identityUserId is null ? null : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+        var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+
+        var formulario = new RegistroDonacionAsistidaViewModel
+        {
+            Usuario = new SelectorUsuarioViewModel { Modo = modo, TipoUsuario = tipoUsuario, Busqueda = busqueda?.Trim() },
+            Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}"
+        };
+
+        UsuariosDeEjemplo.Buscar(formulario.Usuario);
+
+        return View(formulario);
     }
 
     [HttpGet]

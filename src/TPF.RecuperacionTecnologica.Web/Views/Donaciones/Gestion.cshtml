@@ -23,6 +23,12 @@
             <div class="h-id"><h1 tabindex="-1">Donaciones</h1></div>
             <p class="page-sub">Donaciones de todos los donantes, en cualquier estado</p>
         </div>
+        @if (User.IsInRole(nameof(RolPersonal.Coordinador)))
+        {
+            <div class="page-actions">
+                <a class="btn btn-primary" asp-action="RegistrarAsistida"><partial name="_Icon" model="@("plus")" /><span>Registrar donación asistida</span></a>
+            </div>
+        }
     </div>
 
     <section class="card overflow" aria-label="Donaciones" data-listado data-filas-carga="6">
