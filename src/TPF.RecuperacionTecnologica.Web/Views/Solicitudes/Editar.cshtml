@@ -1,0 +1,73 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.FormularioSolicitudViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Editar solicitud";
+
+    var puedeEditarse = Model.EstadoSolicitud == EstadoSolicitud.Pendiente;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Mis solicitudes</a></li>
+    <li><a asp-action="Detalle" asp-route-id="@Model.NroSolicitud">@Model.Codigo</a></li>
+    <li aria-current="page">Editar</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Editar solicitud</h1>
+                <partial name="_EstadoSolicitudBadge" model="Model.EstadoSolicitud" />
+            </div>
+            <p class="page-sub">Solicitud <span class="mono">@Model.Codigo</span></p>
+        </div>
+    </div>
+
+    @if (puedeEditarse)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Solo se puede editar mientras la solicitud está Pendiente. El equipo solicitado no se puede cambiar.</div></div>
+        </div>
+
+        <form class="card" method="post" id="f-solicitud-editar" novalidate aria-labelledby="f-solicitud-titulo">
+            <input type="hidden" asp-for="NroSolicitud" />
+            <input type="hidden" asp-for="NroEquipo" />
+            <div class="card-header">
+                <div><h2 class="card-title" id="f-solicitud-titulo">Datos de la solicitud</h2></div>
+            </div>
+            <div class="card-body">
+                <div class="stack" style="gap:16px">
+                    <partial name="_ResumenErrores" />
+
+                    <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                    <div class="form-grid">
+                        <partial name="_CamposSolicitud" model="Model" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <a class="btn btn-secondary btn-lg" asp-action="Detalle" asp-route-id="@Model.NroSolicitud">Cancelar</a>
+                @* TODO: habilitar el guardado cuando exista la edición del motivo (#119) *@
+                <button type="submit" class="btn btn-primary btn-lg" disabled>Guardar cambios</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Esta solicitud ya no se puede editar: solo se puede mientras está Pendiente.</div></div>
+        </div>
+
+        <div>
+            <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@Model.NroSolicitud"><partial name="_Icon" model="@("arrow-left")" /><span>Volver a la solicitud</span></a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

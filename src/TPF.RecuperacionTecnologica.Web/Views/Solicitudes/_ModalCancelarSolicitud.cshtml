@@ -1,0 +1,21 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.SolicitudDetalleViewModel
+
+<div class="modal fade" id="modal-cancelar-solicitud" tabindex="-1" aria-labelledby="modal-cancelar-solicitud-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-cancelar-solicitud-titulo"><partial name="_Icon" model="@("alert")" />Cancelar solicitud</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <div class="modal-body">
+                <p>Se va a cancelar la solicitud <span class="mono">@Model.Codigo</span> del equipo @Model.MarcaYModelo.</p>
+                <p>Esta acción no se puede deshacer. Se puede hacer una nueva solicitud cuando se quiera.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                @* TODO: habilitar la confirmación cuando exista la cancelación de solicitudes (#120) *@
+                <button type="button" class="btn btn-danger" disabled>Cancelar solicitud</button>
+            </div>
+        </div>
+    </div>
+</div>
