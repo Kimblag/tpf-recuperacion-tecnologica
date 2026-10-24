@@ -55,14 +55,6 @@ public class SolicitudesController : Controller
             new DateTime(2026, 8, 8), new DateTime(2026, 8, 18))
     ];
 
-    // TODO: reemplazar por la búsqueda real de usuarios por DNI o correo (#121)
-    private static readonly IReadOnlyList<UsuarioEncontradoViewModel> UsuariosEjemplo =
-    [
-        new() { NroUsuario = 33, Nombre = "Valeria Acosta", Documento = "34.205.918", CorreoElectronico = "valeria.acosta@example.com", EstadoUsuario = EstadoUsuario.Activo },
-        new() { NroUsuario = 41, Nombre = "Roberto Quiroga", Documento = "20.123.456", CorreoElectronico = "roberto.quiroga@example.com", EstadoUsuario = EstadoUsuario.Activo },
-        new() { NroUsuario = 44, Nombre = "Ana Torres", Documento = "11.222.333", CorreoElectronico = "ana.torres@example.com", EstadoUsuario = EstadoUsuario.Inactivo }
-    ];
-
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]
     public IActionResult Index(MisSolicitudesViewModel filtros)
@@ -234,20 +226,7 @@ public class SolicitudesController : Controller
             .Select(e => (e.NroEquipo, $"{e.CodigoEquipo} · {e.MarcaYModelo}"))
             .ToList();
 
-        // TODO: reemplazar por la búsqueda real de usuarios por DNI o correo, validando que estén Activos (#121)
-        var usuario = formulario.Usuario;
-        var textoBuscado = usuario.Busqueda;
-
-        if (usuario.Modo == ModoUsuarioAsistido.Existente && !string.IsNullOrEmpty(textoBuscado))
-        {
-            var soloDigitos = new string(textoBuscado.Where(char.IsDigit).ToArray());
-
-            usuario.BusquedaRealizada = true;
-            usuario.Encontrado = UsuariosEjemplo.FirstOrDefault(u =>
-                string.Equals(u.CorreoElectronico, textoBuscado, StringComparison.OrdinalIgnoreCase)
-                || (soloDigitos.Length > 0 && u.Documento.Replace(".", string.Empty) == soloDigitos));
-            usuario.NroUsuario = usuario.Encontrado is { EstadoUsuario: EstadoUsuario.Activo } activo ? activo.NroUsuario : null;
-        }
+        UsuariosDeEjemplo.Buscar(formulario.Usuario);
 
         return View(formulario);
     }

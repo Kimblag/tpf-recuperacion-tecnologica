@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
 
