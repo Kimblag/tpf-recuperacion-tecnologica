@@ -310,6 +310,16 @@ public class PersonalService : IPersonalService
             return Error("YaInactivo",
                 "El personal ya se encuentra inactivo.");
         }
+        if (personal.EsRaiz)
+        {
+            return Error("AdministradorPrincipal",
+                "No se puede inactivar al Administrador principal.");
+        }
+        if (personal.CodigoPersonal == codigoAdministrador)
+        {
+            return Error("CuentaPropia",
+                "No se puede inactivar la propia cuenta. Otro Administrador debe hacerlo.");
+        }
         // no se puede dejar al sistema sin ningún Administrador activo
         if (personal.RolAsignado == RolPersonal.Administrador
             && !await _context.PersonalInterno.AnyAsync(p =>

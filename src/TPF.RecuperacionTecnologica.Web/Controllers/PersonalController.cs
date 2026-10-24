@@ -17,17 +17,6 @@ public class PersonalController : Controller
         _personalService = personalService;
     }
 
-    // TODO: reemplazar estos datos de ejemplo por los reales del servicio de personal interno
-    private static readonly IReadOnlyList<PersonalDetalleViewModel> DatosDeEjemplo =
-    [
-        Ejemplo(1, "27884310", "Matías", "Correa", "11 5550-1201", "matias.correa@example.org", RolPersonal.Administrador, EstadoPersonal.Activo),
-        Ejemplo(7, "30115642", "Sofía", "Gutiérrez", "11 5550-1207", "sofia.gutierrez@example.org", RolPersonal.Coordinador, EstadoPersonal.Activo),
-        Ejemplo(9, "31660298", "Ramiro", "Ortega", "11 5550-1209", "ramiro.ortega@example.org", RolPersonal.Coordinador, EstadoPersonal.Activo),
-        Ejemplo(12, "33902117", "Tomás", "Ibáñez", "11 5550-1212", "tomas.ibanez@example.org", RolPersonal.Tecnico, EstadoPersonal.Activo),
-        Ejemplo(14, "35447803", "Agustina", "Luna", "11 5550-1214", "agustina.luna@example.org", RolPersonal.Tecnico, EstadoPersonal.Activo),
-        Ejemplo(15, "32019775", "Federico", "Paz", "11 5550-1215", "federico.paz@example.org", RolPersonal.Tecnico, EstadoPersonal.Inactivo)
-    ];
-
     [HttpGet]
     public async Task<IActionResult> Index(string? busqueda, RolPersonal? rol, EstadoPersonal? estado)
     {
@@ -80,7 +69,14 @@ public class PersonalController : Controller
     {
         var personal = await _personalService.ObtenerDetalleAsync(id);
 
-        return personal is null ? NotFound() : View(personal);
+        if (personal is null)
+        {
+            return NotFound();
+        }
+
+        await MarcarCuentaPropiaAsync(personal);
+
+        return View(personal);
     }
 
     [HttpGet]
@@ -142,11 +138,13 @@ public class PersonalController : Controller
     public async Task<IActionResult> Inactivar(InactivarPersonalViewModel modelo)
     {
         var personal = await _personalService.ObtenerDetalleAsync(modelo.CodigoPersonal);
-        
+
         if (personal is null)
         {
             return NotFound();
         }
+
+        await MarcarCuentaPropiaAsync(personal);
 
         if (!ModelState.IsValid)
         {
@@ -174,20 +172,19 @@ public class PersonalController : Controller
 
         TempData["Mensaje"] = "El integrante del personal se inactivó correctamente.";
         return RedirectToAction(nameof(Detalle), new { id = modelo.CodigoPersonal });
-
     }
 
-    private static PersonalDetalleViewModel Ejemplo(
-        int codigo, string dni, string nombre, string apellido, string telefono,
-        string correo, RolPersonal rol, EstadoPersonal estado) => new()
+    private async Task MarcarCuentaPropiaAsync(PersonalDetalleViewModel personal)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
         {
-            CodigoPersonal = codigo,
-            Dni = dni,
-            Nombre = nombre,
-            Apellido = apellido,
-            Telefono = telefono,
-            CorreoElectronico = correo,
-            RolAsignado = rol,
-            EstadoPersonal = estado
-        };
+            return;
+        }
+
+        var codigoActual = await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        personal.EsCuentaPropia = codigoActual == personal.CodigoPersonal;
+    }
 }
