@@ -972,6 +972,42 @@ th[aria-sort] .orden-link {
             text-align: center;
         }
 
+.queue {
+    display: flex;
+    flex-direction: column;
+}
+
+.q-item {
+    display: grid;
+    grid-template-columns: auto 28px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 20px;
+    border-top: 1px solid color-mix(in srgb, var(--bs-border-color) 75%, transparent);
+    cursor: pointer;
+}
+
+    .q-item:first-child {
+        border-top: 0;
+    }
+
+    .q-item:has(input:checked) {
+        background-color: var(--app-accent-soft);
+    }
+
+.q-pos {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--app-surface-low);
+    font-family: var(--app-font-mono);
+    font-size: calc(12px * var(--fs));
+    font-weight: 600;
+}
+
 .g-detail {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);

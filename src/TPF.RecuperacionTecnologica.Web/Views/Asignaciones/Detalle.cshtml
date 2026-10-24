@@ -1,0 +1,106 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones.AsignacionDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Detalle de asignación";
+
+    var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
+
+    var explicacionEstado = Model.EstadoAsignacion switch
+    {
+        EstadoAsignacion.Vigente => "El equipo está reservado para la solicitud, a la espera de que lo retiren.",
+        EstadoAsignacion.Concretada => "Ya se retiró: la entrega quedó registrada.",
+        _ => "Se desistió o venció el plazo de retiro. El equipo volvió a estar Disponible."
+    };
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Asignaciones</a></li>
+    <li aria-current="page">Detalle</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">Asignación <span class="mono">@Model.Codigo</span></h1>
+                <partial name="_EstadoAsignacionBadge" model="Model.EstadoAsignacion" />
+            </div>
+            <p class="page-sub">@Model.MarcaYModelo</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+            @if (esCoordinador)
+            {
+                if (Model.EsVigente)
+                {
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-liberar-asignacion"><partial name="_Icon" model="@("undo")" /><span>Liberar asignación</span></button>
+                    @* TODO: reemplazar por el enlace a Entregas/Registrar cuando exista la acción (#124) *@
+                    <button type="button" class="btn btn-primary" disabled><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("undo")" /><span>Liberar asignación</span></button>
+                }
+            }
+        </div>
+    </div>
+
+    @if (!Model.EsVigente)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Solo se puede liberar o entregar una asignación Vigente.</div></div>
+        </div>
+    }
+
+    <div class="grid-3-1">
+        <section class="card" aria-labelledby="titulo-datos">
+            <div class="card-header">
+                <div><h2 class="card-title" id="titulo-datos">Datos de la asignación</h2></div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>Asignación</dt>
+                    <dd><span class="mono">@Model.Codigo</span></dd>
+                    <dt>Solicitud</dt>
+                    <dd><a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@Model.NroSolicitud">@Model.CodigoSolicitud</a> · @Model.Solicitante (@Html.DisplayFor(m => m.TipoSolicitante))</dd>
+                    <dt>Equipo</dt>
+                    <dd><a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">@Model.CodigoEquipo</a> · @Model.MarcaYModelo</dd>
+                    <dt>Coordinador</dt>
+                    <dd>@Model.Coordinador</dd>
+                    <dt>Fecha de asignación</dt>
+                    <dd>@Model.FechaAsignacion.ToString("dd/MM/yyyy")</dd>
+                    <dt>Fecha límite de retiro</dt>
+                    <dd>@Model.FechaLimiteRetiro.ToString("dd/MM/yyyy")</dd>
+                    <dt>Orden de prioridad</dt>
+                    <dd>@(Model.CambioPrioridad ? "Se eligió una solicitud distinta de la sugerida" : "Se respetó el orden sugerido")</dd>
+                    @if (Model.CambioPrioridad)
+                    {
+                        <dt>Justificación del cambio</dt>
+                        <dd>@Model.JustificacionCambio</dd>
+                    }
+                    <dt>Estado</dt>
+                    <dd>
+                        <partial name="_EstadoAsignacionBadge" model="Model.EstadoAsignacion" />
+                        <div class="card-sub mt-1">@explicacionEstado</div>
+                    </dd>
+                </dl>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="titulo-historial">
+            <div class="card-header">
+                <div><h2 class="card-title" id="titulo-historial">Historial</h2></div>
+            </div>
+            <div class="card-body">
+                <partial name="_LineaDeTiempo" model="Model.Hitos" />
+            </div>
+        </section>
+    </div>
+</div>
+
+@if (esCoordinador && Model.EsVigente)
+{
+    <partial name="_ModalLiberar" model="Model" />
+}

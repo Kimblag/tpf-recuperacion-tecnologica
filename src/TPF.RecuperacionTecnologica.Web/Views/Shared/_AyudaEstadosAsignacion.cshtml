@@ -1,0 +1,9 @@
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+<details class="help">
+    <summary>¿Qué significa cada estado?</summary>
+    <div class="help-list">
+        <div class="help-row"><partial name="_EstadoAsignacionBadge" model="EstadoAsignacion.Vigente" /><span>El equipo está reservado para la solicitud, a la espera de que lo retiren.</span></div>
+        <div class="help-row"><partial name="_EstadoAsignacionBadge" model="EstadoAsignacion.Concretada" /><span>Ya se retiró: la entrega quedó registrada.</span></div>
+        <div class="help-row"><partial name="_EstadoAsignacionBadge" model="EstadoAsignacion.Liberada" /><span>Se desistió o venció el plazo de retiro. El equipo volvió a estar Disponible.</span></div>
+    </div>
+</details>

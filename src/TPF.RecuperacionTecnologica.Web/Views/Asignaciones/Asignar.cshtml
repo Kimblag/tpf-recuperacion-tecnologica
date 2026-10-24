@@ -1,0 +1,231 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones.AsignarEquipoViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Asignar equipo";
+
+    string TextoOrigen(OrigenSolicitud origen) =>
+        Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)origen).ToString()).Text;
+
+    var estadoDisponible = EstadoEquipo.Disponible;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Index">Asignaciones</a></li>
+    <li aria-current="page">Asignar equipo</li>
+}
+
+<div class="stack">
+    @if (Model.NroEquipo is null)
+    {
+        <div class="stack narrow">
+            <div class="page-head">
+                <div>
+                    <div class="h-id"><h1 tabindex="-1">Asignar equipo</h1></div>
+                    <p class="page-sub">Elegir el equipo disponible que se quiere asignar</p>
+                </div>
+            </div>
+
+            <section class="card" aria-labelledby="titulo-elegir">
+                <div class="card-header">
+                    <div><h2 class="card-title" id="titulo-elegir">Equipo</h2></div>
+                </div>
+                @if (Model.EquiposDisponibles.Count == 0)
+                {
+                    <div class="card-body">
+                        <div class="state">
+                            <span class="state-ic"><partial name="_Icon" model="@("laptop")" /></span>
+                            <h3>No hay equipos disponibles</h3>
+                            <p>Cuando un equipo pase la revisión técnica podrá asignarse desde aquí.</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <form method="get" asp-action="Asignar">
+                        <div class="card-body">
+                            <div class="field">
+                                <label class="form-label" for="nroEquipo">Equipo disponible<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                                <div class="select">
+                                    <select id="nroEquipo" name="nroEquipo" class="form-select" required>
+                                        <option value="">Seleccione un equipo…</option>
+                                        @foreach (var equipo in Model.EquiposDisponibles)
+                                        {
+                                            <option value="@equipo.NroEquipo">@equipo.Texto</option>
+                                        }
+                                    </select>
+                                    <partial name="_Icon" model="@("chevron-down")" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
+                            <button type="submit" class="btn btn-primary btn-lg">Continuar</button>
+                        </div>
+                    </form>
+                }
+            </section>
+        </div>
+    }
+    else
+    {
+        <div class="page-head">
+            <div>
+                <div class="h-id">
+                    <h1 tabindex="-1">Asignar equipo</h1>
+                    <partial name="_EstadoEquipoBadge" model="estadoDisponible" />
+                </div>
+                <p class="page-sub">Equipo <span class="mono">@Model.CodigoEquipo</span> · @Model.MarcaYModelo</p>
+            </div>
+            <div class="page-actions">
+                <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+            </div>
+        </div>
+
+        @if (!Model.EquipoDisponible)
+        {
+            <div class="alert alert-danger" role="alert">
+                <partial name="_Icon" model="@("x-circle")" />
+                <div class="alert-body">
+                    <div class="alert-title">No se puede asignar este equipo</div>
+                    <div>El equipo no está Disponible. Solo se pueden asignar equipos disponibles.</div>
+                </div>
+            </div>
+
+            <div>
+                <a class="btn btn-primary" asp-action="Asignar"><partial name="_Icon" model="@("laptop")" /><span>Elegir otro equipo</span></a>
+            </div>
+        }
+        else if (Model.Candidatas.Count == 0)
+        {
+            <div class="alert alert-warning" role="status">
+                <partial name="_Icon" model="@("alert")" />
+                <div class="alert-body">
+                    <div class="alert-title">No hay solicitudes pendientes para este equipo</div>
+                    <div>Todavía nadie lo pidió. En cuanto haya una solicitud pendiente, se podrá asignar desde aquí.</div>
+                </div>
+            </div>
+
+            <div>
+                <a class="btn btn-primary" asp-controller="Solicitudes" asp-action="Gestion"><partial name="_Icon" model="@("tray")" /><span>Ver solicitudes</span></a>
+            </div>
+        }
+        else
+        {
+            <form method="post" asp-action="Asignar" novalidate>
+                <input type="hidden" asp-for="NroEquipo" />
+
+                <div class="grid-3-1">
+                    <div class="stack">
+                        <partial name="_ResumenErrores" />
+
+                        <section class="card overflow" aria-labelledby="titulo-candidatas">
+                            <div class="card-header">
+                                <div>
+                                    <h2 class="card-title" id="titulo-candidatas">Solicitudes pendientes para este equipo</h2>
+                                    <p class="card-sub">Elegir la solicitud a asignar. Se preselecciona la sugerida.</p>
+                                </div>
+                            </div>
+                            <div class="card-body flush">
+                                <fieldset class="queue border-0 m-0 p-0" style="min-width:0">
+                                    <legend class="visually-hidden">Solicitud a asignar</legend>
+                                    @for (var i = 0; i < Model.Candidatas.Count; i++)
+                                    {
+                                        var candidata = Model.Candidatas[i];
+
+                                        <label class="q-item">
+                                            <input type="radio" name="NroSolicitudSeleccionada" value="@candidata.NroSolicitud" checked="@(Model.NroSolicitudSeleccionada == candidata.NroSolicitud)" />
+                                            <span class="q-pos"><span class="visually-hidden">Orden sugerido </span>@(i + 1)</span>
+                                            <span>
+                                                <b>@candidata.Solicitante</b> <span class="tag">@Html.DisplayFor(m => candidata.TipoSolicitante)</span><br />
+                                                <span class="card-sub"><span class="mono">@candidata.Codigo</span> · @candidata.FechaSolicitud.ToString("dd/MM/yyyy") · @TextoOrigen(candidata.OrigenSolicitud)</span>
+                                            </span>
+                                            @if (i == 0)
+                                            {
+                                                <partial name="_Badge" model="@(("Sugerida", "ok"))" />
+                                            }
+                                            else
+                                            {
+                                                <span></span>
+                                            }
+                                        </label>
+                                    }
+                                </fieldset>
+                            </div>
+                        </section>
+
+                        <section class="card" aria-labelledby="titulo-asignacion">
+                            <div class="card-header">
+                                <div><h2 class="card-title" id="titulo-asignacion">Datos de la asignación</h2></div>
+                            </div>
+                            <div class="card-body">
+                                <div class="stack" style="gap:16px">
+                                    <dl class="dl">
+                                        <dt>Equipo</dt>
+                                        <dd><span class="mono">@Model.CodigoEquipo</span> · @Model.MarcaYModelo</dd>
+                                        <dt>Coordinador</dt>
+                                        <dd>@Model.Coordinador</dd>
+                                        <dt>Fecha de asignación</dt>
+                                        <dd>@Model.FechaAsignacion.ToString("dd/MM/yyyy")</dd>
+                                        <dt>Fecha límite de retiro</dt>
+                                        <dd>@Model.FechaLimiteRetiro.ToString("dd/MM/yyyy") <span class="muted">(@Model.DiasLimiteRetiro días, según los parámetros)</span></dd>
+                                    </dl>
+
+                                    <div class="field">
+                                        <label class="form-label" for="JustificacionCambio">Justificación del cambio de prioridad</label>
+                                        <textarea asp-for="JustificacionCambio" class="form-control" rows="3" maxlength="300" aria-describedby="JustificacionCambio-ayuda"></textarea>
+                                        <div class="form-text" id="JustificacionCambio-ayuda">Es obligatoria cuando se asigna una solicitud distinta de la sugerida.</div>
+                                        <span asp-validation-for="JustificacionCambio"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
+                                @* TODO: habilitar la asignación cuando exista el registro de asignaciones (#122) *@
+                                <button type="submit" class="btn btn-primary btn-lg" disabled><partial name="_Icon" model="@("check")" /><span>Confirmar asignación</span></button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="stack">
+                        <section class="card" aria-labelledby="titulo-regla">
+                            <div class="card-header">
+                                <div>
+                                    <h2 class="card-title" id="titulo-regla">Regla de prioridad</h2>
+                                    <p class="card-sub">Criterio de negocio</p>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <partial name="_ReglaPrioridad" />
+                                <p class="form-text mt-3 mb-0">Si se asigna una solicitud distinta de la sugerida, hay que justificarlo.</p>
+                            </div>
+                        </section>
+
+                        <section class="card" aria-labelledby="titulo-equipo">
+                            <div class="card-header">
+                                <div><h2 class="card-title" id="titulo-equipo">Equipo</h2></div>
+                            </div>
+                            <div class="card-body">
+                                <dl class="dl">
+                                    <dt>Número</dt>
+                                    <dd><span class="mono">@Model.CodigoEquipo</span></dd>
+                                    <dt>Tipo</dt>
+                                    <dd><partial name="_TipoEquipo" model="Model.TipoEquipo" /></dd>
+                                    <dt>Marca y modelo</dt>
+                                    <dd>@Model.MarcaYModelo</dd>
+                                    <dt>Estado</dt>
+                                    <dd><partial name="_EstadoEquipoBadge" model="estadoDisponible" /></dd>
+                                </dl>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </form>
+        }
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
