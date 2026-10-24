@@ -32,7 +32,8 @@
             <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
             @if (Model.PuedeModificarse)
             {
-                <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.NroSolicitud"><partial name="_Icon" model="@("edit")" /><span>Editar solicitud</span></a>
+                @* TODO: reemplazar por el enlace a Editar cuando exista la edición de solicitudes (#119) *@
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("edit")" /><span>Editar solicitud</span></button>
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-cancelar-solicitud"><partial name="_Icon" model="@("x")" /><span>Cancelar solicitud</span></button>
             }
             else
