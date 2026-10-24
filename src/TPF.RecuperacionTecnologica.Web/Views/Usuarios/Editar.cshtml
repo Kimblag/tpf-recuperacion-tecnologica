@@ -1,96 +1,108 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.EdicionUsuarioViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
-    ViewData["Title"] = "Mis datos";
+    ViewData["Title"] = "Editar perfil";
 
     var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Perfil">Mi perfil</a></li>
+    <li aria-current="page">Editar</li>
 }
 
 <div class="stack narrow">
     <div class="page-head">
         <div>
-            <h1 tabindex="-1">Mis datos</h1>
-            <p class="page-sub">Actualice sus datos de contacto.</p>
+            <div class="h-id"><h1 tabindex="-1">Editar perfil</h1></div>
+            <p class="page-sub">Se pueden actualizar los datos personales y de contacto</p>
         </div>
     </div>
 
-    <form class="card" asp-action="Editar" method="post" id="f-usuario-editar" novalidate aria-labelledby="f-usuario-titulo">
-        @* datos que no se editan: viajan solo para volver a mostrarlos si hay errores *@
+    <form asp-action="Editar" method="post" id="f-usuario-editar" class="stack" novalidate>
         <input type="hidden" asp-for="TipoUsuario" />
         <input type="hidden" asp-for="TipoDocumento" />
-        <div class="card-header">
-            <div><h2 class="card-title" id="f-usuario-titulo">Datos de la cuenta</h2></div>
-        </div>
-        <div class="card-body">
-            <div class="stack" style="gap:16px">
-                <partial name="_ResumenErrores" />
+        <input type="hidden" asp-for="NroDocumento" />
+        <input type="hidden" asp-for="CorreoElectronico" />
 
-                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+        <partial name="_ResumenErrores" />
 
+        <section class="card" aria-labelledby="titulo-fijos">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title" id="titulo-fijos">Datos que no se pueden cambiar</h2>
+                    <p class="card-sub">Identifican la cuenta y se usan para iniciar sesión</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="dl">
+                    <dt>@(esPersona ? "Documento (DNI)" : "CUIT")</dt>
+                    <dd><span class="mono">@Model.NroDocumento</span></dd>
+                    <dt>Correo electrónico</dt>
+                    <dd>@Model.CorreoElectronico</dd>
+                </dl>
+                <p class="form-text mb-0">Si alguno de estos datos tiene un error, hay que comunicarse con la organización.</p>
+            </div>
+        </section>
+
+        <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+        <section class="card" aria-labelledby="titulo-personales">
+            <div class="card-header">
+                <div><h2 class="card-title" id="titulo-personales">@(esPersona ? "Datos personales" : "Datos de la institución")</h2></div>
+            </div>
+            <div class="card-body">
                 <div class="form-grid">
-                    <h3 class="span-2 sec-title">@(esPersona ? "Datos personales" : "Datos de la institución")</h3>
-
                     @if (esPersona)
                     {
                         <div class="field">
-                            <label class="form-label" for="Nombre">Nombre <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
-                            <input asp-for="Nombre" class="form-control" readonly />
+                            <label class="form-label" for="Nombre">Nombre<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="Nombre" class="form-control" autocomplete="given-name" maxlength="100" />
+                            <span asp-validation-for="Nombre"></span>
                         </div>
                         <div class="field">
-                            <label class="form-label" for="Apellido">Apellido <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
-                            <input asp-for="Apellido" class="form-control" readonly />
+                            <label class="form-label" for="Apellido">Apellido<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="Apellido" class="form-control" autocomplete="family-name" maxlength="100" />
+                            <span asp-validation-for="Apellido"></span>
                         </div>
                     }
                     else
                     {
                         <div class="field span-2">
-                            <label class="form-label" for="RazonSocial">Razón social <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
-                            <input asp-for="RazonSocial" class="form-control" readonly />
+                            <label class="form-label" for="RazonSocial">Razón social<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="RazonSocial" class="form-control" autocomplete="organization" maxlength="150" />
+                            <span asp-validation-for="RazonSocial"></span>
                         </div>
                     }
-                    <div class="field">
-                        <label class="form-label" for="NroDocumento">@(esPersona ? "DNI" : "CUIT") <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
-                        <input asp-for="NroDocumento" class="form-control" readonly />
-                    </div>
+                </div>
+            </div>
+        </section>
 
-                    <h3 class="span-2 sec-title">Datos de contacto</h3>
-
+        <section class="card" aria-labelledby="titulo-contacto">
+            <div class="card-header">
+                <div><h2 class="card-title" id="titulo-contacto">Datos de contacto</h2></div>
+            </div>
+            <div class="card-body">
+                <div class="form-grid">
                     <div class="field span-2">
                         <label class="form-label" for="Direccion">Dirección</label>
-                        <input asp-for="Direccion" class="form-control" autocomplete="street-address" />
+                        <input asp-for="Direccion" class="form-control" autocomplete="street-address" maxlength="200" />
                         <span asp-validation-for="Direccion"></span>
                     </div>
                     <div class="field">
                         <label class="form-label" for="Telefono">Teléfono</label>
-                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="11 5555-0000" />
+                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="11 5555-0000" />
                         <span asp-validation-for="Telefono"></span>
-                    </div>
-                    <div class="field span-2">
-                        <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <input asp-for="CorreoElectronico" class="form-control" autocomplete="email" aria-describedby="CorreoElectronico-hint" />
-                        <div class="form-text" id="CorreoElectronico-hint">Si cambia el correo, deberá iniciar sesión de nuevo.</div>
-                        <span asp-validation-for="CorreoElectronico"></span>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="form-actions">
-            <a class="btn btn-secondary btn-lg" asp-controller="Home" asp-action="Index">Cancelar</a>
-            <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
-        </div>
-    </form>
-
-    <section class="card" aria-labelledby="baja-titulo">
-        <div class="card-header">
-            <div>
-                <h2 class="card-title" id="baja-titulo">Baja de la cuenta</h2>
-                <p class="card-sub">Si ya no desea usar la plataforma, puede dar de baja su cuenta.</p>
+            <div class="form-actions">
+                <a class="btn btn-secondary btn-lg" asp-action="Perfil">Cancelar</a>
+                <button type="submit" class="btn btn-primary btn-lg">Guardar cambios</button>
             </div>
-        </div>
-        <div class="form-actions">
-            <a class="btn btn-danger" asp-action="Baja">Dar de baja mi cuenta</a>
-        </div>
-    </section>
+        </section>
+    </form>
 </div>
 
 @section Scripts {

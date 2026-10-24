@@ -3,22 +3,26 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
-public class EdicionUsuarioViewModel
+public class EdicionUsuarioViewModel : IValidatableObject
 {
-    // estos datos se muestran pero no se editan: el servicio nunca los lee del formulario
     public TipoUsuario TipoUsuario { get; set; }
 
+    [StringLength(100, ErrorMessage = "Máximo 100 caracteres.")]
     public string? Nombre { get; set; }
 
+    [StringLength(100, ErrorMessage = "Máximo 100 caracteres.")]
     public string? Apellido { get; set; }
 
     [Display(Name = "Razón social")]
+    [StringLength(150, ErrorMessage = "Máximo 150 caracteres.")]
     public string? RazonSocial { get; set; }
 
     public TipoDocumento TipoDocumento { get; set; }
 
     [Display(Name = "Número de documento")]
     public string NroDocumento { get; set; } = string.Empty;
+
+    public DateTime FechaAlta { get; set; }
 
     [Display(Name = "Dirección")]
     [StringLength(200, ErrorMessage = "Máximo 200 caracteres.")]
@@ -29,8 +33,25 @@ public class EdicionUsuarioViewModel
     public string? Telefono { get; set; }
 
     [Display(Name = "Correo electrónico")]
-    [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
-    [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
-    [StringLength(254, ErrorMessage = "Máximo 254 caracteres.")]
     public string CorreoElectronico { get; set; } = string.Empty;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (TipoUsuario == TipoUsuario.Persona)
+        {
+            if (string.IsNullOrWhiteSpace(Nombre))
+            {
+                yield return new ValidationResult("El nombre es obligatorio.", [nameof(Nombre)]);
+            }
+
+            if (string.IsNullOrWhiteSpace(Apellido))
+            {
+                yield return new ValidationResult("El apellido es obligatorio.", [nameof(Apellido)]);
+            }
+        }
+        else if (string.IsNullOrWhiteSpace(RazonSocial))
+        {
+            yield return new ValidationResult("La razón social es obligatoria.", [nameof(RazonSocial)]);
+        }
+    }
 }

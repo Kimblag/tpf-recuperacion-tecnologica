@@ -1,0 +1,85 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.EdicionUsuarioViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Mi perfil";
+
+    var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Mi perfil</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Mi perfil</h1></div>
+            <p class="page-sub">Datos personales y de contacto</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="Editar"><partial name="_Icon" model="@("edit")" /><span>Editar perfil</span></a>
+        </div>
+    </div>
+
+    <section class="card" aria-labelledby="titulo-personales">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="titulo-personales">@(esPersona ? "Datos personales" : "Datos de la institución")</h2>
+                <p class="card-sub">Identifican la cuenta</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="dl">
+                <dt>@(esPersona ? "Documento (DNI)" : "CUIT")</dt>
+                <dd><span class="mono">@Model.NroDocumento</span></dd>
+                @if (esPersona)
+                {
+                    <dt>Nombre</dt>
+                    <dd>@Model.Nombre</dd>
+                    <dt>Apellido</dt>
+                    <dd>@Model.Apellido</dd>
+                }
+                else
+                {
+                    <dt>Razón social</dt>
+                    <dd>@Model.RazonSocial</dd>
+                }
+                <dt>Con cuenta desde</dt>
+                <dd>@Model.FechaAlta.ToString("dd/MM/yyyy")</dd>
+            </dl>
+        </div>
+    </section>
+
+    <section class="card" aria-labelledby="titulo-contacto">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="titulo-contacto">Datos de contacto</h2>
+                <p class="card-sub">Sirven para comunicarse y para iniciar sesión</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="dl">
+                <dt>Correo electrónico</dt>
+                <dd>@Model.CorreoElectronico</dd>
+                <dt>Teléfono</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
+                <dt>Dirección</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Direccion) ? "—" : Model.Direccion)</dd>
+            </dl>
+        </div>
+    </section>
+
+    <section class="card border-danger" aria-labelledby="titulo-peligro">
+        <div class="card-header">
+            <div><h2 class="card-title text-danger" id="titulo-peligro">Zona de peligro</h2></div>
+        </div>
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="min-w-0">
+                <p class="fw-semibold mb-1">Dar de baja la cuenta</p>
+                <p class="form-text mb-0">La baja es permanente y solo se puede hacer si no hay donaciones ni solicitudes en curso.</p>
+            </div>
+            <a class="btn btn-secondary text-danger border-danger" asp-action="Baja"><partial name="_Icon" model="@("ban")" /><span>Dar de baja la cuenta</span></a>
+        </div>
+    </section>
+</div>

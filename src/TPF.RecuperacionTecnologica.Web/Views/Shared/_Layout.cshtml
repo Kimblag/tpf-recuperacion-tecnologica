@@ -100,7 +100,10 @@
                             <partial name="_Icon" model="@("chevrons")" />
                         </button>
                         <ul class="dropdown-menu w-100 profile-menu">
-                            <li><a class="dropdown-item" href="#"><partial name="_Icon" model="@("user")" />Mi perfil</a></li>
+                            @if (User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
+                            {
+                                <li><a class="dropdown-item" asp-controller="Usuarios" asp-action="Perfil"><partial name="_Icon" model="@("user")" />Mi perfil</a></li>
+                            }
                             <li>
                                 <form asp-controller="Cuenta" asp-action="Logout" method="post">
                                     <button type="submit" class="dropdown-item"><partial name="_Icon" model="@("logout")" />Cerrar sesión</button>
