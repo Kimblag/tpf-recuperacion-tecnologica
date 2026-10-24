@@ -1,12 +1,18 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.RegistroDonacionAsistidaViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
 @{
     ViewData["Title"] = "Registrar donación asistida";
     ViewData["FormularioId"] = "f-donacion-asistida";
 
-    ViewData["Donante"] = "La persona seleccionada arriba";
-    ViewData["AyudaDonante"] = "Se completa con el usuario elegido en la sección anterior.";
-    ViewData["NroEquipo"] = "Se asigna al registrar";
-    ViewData["AyudaNroEquipo"] = "Se asigna automáticamente al registrar.";
+    var donante = Model.Usuario.Modo == ModoUsuarioAsistido.Existente
+        ? (Model.Usuario.Encontrado?.Nombre ?? string.Empty)
+        : (Model.Usuario.TipoUsuario == TipoUsuario.Persona
+            ? $"{Model.Usuario.Nombre} {Model.Usuario.Apellido}".Trim()
+            : Model.Usuario.RazonSocial?.Trim() ?? string.Empty);
+
+    ViewData["Donante"] = string.IsNullOrWhiteSpace(donante) ? "Todavía no se eligió a la persona donante" : donante;
+    ViewData["AyudaDonante"] = "Es la persona elegida en la sección anterior.";
     ViewData["Fecha"] = DateTime.Today.ToString("dd/MM/yyyy");
 }
 
@@ -28,7 +34,7 @@
         <partial name="_Icon" model="@("info")" />
         <div class="alert-body">
             <div class="alert-title">Esta donación se registra en nombre de la persona donante</div>
-            <div>Si todavía no tiene cuenta, se puede abrir una en este mismo paso, con sus datos completos.</div>
+            <div>Si todavía no tiene cuenta, se abre una en este mismo paso con sus datos completos y se le envía una invitación por correo para que defina su contraseña.</div>
         </div>
     </div>
 
@@ -67,8 +73,7 @@
         </div>
         <div class="form-actions">
             <a class="btn btn-secondary btn-lg" asp-action="Gestion">Cancelar</a>
-            @* TODO: habilitar el registro cuando exista la donación asistida *@
-            <button type="submit" class="btn btn-primary btn-lg" disabled>Registrar donación</button>
+            <button type="submit" class="btn btn-primary btn-lg">Registrar donación</button>
         </div>
     </form>
 </div>
