@@ -5,6 +5,8 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
@@ -14,15 +16,21 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 public class DonacionService : IDonacionService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IUsuarioService _usuarioService;
+    private readonly ICuentaService _cuentaService;
     private readonly IAuditoriaService _auditoriaService;
     private readonly ILogger<DonacionService> _logger;
 
     public DonacionService(
         ApplicationDbContext context,
+        IUsuarioService usuarioService,
+        ICuentaService cuentaService,
         IAuditoriaService auditoriaService,
         ILogger<DonacionService> logger)
     {
         _context = context;
+        _usuarioService = usuarioService;
+        _cuentaService = cuentaService;
         _auditoriaService = auditoriaService;
         _logger = logger;
     }
@@ -54,6 +62,19 @@ public class DonacionService : IDonacionService
         };
     }
 
+    private static Equipo NuevoEquipo(int nroUsuarioDonante, RegistroDonacionViewModel modelo) => new()
+    {
+        NroUsuarioDonante = nroUsuarioDonante,
+        TipoEquipo = modelo.TipoEquipo!.Value,
+        Marca = modelo.Marca.Trim(),
+        Modelo = modelo.Modelo.Trim(),
+        EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value,
+        Observaciones = TextoOpcional(modelo.Observaciones),
+        EspecificacionesDeclaradas = EspecificacionesDelTipo(modelo.TipoEquipo!.Value, modelo),
+        EstadoEquipo = EstadoEquipo.PendienteRecepcion,
+        FechaRegistro = DateTime.UtcNow
+    };
+
     public async Task<int?> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo)
     {
         // solo dona un Usuario activo; el Personal no tiene ficha de Usuario
@@ -67,18 +88,7 @@ public class DonacionService : IDonacionService
             return null;
         }
 
-        var equipo = new Equipo
-        {
-            NroUsuarioDonante = nroUsuario.Value,
-            TipoEquipo = modelo.TipoEquipo!.Value,
-            Marca = modelo.Marca.Trim(),
-            Modelo = modelo.Modelo.Trim(),
-            EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value,
-            Observaciones = TextoOpcional(modelo.Observaciones),
-            EspecificacionesDeclaradas = EspecificacionesDelTipo(modelo.TipoEquipo!.Value, modelo),
-            EstadoEquipo = EstadoEquipo.PendienteRecepcion,
-            FechaRegistro = DateTime.UtcNow
-        };
+        var equipo = NuevoEquipo(nroUsuario.Value, modelo);
 
         _context.Equipos.Add(equipo);
         await _context.SaveChangesAsync();
@@ -96,6 +106,138 @@ public class DonacionService : IDonacionService
         }
 
         return equipo.NroEquipo;
+    }
+
+    private static bool EsViolacionDeUnicidad(DbUpdateException ex) =>
+        ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 };
+
+    private async Task AuditarAsistidaAsync(
+        TipoOperacionAuditoria tipo, int codigoPersonal, string entidad, int id, string detalle)
+    {
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(tipo, codigoPersonal, entidad, id, detalle);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar el evento {Tipo} de la entidad {Entidad} {Id}", tipo, entidad, id);
+        }
+    }
+
+    public async Task<ResultadoRegistroDonacion> RegistrarAsistidaAsync(
+        string identityUserIdCoordinador, RegistroDonacionAsistidaViewModel modelo,
+        Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud)
+    {
+        var codigoCoordinador = await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.IdentityUserId == identityUserIdCoordinador
+                && p.RolAsignado == RolPersonal.Coordinador
+                && p.EstadoPersonal == EstadoPersonal.Activo)
+            .Select(p => (int?)p.CodigoPersonal)
+            .FirstOrDefaultAsync();
+
+        if (codigoCoordinador is null)
+        {
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.CoordinadorNoHabilitado,
+                "La cuenta no está habilitada para registrar donaciones asistidas.");
+        }
+
+        return modelo.Usuario.Modo == ModoUsuarioAsistido.Existente
+            ? await RegistrarAsistidaParaExistenteAsync(codigoCoordinador.Value, modelo)
+            : await RegistrarAsistidaParaNuevoAsync(codigoCoordinador.Value, modelo, construirRutaInvitacion, urlBaseSolicitud);
+    }
+
+    private async Task<ResultadoRegistroDonacion> RegistrarAsistidaParaExistenteAsync(
+        int codigoCoordinador, RegistroDonacionAsistidaViewModel modelo)
+    {
+        var donante = await _context.Usuarios
+            .AsNoTracking()
+            .Where(u => u.NroUsuario == modelo.Usuario.NroUsuario)
+            .Select(u => new { u.NroUsuario, u.EstadoUsuario })
+            .FirstOrDefaultAsync();
+
+        if (donante is null || donante.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.UsuarioNoHabilitado,
+                "El usuario no existe o no está activo, por eso no se puede registrar una donación a su nombre.");
+        }
+
+        var equipo = NuevoEquipo(donante.NroUsuario, modelo);
+        _context.Equipos.Add(equipo);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló el registro asistido de la donación del Usuario {NroUsuario}", donante.NroUsuario);
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.Fallido,
+                "No se pudo registrar la donación. Intentar nuevamente.");
+        }
+
+        await AuditarAsistidaAsync(TipoOperacionAuditoria.Donacion, codigoCoordinador, nameof(Equipo),
+            equipo.NroEquipo, $"Donación asistida de equipo ({equipo.TipoEquipo})");
+
+        return ResultadoRegistroDonacion.Ok(equipo.NroEquipo);
+    }
+
+    private async Task<ResultadoRegistroDonacion> RegistrarAsistidaParaNuevoAsync(
+        int codigoCoordinador, RegistroDonacionAsistidaViewModel modelo,
+        Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud)
+    {
+        string identityUserId;
+        Usuario usuario;
+        Equipo equipo;
+
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var alta = await _usuarioService.AltaAsistidaAsync(modelo.Usuario);
+
+            if (!alta.Exitoso)
+            {
+                return alta.YaExiste
+                    ? ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.UsuarioYaExiste, alta.Mensaje!)
+                    : ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.Fallido, alta.Mensaje ?? "No se pudo crear la cuenta de la persona.");
+            }
+
+            usuario = alta.Usuario!;
+            identityUserId = alta.IdentityUserId!;
+
+            equipo = NuevoEquipo(usuario.NroUsuario, modelo);
+            _context.Equipos.Add(equipo);
+            await _context.SaveChangesAsync();
+
+            await transaccion.CommitAsync();
+        }
+        catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
+        {
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.UsuarioYaExiste, ResultadoAltaAsistida.MensajeYaExiste);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló el alta asistida del donante y su donación; se revirtió la transacción");
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.Fallido,
+                "No se pudo completar el registro. No se guardó nada. Intentar nuevamente.");
+        }
+
+        await AuditarAsistidaAsync(TipoOperacionAuditoria.AltaUsuario, codigoCoordinador, nameof(Usuario),
+            usuario.NroUsuario, $"Alta asistida de usuario ({usuario.TipoUsuario})");
+        await AuditarAsistidaAsync(TipoOperacionAuditoria.Donacion, codigoCoordinador, nameof(Equipo),
+            equipo.NroEquipo, $"Donación asistida de equipo ({equipo.TipoEquipo})");
+
+        try
+        {
+            await _cuentaService.EnviarInvitacionAsync(identityUserId, construirRutaInvitacion, urlBaseSolicitud);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo enviar la invitación al Usuario {NroUsuario}", usuario.NroUsuario);
+        }
+
+        return ResultadoRegistroDonacion.Ok(equipo.NroEquipo);
     }
 
     public async Task<EdicionDonacionViewModel?> ObtenerParaEdicionAsync(string identityUserId, int nroEquipo)

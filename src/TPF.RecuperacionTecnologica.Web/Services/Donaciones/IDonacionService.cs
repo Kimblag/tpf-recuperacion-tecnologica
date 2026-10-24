@@ -15,6 +15,10 @@ public interface IDonacionService
     /// <returns>El Número de Equipo generado, o null si la cuenta no corresponde a un Usuario activo.</returns>
     Task<int?> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo);
 
+    Task<ResultadoRegistroDonacion> RegistrarAsistidaAsync(
+        string identityUserIdCoordinador, RegistroDonacionAsistidaViewModel modelo,
+        Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud);
+
     /// <summary>
     /// Devuelve los datos de una donación para editarla.
     /// </summary>

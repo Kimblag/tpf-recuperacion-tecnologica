@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
@@ -14,13 +15,18 @@ public class DonacionesController : Controller
 {
     private readonly IDonacionService _donacionService;
     private readonly IPersonalService _personalService;
+    private readonly IUsuarioService _usuarioService;
     private readonly ILogger<DonacionesController> _logger;
 
     public DonacionesController(
-        IDonacionService donacionService, IPersonalService personalService, ILogger<DonacionesController> logger)
+        IDonacionService donacionService,
+        IPersonalService personalService,
+        IUsuarioService usuarioService,
+        ILogger<DonacionesController> logger)
     {
         _donacionService = donacionService;
         _personalService = personalService;
+        _usuarioService = usuarioService;
         _logger = logger;
     }
 
@@ -29,18 +35,90 @@ public class DonacionesController : Controller
     public async Task<IActionResult> RegistrarAsistida(ModoUsuarioAsistido modo, TipoUsuario tipoUsuario, string? busqueda)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var codigoPersonal = identityUserId is null ? null : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
-        var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
 
         var formulario = new RegistroDonacionAsistidaViewModel
         {
-            Usuario = new SelectorUsuarioViewModel { Modo = modo, TipoUsuario = tipoUsuario, Busqueda = busqueda?.Trim() },
-            Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}"
+            Usuario = new SelectorUsuarioViewModel { Modo = modo, TipoUsuario = tipoUsuario, Busqueda = busqueda?.Trim() }
         };
 
-        UsuariosDeEjemplo.Buscar(formulario.Usuario);
+        await CompletarFormularioAsistidoAsync(formulario, identityUserId);
+
+        if (modo == ModoUsuarioAsistido.Existente && !string.IsNullOrWhiteSpace(formulario.Usuario.Busqueda))
+        {
+            var encontrado = await _usuarioService.BuscarPorDocumentoOCorreoAsync(formulario.Usuario.Busqueda);
+
+            AplicarUsuarioEncontrado(formulario.Usuario, encontrado);
+            formulario.Usuario.BusquedaRealizada = true;
+        }
 
         return View(formulario);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> RegistrarAsistida(
+        [Bind("Usuario,TipoEquipo,Marca,Modelo,EstadoInicialDeclarado,Observaciones,Procesador,MemoriaRam,Almacenamiento,TamanoPantalla,EstadoBateria,Otros")]
+        RegistroDonacionAsistidaViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        if (ModelState.IsValid)
+        {
+            var resultado = await _donacionService.RegistrarAsistidaAsync(
+                identityUserId,
+                formulario,
+                (idUsuario, token) => Url.Action("RestablecerContrasena", "Cuenta", new { idUsuario, token })!,
+                $"{Request.Scheme}://{Request.Host}");
+
+            if (resultado.Exitoso)
+            {
+                TempData["Mensaje"] = formulario.Usuario.Modo == ModoUsuarioAsistido.Nuevo
+                    ? $"La donación asistida se registró y se envió una invitación a {formulario.Usuario.CorreoElectronico!.Trim()} para que la persona defina su contraseña. Estado: Pendiente de recepción."
+                    : "La donación asistida se registró correctamente. Estado: Pendiente de recepción.";
+
+                return RedirectToAction(nameof(Gestion));
+            }
+
+            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+        }
+
+        await CompletarFormularioAsistidoAsync(formulario, identityUserId);
+
+        if (formulario.Usuario.Modo == ModoUsuarioAsistido.Existente && formulario.Usuario.NroUsuario is not null)
+        {
+            var encontrado = await _usuarioService.ObtenerUsuarioEncontradoAsync(formulario.Usuario.NroUsuario.Value);
+
+            AplicarUsuarioEncontrado(formulario.Usuario, encontrado);
+            formulario.Usuario.BusquedaRealizada = true;
+            ModelState.Remove("Usuario.NroUsuario");
+        }
+
+        return View(formulario);
+    }
+
+    private async Task CompletarFormularioAsistidoAsync(RegistroDonacionAsistidaViewModel formulario, string identityUserId)
+    {
+        var codigoPersonal = await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+        var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+
+        formulario.Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}";
+    }
+
+    private static void AplicarUsuarioEncontrado(SelectorUsuarioViewModel selector, UsuarioEncontradoViewModel? encontrado)
+    {
+        selector.Encontrado = encontrado;
+        selector.NroUsuario = encontrado is { EstadoUsuario: EstadoUsuario.Activo } ? encontrado.NroUsuario : null;
     }
 
     [HttpGet]
