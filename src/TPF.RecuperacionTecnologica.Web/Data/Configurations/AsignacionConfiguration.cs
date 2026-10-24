@@ -34,9 +34,16 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
         builder.Property(a => a.FechaAsignacion)
             .HasDefaultValueSql("SYSUTCDATETIME()");
 
-        builder.ToTable(t => t.HasCheckConstraint(
-            "CK_Asignacion_FechaLiberacion_Coherente",
-            "[FechaLiberacion] IS NULL OR [FechaLiberacion] >= [FechaAsignacion]"));
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint(
+                "CK_Asignacion_FechaLiberacion_Coherente",
+                "[FechaLiberacion] IS NULL OR [FechaLiberacion] >= [FechaAsignacion]");
+
+            t.HasCheckConstraint(
+                "CK_Asignacion_FechaLimiteRetiro_Coherente",
+                "[FechaLimiteRetiro] >= [FechaAsignacion]");
+        });
 
         builder.Property(a => a.RowVersion)
             .IsRowVersion();

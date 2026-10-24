@@ -243,6 +243,9 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.Property<DateTime?>("FechaLiberacion")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("FechaLimiteRetiro")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("FechaUltimaModificacion")
                         .HasColumnType("datetime2");
 
@@ -277,6 +280,8 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.ToTable("Asignaciones", t =>
                         {
                             t.HasCheckConstraint("CK_Asignacion_FechaLiberacion_Coherente", "[FechaLiberacion] IS NULL OR [FechaLiberacion] >= [FechaAsignacion]");
+
+                            t.HasCheckConstraint("CK_Asignacion_FechaLimiteRetiro_Coherente", "[FechaLimiteRetiro] >= [FechaAsignacion]");
                         });
                 });
 

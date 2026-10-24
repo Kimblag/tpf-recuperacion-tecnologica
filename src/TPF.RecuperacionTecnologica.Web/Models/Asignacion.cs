@@ -19,6 +19,7 @@ public class Asignacion
     public Personal Coordinador { get; set; } = null!;
 
     public DateTime FechaAsignacion { get; set; }
+    public DateTime FechaLimiteRetiro { get; set; }
 
     public DateTime? FechaUltimaModificacion { get; set; }
 
