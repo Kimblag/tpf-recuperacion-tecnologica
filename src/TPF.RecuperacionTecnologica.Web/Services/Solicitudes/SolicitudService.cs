@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
@@ -15,6 +16,10 @@ public class SolicitudService : ISolicitudService
 
     private const string MensajeUsuarioNoHabilitado = "La cuenta no está habilitada para registrar solicitudes.";
     private const string MensajeSolicitudDuplicada = "Esta cuenta ya tiene una solicitud pendiente para este equipo. Su estado se puede ver en Mis solicitudes.";
+    private const string MotivoCancelacionSolicitante = "Cancelada por la persona solicitante.";
+
+    private static IdentityResult Fallo(string codigo, string descripcion) =>
+        IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
     private readonly ApplicationDbContext _context;
     private readonly IAuditoriaService _auditoriaService;
@@ -162,5 +167,117 @@ public class SolicitudService : ISolicitudService
         }
 
         return ResultadoRegistroSolicitud.Ok(solicitud.NroSolicitud);
+    }
+
+    public async Task<IdentityResult> EditarMotivoAsync(string identityUserId, int nroSolicitud, string motivo)
+    {
+        var solicitud = await _context.Solicitudes
+            .FirstOrDefaultAsync(s => s.NroSolicitud == nroSolicitud
+                && s.Usuario.IdentityUserId == identityUserId
+                && s.Usuario.EstadoUsuario == EstadoUsuario.Activo);
+
+        if (solicitud is null)
+        {
+            return Fallo("SolicitudNoEncontrada", "No se encontró la solicitud.");
+        }
+
+        if (solicitud.EstadoSolicitud != EstadoSolicitud.Pendiente)
+        {
+            return Fallo("SolicitudNoEditable",
+                "La solicitud ya no puede editarse porque dejó de estar Pendiente.");
+        }
+
+        var motivoNuevo = motivo.Trim();
+
+        if (motivoNuevo == solicitud.MotivoSolicitud)
+        {
+            return IdentityResult.Success;
+        }
+
+        solicitud.MotivoSolicitud = motivoNuevo;
+        solicitud.FechaUltimaModificacion = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Fallo("SolicitudModificada",
+                "La solicitud cambió mientras se editaba. Volver a abrirla e intentar nuevamente.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la edición del motivo de la Solicitud {NroSolicitud}", nroSolicitud);
+            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentar nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.Solicitud, null, nameof(Solicitud), solicitud.NroSolicitud,
+                "Edición del motivo de la solicitud");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la edición de la Solicitud {NroSolicitud}", nroSolicitud);
+        }
+
+        return IdentityResult.Success;
+    }
+
+    public async Task<IdentityResult> CancelarAsync(string identityUserId, int nroSolicitud)
+    {
+        var solicitud = await _context.Solicitudes
+            .FirstOrDefaultAsync(s => s.NroSolicitud == nroSolicitud
+                && s.Usuario.IdentityUserId == identityUserId
+                && s.Usuario.EstadoUsuario == EstadoUsuario.Activo);
+
+        if (solicitud is null)
+        {
+            return Fallo("SolicitudNoEncontrada", "No se encontró la solicitud.");
+        }
+
+        if (solicitud.EstadoSolicitud != EstadoSolicitud.Pendiente)
+        {
+            return Fallo("SolicitudNoCancelable",
+                "La solicitud ya no puede cancelarse porque fue asignada o cambió de estado.");
+        }
+
+        var ahora = DateTime.UtcNow;
+
+        solicitud.EstadoSolicitud = EstadoSolicitud.Cancelada;
+        solicitud.FechaCancelacion = ahora;
+        solicitud.FechaCierre = ahora;
+        solicitud.MotivoCancelacion = MotivoCancelacionSolicitante;
+        solicitud.FechaUltimaModificacion = ahora;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Fallo("SolicitudModificada",
+                "La solicitud cambió mientras se cancelaba. Volver a abrirla e intentar nuevamente.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la cancelación de la Solicitud {NroSolicitud}", nroSolicitud);
+            return Fallo("CancelacionFallida", "No se pudo cancelar la solicitud. Intentar nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.Solicitud, null, nameof(Solicitud), solicitud.NroSolicitud,
+                "Cancelación de solicitud");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la cancelación de la Solicitud {NroSolicitud}", nroSolicitud);
+        }
+
+        return IdentityResult.Success;
     }
 }
