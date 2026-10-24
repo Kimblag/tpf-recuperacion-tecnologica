@@ -180,9 +180,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 Fecha = solicitud.FechaCancelacion,
                 Icono = "x",
                 Estado = EstadoHito.Cancelado,
-                Texto = string.IsNullOrWhiteSpace(solicitud.MotivoCancelacion)
-                    ? "Cancelada por la persona solicitante."
-                    : $"Cancelada por la persona solicitante. Motivo: {solicitud.MotivoCancelacion}"
+                Texto = "Cancelada por la persona solicitante."
             });
 
             return hitos;
@@ -244,5 +242,47 @@ public class SolicitudConsultaService : ISolicitudConsultaService
         }
 
         return hitos;
+    }
+
+    public async Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionPropiaAsync(string identityUserId, int nroSolicitud)
+    {
+        var datos = await _context.Solicitudes
+            .AsNoTracking()
+            .Where(s => s.NroSolicitud == nroSolicitud && s.Usuario.IdentityUserId == identityUserId)
+            .Select(s => new
+            {
+                s.NroEquipoRequerido,
+                s.EquipoRequerido.TipoEquipo,
+                s.EquipoRequerido.Marca,
+                s.EquipoRequerido.Modelo,
+                s.TipoSolicitante,
+                s.MotivoSolicitud,
+                s.OrigenSolicitud,
+                s.FechaSolicitud,
+                s.EstadoSolicitud,
+                s.Usuario.RazonSocial,
+                s.Usuario.Nombre,
+                s.Usuario.Apellido
+            })
+            .FirstOrDefaultAsync();
+
+        if (datos is null)
+        {
+            return null;
+        }
+
+        return new EditarMotivoSolicitudViewModel
+        {
+            NroSolicitud = nroSolicitud,
+            MotivoSolicitud = datos.MotivoSolicitud,
+            NroEquipo = datos.NroEquipoRequerido,
+            TipoEquipo = datos.TipoEquipo,
+            MarcaYModelo = $"{datos.Marca} {datos.Modelo}",
+            Solicitante = NombreSolicitante(datos.RazonSocial, datos.Nombre, datos.Apellido),
+            TipoSolicitante = datos.TipoSolicitante,
+            OrigenSolicitud = datos.OrigenSolicitud,
+            FechaSolicitud = datos.FechaSolicitud,
+            EstadoSolicitud = datos.EstadoSolicitud
+        };
     }
 }

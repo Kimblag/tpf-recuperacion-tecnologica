@@ -10,4 +10,6 @@ public interface ISolicitudConsultaService
         string identityUserId, string? busqueda, EstadoSolicitud? estado, int pagina, int tamanoPagina);
 
     Task<SolicitudDetalleViewModel?> ObtenerDetallePropioAsync(string identityUserId, int nroSolicitud);
+
+    Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionPropiaAsync(string identityUserId, int nroSolicitud);
 }

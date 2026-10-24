@@ -11,11 +11,10 @@
                 <p>Se va a cancelar la solicitud <span class="mono">@Model.Codigo</span> del equipo @Model.MarcaYModelo.</p>
                 <p>Esta acción no se puede deshacer. Se puede hacer una nueva solicitud cuando se quiera.</p>
             </div>
-            <div class="modal-footer">
+            <form class="modal-footer" method="post" asp-action="Cancelar" asp-route-id="@Model.NroSolicitud">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
-                @* TODO: habilitar la confirmación cuando exista la cancelación de solicitudes (#120) *@
-                <button type="button" class="btn btn-danger" disabled>Cancelar solicitud</button>
-            </div>
+                <button type="submit" class="btn btn-danger">Cancelar solicitud</button>
+            </form>
         </div>
     </div>
 </div>
