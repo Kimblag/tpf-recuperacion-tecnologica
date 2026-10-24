@@ -51,13 +51,43 @@
             return envoltorio;
         }
 
+        function construirTarjetas() {
+            var rejilla = document.createElement('div');
+            rejilla.className = 'cat-grid';
+
+            for (var indice = 0; indice < filas; indice++) {
+                var tarjeta = document.createElement('div');
+                tarjeta.className = 'eq-card';
+
+                var imagen = document.createElement('div');
+                imagen.className = 'eq-media';
+
+                var cuerpoTarjeta = document.createElement('div');
+                cuerpoTarjeta.className = 'eq-body';
+
+                [40, 85, 60].forEach(function (ancho) {
+                    var barra = document.createElement('span');
+                    barra.className = 'skel';
+                    barra.style.width = ancho + '%';
+                    cuerpoTarjeta.appendChild(barra);
+                });
+
+                tarjeta.append(imagen, cuerpoTarjeta);
+                rejilla.appendChild(tarjeta);
+            }
+
+            return rejilla;
+        }
+
         function mostrarCarga() {
             temporizador = null;
 
             if (original !== null) return;
 
+            var esquema = listado.hasAttribute('data-tarjetas') ? construirTarjetas() : construirTabla();
+
             original = cuerpo.innerHTML;
-            cuerpo.replaceChildren(construirTabla(), plantillaNota.content.cloneNode(true));
+            cuerpo.replaceChildren(esquema, plantillaNota.content.cloneNode(true));
             listado.setAttribute('aria-busy', 'true');
         }
 

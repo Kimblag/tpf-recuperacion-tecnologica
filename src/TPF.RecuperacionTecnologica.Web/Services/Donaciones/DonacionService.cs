@@ -515,29 +515,77 @@ public class DonacionService : IDonacionService
     }
 
 
-    public async Task<IReadOnlyList<EquipoDisponibleViewModel>> ObtenerDisponiblesAsync(TipoEquipo? tipo)
+    public async Task<ResultadoCatalogo> ObtenerDisponiblesAsync(
+    string? busqueda, string? marca, TipoEquipo? tipo, OrdenCatalogo orden, int pagina, int tamanoPagina)
     {
-        var consulta = _context.Equipos
+        var disponibles = _context.Equipos
             .AsNoTracking()
-            .Where(e => e.EstadoEquipo == EstadoEquipo.Disponible);
+            .Where(e => e.EstadoEquipo == EstadoEquipo.Disponible)
+            .Join(_context.Diagnosticos.Where(d => d.EsVigente),
+                e => e.NroEquipo, d => d.NroEquipo,
+                (e, d) => new { Equipo = e, Diagnostico = d });
+
+        var totalDisponibles = await disponibles.CountAsync();
+
+        var marcas = await disponibles
+            .Select(x => x.Equipo.Marca)
+            .Distinct()
+            .OrderBy(m => m)
+            .ToListAsync();
+
+        var consulta = disponibles;
 
         if (tipo is not null)
         {
-            consulta = consulta.Where(e => e.TipoEquipo == tipo);
+            consulta = consulta.Where(x => x.Equipo.TipoEquipo == tipo);
         }
 
-        // el catálogo muestra lo que verificó el técnico, nunca lo declarado por el donante
-        return await consulta
-            .Join(_context.Diagnosticos.Where(d => d.EsVigente),
-                e => e.NroEquipo, d => d.NroEquipo,
-                (e, d) => new { Equipo = e, Diagnostico = d })
-            .OrderBy(x => x.Equipo.NroEquipo)
+        if (!string.IsNullOrWhiteSpace(marca))
+        {
+            consulta = consulta.Where(x => x.Equipo.Marca == marca);
+        }
+
+        var texto = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(texto))
+        {
+            var esNumero = int.TryParse(texto, out var nroEquipo);
+
+            consulta = consulta.Where(x =>
+                (esNumero && x.Equipo.NroEquipo == nroEquipo)
+                || x.Equipo.Marca.Contains(texto)
+                || x.Equipo.Modelo.Contains(texto)
+                || (x.Diagnostico.EspecificacionesVerificadas.Procesador != null && x.Diagnostico.EspecificacionesVerificadas.Procesador.Contains(texto))
+                || (x.Diagnostico.EspecificacionesVerificadas.MemoriaRam != null && x.Diagnostico.EspecificacionesVerificadas.MemoriaRam.Contains(texto))
+                || (x.Diagnostico.EspecificacionesVerificadas.Almacenamiento != null && x.Diagnostico.EspecificacionesVerificadas.Almacenamiento.Contains(texto))
+                || (x.Diagnostico.EspecificacionesVerificadas.TamanoPantalla != null && x.Diagnostico.EspecificacionesVerificadas.TamanoPantalla.Contains(texto))
+                || (x.Diagnostico.EspecificacionesVerificadas.EstadoBateria != null && x.Diagnostico.EspecificacionesVerificadas.EstadoBateria.Contains(texto))
+                || (x.Diagnostico.EspecificacionesVerificadas.Otros != null && x.Diagnostico.EspecificacionesVerificadas.Otros.Contains(texto)));
+        }
+
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        var ordenada = orden switch
+        {
+            OrdenCatalogo.Antiguos => consulta.OrderBy(x => x.Equipo.FechaDisponibilidad),
+            OrdenCatalogo.MarcaAsc => consulta.OrderBy(x => x.Equipo.Marca).ThenBy(x => x.Equipo.Modelo),
+            OrdenCatalogo.MarcaDesc => consulta.OrderByDescending(x => x.Equipo.Marca).ThenByDescending(x => x.Equipo.Modelo),
+            _ => consulta.OrderByDescending(x => x.Equipo.FechaDisponibilidad)
+        };
+
+        var elementos = await ordenada
+            .ThenBy(x => x.Equipo.NroEquipo)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
             .Select(x => new EquipoDisponibleViewModel
             {
                 NroEquipo = x.Equipo.NroEquipo,
                 TipoEquipo = x.Equipo.TipoEquipo,
                 Marca = x.Equipo.Marca,
                 Modelo = x.Equipo.Modelo,
+                FechaDisponibilidad = x.Equipo.FechaDisponibilidad,
                 Procesador = x.Diagnostico.EspecificacionesVerificadas.Procesador,
                 MemoriaRam = x.Diagnostico.EspecificacionesVerificadas.MemoriaRam,
                 Almacenamiento = x.Diagnostico.EspecificacionesVerificadas.Almacenamiento,
@@ -548,9 +596,21 @@ public class DonacionService : IDonacionService
                     .Where(i => i.NroEquipo == x.Equipo.NroEquipo)
                     .OrderBy(i => i.FechaCarga)
                     .Select(i => i.UrlImagen)
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
+                CantidadImagenes = _context.ImagenesEquipo.Count(i => i.NroEquipo == x.Equipo.NroEquipo),
+                SolicitudesEnEspera = _context.Solicitudes.Count(s =>
+                    s.NroEquipoRequerido == x.Equipo.NroEquipo && s.EstadoSolicitud == EstadoSolicitud.Pendiente)
             })
             .ToListAsync();
+
+        return new ResultadoCatalogo
+        {
+            Elementos = elementos,
+            Total = total,
+            Pagina = pagina,
+            TotalDisponibles = totalDisponibles,
+            Marcas = marcas
+        };
     }
 
     public async Task<EquipoCatalogoDetalleViewModel?> ObtenerDetalleDisponibleAsync(int nroEquipo)
@@ -569,6 +629,10 @@ public class DonacionService : IDonacionService
                 Marca = x.Equipo.Marca,
                 Modelo = x.Equipo.Modelo,
                 FechaDisponibilidad = x.Equipo.FechaDisponibilidad,
+                FechaRevision = x.Diagnostico.FechaDiagnostico,
+                DictamenTecnico = x.Diagnostico.DictamenTecnico,
+                SolicitudesEnEspera = _context.Solicitudes.Count(s =>
+                    s.NroEquipoRequerido == x.Equipo.NroEquipo && s.EstadoSolicitud == EstadoSolicitud.Pendiente),
                 Procesador = x.Diagnostico.EspecificacionesVerificadas.Procesador,
                 MemoriaRam = x.Diagnostico.EspecificacionesVerificadas.MemoriaRam,
                 Almacenamiento = x.Diagnostico.EspecificacionesVerificadas.Almacenamiento,

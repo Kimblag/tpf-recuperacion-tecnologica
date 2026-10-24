@@ -77,11 +77,15 @@ public interface IDonacionService
     Task<IdentityResult> CancelarAsync(string identityUserId, int nroEquipo);
 
     /// <summary>
-    /// Lista los equipos Disponibles para el catálogo, con filtro opcional por tipo.
+    /// Lista los equipos Disponibles para el catálogo, con búsqueda, filtro por marca y tipo, orden y paginación.
     /// Las características son las verificadas en el diagnóstico vigente, no las declaradas por el donante.
     /// </summary>
-    /// <returns>Los equipos disponibles, vacía si ninguno cumple el filtro.</returns>
-    Task<IReadOnlyList<EquipoDisponibleViewModel>> ObtenerDisponiblesAsync(TipoEquipo? tipo);
+    /// <returns>
+    /// La página pedida, ajustada al rango válido, junto con el total de equipos disponibles sin filtrar
+    /// y las marcas disponibles para el filtro.
+    /// </returns>
+    Task<ResultadoCatalogo> ObtenerDisponiblesAsync(
+        string? busqueda, string? marca, TipoEquipo? tipo, OrdenCatalogo orden, int pagina, int tamanoPagina);
 
     /// <summary>
     /// Devuelve el detalle de un equipo Disponible para el catálogo, con sus características verificadas y sus imágenes.
