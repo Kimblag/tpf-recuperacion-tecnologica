@@ -11,5 +11,11 @@ public interface ISolicitudConsultaService
 
     Task<SolicitudDetalleViewModel?> ObtenerDetallePropioAsync(string identityUserId, int nroSolicitud);
 
+    Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarTodasAsync(
+        string? busqueda, TipoSolicitante? tipo, OrigenSolicitud? origen, EstadoSolicitud? estado,
+        int pagina, int tamanoPagina);
+
+    Task<SolicitudDetalleViewModel?> ObtenerDetalleInternoAsync(int nroSolicitud);
+
     Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionPropiaAsync(string identityUserId, int nroSolicitud);
 }

@@ -58,7 +58,7 @@
                     <dt>Equipo solicitado</dt>
                     <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
                     <dt>Solicitante</dt>
-                    <dd>@Model.Solicitante</dd>
+                    <dd>@Model.Solicitante<div class="card-sub">@Html.DisplayFor(m => m.TipoCuenta) · @Model.CorreoSolicitante</div></dd>
                     <dt>Tipo de solicitante</dt>
                     <dd>@Html.DisplayFor(m => m.TipoSolicitante)</dd>
                     <dt>Motivo</dt>
