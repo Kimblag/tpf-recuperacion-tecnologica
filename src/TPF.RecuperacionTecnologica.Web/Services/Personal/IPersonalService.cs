@@ -43,4 +43,9 @@ public interface IPersonalService
     /// </summary>
     /// <param name="codigoAdministrador">Código del Administrador que realiza la edición, para la auditoría.</param>
     Task<IdentityResult> EditarAsync(EdicionPersonalViewModel modelo, int codigoAdministrador);
+
+    /// <summary>
+    /// Inactiva un integrante de Personal e invalida sus sesiones.
+    /// </summary>
+    Task<IdentityResult> InactivarAsync(InactivarPersonalViewModel modelo, int codigoAdministrador);
 }
