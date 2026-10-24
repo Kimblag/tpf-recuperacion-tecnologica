@@ -33,7 +33,12 @@ public class HomeController : Controller
                 return RedirectToAction("Inicio", "Administrador");
             }
 
-            return User.IsInRole(nameof(RolPersonal.Tecnico)) ? await InicioTecnicoAsync(identityUserId) : View();
+            if (User.IsInRole(nameof(RolPersonal.Tecnico)))
+            {
+                return await InicioTecnicoAsync(identityUserId);
+            }
+
+            return User.IsInRole(nameof(RolPersonal.Coordinador)) ? await InicioCoordinadorAsync(identityUserId) : Forbid();
         }
 
         if (identityUserId is null)
@@ -71,6 +76,26 @@ public class HomeController : Controller
         {
             _logger.LogError(ex, "No se pudo cargar el inicio del Técnico");
             return View("InicioTecnico", new TecnicoInicioViewModel { ErrorAlCargar = true });
+        }
+    }
+
+    private async Task<IActionResult> InicioCoordinadorAsync(string? identityUserId)
+    {
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            var inicio = await _inicioService.ObtenerInicioCoordinadorAsync(identityUserId);
+
+            return inicio is null ? NotFound() : View("InicioCoordinador", inicio);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el inicio del Coordinador");
+            return View("InicioCoordinador", new CoordinadorInicioViewModel { ErrorAlCargar = true });
         }
     }
 
