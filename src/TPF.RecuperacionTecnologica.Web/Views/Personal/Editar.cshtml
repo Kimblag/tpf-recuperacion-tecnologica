@@ -21,8 +21,17 @@
         </div>
     </div>
 
+    @if (Model.EsRaiz)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Este es el Administrador principal. Su rol y su correo no se pueden cambiar. El nombre y el teléfono sí se pueden actualizar.</div></div>
+        </div>
+    }
+
     <form class="card" asp-action="Editar" method="post" id="f-personal-editar" novalidate aria-labelledby="f-personal-titulo">
         <input type="hidden" asp-for="CodigoPersonal" />
+        <input type="hidden" asp-for="EsRaiz" />
         <div class="card-header">
             <div><h2 class="card-title" id="f-personal-titulo">Datos del personal</h2></div>
         </div>
@@ -59,22 +68,43 @@
                         <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="11 5555-0000" />
                         <span asp-validation-for="Telefono"></span>
                     </div>
-                    <div class="field">
-                        <label class="form-label" for="RolAsignado">Rol<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <div class="select">
-                            <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)"></select>
-                            <partial name="_Icon" model="@("chevron-down")" />
+                    @if (Model.EsRaiz)
+                    {
+                        <div class="field">
+                            <label class="form-label" for="RolVisible">Rol <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
+                            <input id="RolVisible" class="form-control" value="@Model.RolAsignado" readonly />
+                            <input type="hidden" asp-for="RolAsignado" />
                         </div>
-                        <span asp-validation-for="RolAsignado"></span>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="field">
+                            <label class="form-label" for="RolAsignado">Rol<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <div class="select">
+                                <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)"></select>
+                                <partial name="_Icon" model="@("chevron-down")" />
+                            </div>
+                            <span asp-validation-for="RolAsignado"></span>
+                        </div>
+                    }
 
                     <h3 class="span-2 sec-title">Cuenta de acceso</h3>
 
-                    <div class="field span-2">
-                        <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <input asp-for="CorreoElectronico" class="form-control" autocomplete="off" />
-                        <span asp-validation-for="CorreoElectronico"></span>
-                    </div>
+                    @if (Model.EsRaiz)
+                    {
+                        <div class="field span-2">
+                            <label class="form-label" for="CorreoElectronico">Correo electrónico <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
+                            <input asp-for="CorreoElectronico" class="form-control" readonly />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="field span-2">
+                            <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="CorreoElectronico" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="CorreoElectronico"></span>
+                        </div>
+                    }
                     <div class="field">
                         <label class="form-label" for="EstadoVisible">Estado</label>
                         <input id="EstadoVisible" class="form-control" value="@(Model.EstadoPersonal == EstadoPersonal.Activo ? "Activo" : "Inactivo")" disabled />

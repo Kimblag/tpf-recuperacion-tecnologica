@@ -26,13 +26,16 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.CodigoPersonal"><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></a>
-            @if (estaActivo)
+            @if (!Model.EsRaiz)
             {
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-inactivar"><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
-            }
-            else
-            {
-                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+                if (estaActivo)
+                {
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-inactivar"><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+                }
             }
         </div>
     </div>
@@ -47,6 +50,14 @@
                     <div>@error.ErrorMessage</div>
                 }
             </div>
+        </div>
+    }
+
+    @if (Model.EsRaiz)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body"><div>Este es el Administrador principal. No se puede inactivar y su rol y su correo no se pueden cambiar.</div></div>
         </div>
     }
 
@@ -102,7 +113,7 @@
     </div>
 </div>
 
-@if (estaActivo)
+@if (estaActivo && !Model.EsRaiz)
 {
     <partial name="_ModalInactivar" model="new InactivarPersonalViewModel { CodigoPersonal = Model.CodigoPersonal, NombreCompleto = Model.NombreCompleto, Codigo = Model.Codigo }" />
 }
