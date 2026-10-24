@@ -1,0 +1,13 @@
+@model TPF.RecuperacionTecnologica.Web.Models.Enums.EstadoAsignacion
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    var texto = Html.GetEnumSelectList<EstadoAsignacion>().First(i => i.Value == ((int)Model).ToString()).Text;
+
+    var variante = Model switch
+    {
+        EstadoAsignacion.Vigente => "info",
+        EstadoAsignacion.Concretada => "ok",
+        _ => "muted"
+    };
+}
+<partial name="_Badge" model="@((texto, variante))" />
