@@ -19,6 +19,19 @@ public class ParametrosViewModel
     [Range(1, 365, ErrorMessage = "Ingrese un número entero entre 1 y 365.")]
     public int? DiasLimiteRetiro { get; set; }
 
+    [Display(Name = "Máximo de solicitudes pendientes por persona")]
+    [Required(ErrorMessage = "Ingrese la cantidad máxima de solicitudes.")]
+    [Range(1, 20, ErrorMessage = "Ingrese un número entero entre 1 y 20.")]
+    public int? MaximoSolicitudesPendientes { get; set; }
+
+    // el tope real son los días límite de retiro: se valida en ConfiguracionService
+    [Display(Name = "Días de aviso antes del vencimiento")]
+    [Required(ErrorMessage = "Ingrese la cantidad de días.")]
+    [Range(1, 365, ErrorMessage = "Ingrese un número entero entre 1 y 365.")]
+    public int? DiasAvisoVencimiento { get; set; }
+
+    public byte[] RowVersion { get; set; } = [];
+
     public int? CodigoAdministrador { get; set; }
 
     public DateTime? FechaUltimaModificacion { get; set; }

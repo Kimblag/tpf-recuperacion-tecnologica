@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
@@ -13,13 +14,16 @@ public class InicioService : IInicioService
     private const int CantidadReciente = 4;
     private const int CantidadActividad = 5;
     private const int CantidadPendientes = 5;
-    private const int DiasAvisoVencimiento = 3;
+    // se usa solo si todavía no existe la fila de configuración
+    private const int DiasAvisoVencimientoPorDefecto = 3;
 
     private readonly ApplicationDbContext _context;
+    private readonly IConfiguracionService _configuracionService;
 
-    public InicioService(ApplicationDbContext context)
+    public InicioService(ApplicationDbContext context, IConfiguracionService configuracionService)
     {
         _context = context;
+        _configuracionService = configuracionService;
     }
 
     public async Task<InicioUsuarioViewModel?> ObtenerInicioUsuarioAsync(string identityUserId)
@@ -277,7 +281,9 @@ public class InicioService : IInicioService
 
         var ahora = DateTime.UtcNow;
         var hoy = ahora.Date;
-        var limiteAviso = hoy.AddDays(DiasAvisoVencimiento);
+        var diasAviso = (await _configuracionService.ObtenerAsync())?.DiasAvisoVencimiento
+            ?? DiasAvisoVencimientoPorDefecto;
+        var limiteAviso = hoy.AddDays(diasAviso);
         var haceUnaSemana = ahora.AddDays(-7);
         var inicioDeMes = new DateTime(ahora.Year, ahora.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var inicioDeMesAnterior = inicioDeMes.AddMonths(-1);

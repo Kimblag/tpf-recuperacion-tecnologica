@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
@@ -14,8 +15,8 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 
 public class SolicitudService : ISolicitudService
 {
-    // TODO: pasar el máximo de solicitudes pendientes a un parámetro institucional
-    public const int MaximoPendientesPorUsuario = 3;
+    // se usa solo si todavía no existe la fila de configuración
+    private const int MaximoPendientesPorDefecto = 3;
 
     private const string MensajeUsuarioNoHabilitado = "La cuenta no está habilitada para registrar solicitudes.";
     private const string MensajeSolicitudDuplicada = "Esta cuenta ya tiene una solicitud pendiente para este equipo. Su estado se puede ver en Mis solicitudes.";
@@ -28,6 +29,7 @@ public class SolicitudService : ISolicitudService
     private readonly IUsuarioService _usuarioService;
     private readonly ICuentaService _cuentaService;
     private readonly IAuditoriaService _auditoriaService;
+    private readonly IConfiguracionService _configuracionService;
     private readonly ILogger<SolicitudService> _logger;
 
     public SolicitudService(
@@ -35,12 +37,14 @@ public class SolicitudService : ISolicitudService
         IUsuarioService usuarioService,
         ICuentaService cuentaService,
         IAuditoriaService auditoriaService,
+        IConfiguracionService configuracionService,
         ILogger<SolicitudService> logger)
     {
         _context = context;
         _usuarioService = usuarioService;
         _cuentaService = cuentaService;
         _auditoriaService = auditoriaService;
+        _configuracionService = configuracionService;
         _logger = logger;
     }
 
@@ -97,10 +101,13 @@ public class SolicitudService : ISolicitudService
             return new ImpedimentoSolicitud(ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicada);
         }
 
-        if (equiposPendientes.Count >= MaximoPendientesPorUsuario)
+        var maximoPendientes = (await _configuracionService.ObtenerAsync())?.MaximoSolicitudesPendientes
+            ?? MaximoPendientesPorDefecto;
+
+        if (equiposPendientes.Count >= maximoPendientes)
         {
             return new ImpedimentoSolicitud(ErrorRegistroSolicitud.LimiteAlcanzado,
-                $"Esta cuenta ya tiene {MaximoPendientesPorUsuario} solicitudes pendientes, que es el máximo. Hay que esperar a que alguna se resuelva o cancelarla para pedir otro equipo.");
+                $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Hay que esperar a que alguna se resuelva o cancelarla para pedir otro equipo.");
         }
 
         return null;

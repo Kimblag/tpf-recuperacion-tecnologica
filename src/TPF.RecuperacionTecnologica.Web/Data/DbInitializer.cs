@@ -86,27 +86,59 @@ public static class DbInitializer
                     return;
                 }
 
-                administrador = await CrearAdministradorAsync(context, userManager, correo, password);
+                await CrearAdministradorAsync(context, userManager, correo, password);
                 logger.LogInformation("Se creó el primer Administrador ({Correo}).", correo);
-            }
-
-            if (!await context.ConfiguracionInstitucional.AnyAsync())
-            {
-                context.ConfiguracionInstitucional.Add(new ConfiguracionInstitucional
-                {
-                    Id = 1,
-                    NombreOrganizacion = "Organización de prueba",
-                    ZonaCobertura = "Zona de prueba",
-                    DiasLimiteRetiro = 7,
-                    CodigoAdministrador = administrador.CodigoPersonal
-                });
-
-                await context.SaveChangesAsync();
             }
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "No se pudo crear el Administrador. ¿Está la base migrada? (dotnet ef database update)");
+        }
+    }
+
+    // crea la única fila de configuración (Id == 1) con valores por defecto si todavía no existe
+    public static async Task SeedConfiguracionAsync(IServiceProvider services)
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(DbInitializer));
+
+        try
+        {
+            if (await context.ConfiguracionInstitucional.AnyAsync(c => c.Id == 1))
+            {
+                return;
+            }
+
+            // la fila necesita un Administrador: se usa el Administrador principal
+            var codigoAdministrador = await context.PersonalInterno
+                .Where(p => p.EsRaiz)
+                .Select(p => (int?)p.CodigoPersonal)
+                .FirstOrDefaultAsync();
+
+            if (codigoAdministrador is null)
+            {
+                logger.LogWarning(
+                    "No se creó la configuración institucional: todavía no existe el Administrador principal.");
+                return;
+            }
+
+            context.ConfiguracionInstitucional.Add(new ConfiguracionInstitucional
+            {
+                Id = 1,
+                NombreOrganizacion = "Recuperación Tecnológica",
+                ZonaCobertura = string.Empty,
+                DiasLimiteRetiro = 10,
+                MaximoSolicitudesPendientes = 3,
+                DiasAvisoVencimiento = 3,
+                CodigoAdministrador = codigoAdministrador.Value
+            });
+
+            await context.SaveChangesAsync();
+            logger.LogInformation("Se creó la configuración institucional con valores por defecto.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "No se pudo crear la configuración institucional. ¿Está la base migrada? (dotnet ef database update)");
         }
     }
 
