@@ -293,11 +293,21 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.Property<int>("CodigoAdministrador")
                         .HasColumnType("int");
 
+                    b.Property<int>("DiasAvisoVencimiento")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(3);
+
                     b.Property<int>("DiasLimiteRetiro")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("FechaUltimaModificacion")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("MaximoSolicitudesPendientes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(3);
 
                     b.Property<string>("NombreOrganizacion")
                         .IsRequired()

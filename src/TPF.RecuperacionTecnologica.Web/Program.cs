@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
@@ -53,6 +54,7 @@ builder.Services.AddScoped<IDiagnosticoService, DiagnosticoService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 builder.Services.AddScoped<ISolicitudConsultaService, SolicitudConsultaService>();
+builder.Services.AddScoped<IConfiguracionService, ConfiguracionService>();
 
 builder.Services
     .AddIdentity<IdentityUser, IdentityRole>(options =>
@@ -130,11 +132,14 @@ using (var scope = app.Services.CreateScope())
     // los roles son datos de referencia: se aseguran siempre
     await DbInitializer.SeedRolesAsync(scope.ServiceProvider);
 
-    // el primer Administrador y la configuración institucional se crean solo en desarrollo
+    // el primer Administrador se crea solo en desarrollo
     if (app.Environment.IsDevelopment())
     {
         await DbInitializer.SeedAdminAsync(scope.ServiceProvider);
     }
+
+    // la configuración institucional se asegura siempre
+    await DbInitializer.SeedConfiguracionAsync(scope.ServiceProvider);
 }
 
 // Configure the HTTP request pipeline.

@@ -23,6 +23,12 @@ public class ConfiguracionInstitucionalConfiguration : IEntityTypeConfiguration<
             .IsRequired()
             .HasMaxLength(150);
 
+        builder.Property(c => c.MaximoSolicitudesPendientes)
+            .HasDefaultValue(3);
+
+        builder.Property(c => c.DiasAvisoVencimiento)
+            .HasDefaultValue(3);
+
         builder.HasOne(c => c.Administrador)
             .WithMany()
             .HasForeignKey(c => c.CodigoAdministrador)

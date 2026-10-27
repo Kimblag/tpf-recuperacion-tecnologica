@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -13,15 +14,21 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
 public class AsignacionesController : Controller
 {
-    private const int DiasLimiteRetiroDeEjemplo = 10;
+    // se usa solo si todavía no existe la fila de configuración
+    private const int DiasLimiteRetiroPorDefecto = 10;
 
     private readonly IDonacionService _donacionService;
     private readonly IPersonalService _personalService;
+    private readonly IConfiguracionService _configuracionService;
 
-    public AsignacionesController(IDonacionService donacionService, IPersonalService personalService)
+    public AsignacionesController(
+        IDonacionService donacionService,
+        IPersonalService personalService,
+        IConfiguracionService configuracionService)
     {
         _donacionService = donacionService;
         _personalService = personalService;
+        _configuracionService = configuracionService;
     }
 
     [HttpGet]
@@ -108,13 +115,15 @@ public class AsignacionesController : Controller
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var codigoPersonal = identityUserId is null ? null : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
         var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
+        var diasLimiteRetiro = (await _configuracionService.ObtenerAsync())?.DiasLimiteRetiro
+            ?? DiasLimiteRetiroPorDefecto;
 
         var formulario = new AsignarEquipoViewModel
         {
             NroEquipo = nroEquipo,
             Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}",
             FechaAsignacion = DateTime.Today,
-            DiasLimiteRetiro = DiasLimiteRetiroDeEjemplo
+            DiasLimiteRetiro = diasLimiteRetiro
         };
 
         if (nroEquipo is null)

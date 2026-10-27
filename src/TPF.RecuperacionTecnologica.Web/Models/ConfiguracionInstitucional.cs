@@ -10,6 +10,10 @@ public class ConfiguracionInstitucional
 
     public int DiasLimiteRetiro { get; set; }
 
+    public int MaximoSolicitudesPendientes { get; set; }
+
+    public int DiasAvisoVencimiento { get; set; }
+
     public int CodigoAdministrador { get; set; }
 
     public Personal Administrador { get; set; } = null!;

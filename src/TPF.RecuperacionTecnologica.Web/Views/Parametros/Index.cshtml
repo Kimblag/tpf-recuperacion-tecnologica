@@ -27,6 +27,7 @@
             <div class="card-body">
                 <div class="stack" style="gap:16px">
                     <partial name="_ResumenErrores" />
+                    <input type="hidden" asp-for="RowVersion" />
 
                     <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
 
@@ -46,8 +47,20 @@
                         <div class="field">
                             <label class="form-label" for="DiasLimiteRetiro">Días límite de retiro<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                             <input asp-for="DiasLimiteRetiro" type="number" min="1" max="365" class="form-control" aria-describedby="DiasLimiteRetiro-hint" />
-                            <div class="form-text" id="DiasLimiteRetiro-hint">Días corridos que tiene quien solicita para retirar un equipo asignado.</div>
+                            <div class="form-text" id="DiasLimiteRetiro-hint">Días corridos que tiene quien solicita para retirar un equipo asignado. Un cambio solo afecta a las asignaciones nuevas: cada asignación guarda su propia fecha límite.</div>
                             <span asp-validation-for="DiasLimiteRetiro"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="MaximoSolicitudesPendientes">Máximo de solicitudes pendientes por persona<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="MaximoSolicitudesPendientes" type="number" min="1" max="20" class="form-control" aria-describedby="MaximoSolicitudesPendientes-hint" />
+                            <div class="form-text" id="MaximoSolicitudesPendientes-hint">Cantidad de solicitudes en estado Pendiente que puede tener una misma persona.</div>
+                            <span asp-validation-for="MaximoSolicitudesPendientes"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="DiasAvisoVencimiento">Días de aviso antes del vencimiento<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="DiasAvisoVencimiento" type="number" min="1" max="365" class="form-control" aria-describedby="DiasAvisoVencimiento-hint" />
+                            <div class="form-text" id="DiasAvisoVencimiento-hint">Días antes de la fecha límite de retiro en que una asignación se muestra como por vencer. No puede superar a los días límite de retiro.</div>
+                            <span asp-validation-for="DiasAvisoVencimiento"></span>
                         </div>
                     </div>
                 </div>
@@ -87,6 +100,10 @@
                         <dd>@Model.ZonaCobertura</dd>
                         <dt>Retiro</dt>
                         <dd>@Model.DiasLimiteRetiro días</dd>
+                        <dt>Máximo de solicitudes pendientes</dt>
+                        <dd>@Model.MaximoSolicitudesPendientes por persona</dd>
+                        <dt>Aviso de vencimiento</dt>
+                        <dd>@Model.DiasAvisoVencimiento días antes</dd>
                         <dt>Última modificación</dt>
                         <dd>@(Model.UltimaModificacion ?? "—")</dd>
                     </dl>
