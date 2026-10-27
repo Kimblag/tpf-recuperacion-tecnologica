@@ -25,6 +25,15 @@ public class AsignacionConfiguration : IEntityTypeConfiguration<Asignacion>
             .HasForeignKey(a => a.CodigoCoordinador)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // última defensa contra dos asignaciones simultáneas: una sola Vigente por equipo y por solicitud
+        builder.HasIndex(a => a.NroEquipo)
+            .IsUnique()
+            .HasFilter("[EstadoAsignacion] = 0");
+
+        builder.HasIndex(a => a.NroSolicitud)
+            .IsUnique()
+            .HasFilter("[EstadoAsignacion] = 0");
+
         builder.Property(a => a.JustificacionCambio)
             .HasMaxLength(500);
 

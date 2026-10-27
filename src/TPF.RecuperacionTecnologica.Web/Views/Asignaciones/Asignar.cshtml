@@ -31,40 +31,12 @@
                 <div class="card-header">
                     <div><h2 class="card-title" id="titulo-elegir">Equipo</h2></div>
                 </div>
-                @if (Model.EquiposDisponibles.Count == 0)
-                {
-                    <div class="card-body">
-                        <div class="state">
-                            <span class="state-ic"><partial name="_Icon" model="@("laptop")" /></span>
-                            <h3>No hay equipos disponibles</h3>
-                            <p>Cuando un equipo pase la revisión técnica podrá asignarse desde aquí.</p>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <form method="get" asp-action="Asignar">
-                        <div class="card-body">
-                            <div class="field">
-                                <label class="form-label" for="nroEquipo">Equipo disponible<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                                <div class="select">
-                                    <select id="nroEquipo" name="nroEquipo" class="form-select" required>
-                                        <option value="">Seleccione un equipo…</option>
-                                        @foreach (var equipo in Model.EquiposDisponibles)
-                                        {
-                                            <option value="@equipo.NroEquipo">@equipo.Texto</option>
-                                        }
-                                    </select>
-                                    <partial name="_Icon" model="@("chevron-down")" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
-                            <button type="submit" class="btn btn-primary btn-lg">Continuar</button>
-                        </div>
-                    </form>
-                }
+                <div class="card-body">
+                    <partial name="_SelectorEquipo" for="Equipo" />
+                </div>
+                <div class="form-actions">
+                    <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
+                </div>
             </section>
         </div>
     }
@@ -182,8 +154,7 @@
                             </div>
                             <div class="form-actions">
                                 <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
-                                @* TODO: habilitar la asignación cuando exista el registro de asignaciones (#122) *@
-                                <button type="submit" class="btn btn-primary btn-lg" disabled><partial name="_Icon" model="@("check")" /><span>Confirmar asignación</span></button>
+                                <button type="submit" class="btn btn-primary btn-lg"><partial name="_Icon" model="@("check")" /><span>Confirmar asignación</span></button>
                             </div>
                         </section>
                     </div>
