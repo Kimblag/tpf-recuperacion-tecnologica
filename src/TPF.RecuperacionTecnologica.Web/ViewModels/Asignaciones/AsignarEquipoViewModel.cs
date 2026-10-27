@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones;
 
@@ -46,7 +47,7 @@ public class AsignarEquipoViewModel
 
     public DateTime FechaLimiteRetiro => FechaAsignacion.AddDays(DiasLimiteRetiro);
 
-    public IReadOnlyList<(int NroEquipo, string Texto)> EquiposDisponibles { get; set; } = [];
+    public SelectorEquipoViewModel Equipo { get; set; } = new();
 
     public string CodigoEquipo => NroEquipo is null ? string.Empty : NroEquipo.Value.ToString("D6");
 }

@@ -273,9 +273,13 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
 
                     b.HasIndex("CodigoCoordinador");
 
-                    b.HasIndex("NroEquipo");
+                    b.HasIndex("NroEquipo")
+                        .IsUnique()
+                        .HasFilter("[EstadoAsignacion] = 0");
 
-                    b.HasIndex("NroSolicitud");
+                    b.HasIndex("NroSolicitud")
+                        .IsUnique()
+                        .HasFilter("[EstadoAsignacion] = 0");
 
                     b.ToTable("Asignaciones", t =>
                         {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Asignaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
@@ -20,15 +21,18 @@ public class AsignacionesController : Controller
     private readonly IDonacionService _donacionService;
     private readonly IPersonalService _personalService;
     private readonly IConfiguracionService _configuracionService;
+    private readonly IAsignacionService _asignacionService;
 
     public AsignacionesController(
         IDonacionService donacionService,
         IPersonalService personalService,
-        IConfiguracionService configuracionService)
+        IConfiguracionService configuracionService,
+        IAsignacionService asignacionService)
     {
         _donacionService = donacionService;
         _personalService = personalService;
         _configuracionService = configuracionService;
+        _asignacionService = asignacionService;
     }
 
     [HttpGet]
@@ -110,7 +114,51 @@ public class AsignacionesController : Controller
 
     [HttpGet]
     [Authorize(Policy = "SoloCoordinador")]
-    public async Task<IActionResult> Asignar(int? nroEquipo)
+    public async Task<IActionResult> Asignar(int? nroEquipo, string? busquedaEquipo)
+    {
+        var formulario = new AsignarEquipoViewModel { NroEquipo = nroEquipo };
+        formulario.Equipo.Busqueda = busquedaEquipo;
+
+        await CompletarFormularioAsync(formulario);
+
+        return View(formulario);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> Asignar(
+        [Bind("NroEquipo,NroSolicitudSeleccionada,JustificacionCambio")] AsignarEquipoViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        if (formulario.NroEquipo is not null && ModelState.IsValid)
+        {
+            var resultado = await _asignacionService.AsignarAsync(
+                identityUserId, formulario.NroEquipo.Value, formulario.NroSolicitudSeleccionada!.Value, formulario.JustificacionCambio);
+
+            if (resultado.Exitoso)
+            {
+                TempData["Mensaje"] = "La asignación se registró correctamente.";
+                return RedirectToAction(nameof(Detalle), new { id = resultado.NroAsignacion });
+            }
+
+            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+        }
+
+        await CompletarFormularioAsync(formulario);
+
+        return View(formulario);
+    }
+
+    private const int MaximoResultadosEquipo = 10;
+
+    private async Task CompletarFormularioAsync(AsignarEquipoViewModel formulario)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var codigoPersonal = identityUserId is null ? null : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
@@ -118,66 +166,40 @@ public class AsignacionesController : Controller
         var diasLimiteRetiro = (await _configuracionService.ObtenerAsync())?.DiasLimiteRetiro
             ?? DiasLimiteRetiroPorDefecto;
 
-        var formulario = new AsignarEquipoViewModel
+        formulario.Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}";
+        formulario.FechaAsignacion = DateTime.Today;
+        formulario.DiasLimiteRetiro = diasLimiteRetiro;
+
+        if (formulario.NroEquipo is null)
         {
-            NroEquipo = nroEquipo,
-            Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}",
-            FechaAsignacion = DateTime.Today,
-            DiasLimiteRetiro = diasLimiteRetiro
-        };
+            var selector = formulario.Equipo;
 
-        if (nroEquipo is null)
-        {
-            var disponibles = await _donacionService.ObtenerDisponiblesAsync(null, null, null, OrdenCatalogo.Recientes, 1, 50);
+            // solo se ofrecen equipos con solicitudes pendientes; sin búsqueda se precargan los más recientes
+            selector.BusquedaRealizada = true;
+            selector.Resultados = await _asignacionService.ObtenerEquiposConSolicitudPendienteAsync(
+                selector.Busqueda, MaximoResultadosEquipo);
 
-            formulario.EquiposDisponibles = disponibles.Elementos
-                .Select(e => (e.NroEquipo, $"{e.CodigoEquipo} · {e.MarcaYModelo}"))
-                .ToList();
-
-            return View(formulario);
+            return;
         }
 
-        var equipo = await _donacionService.ObtenerDetalleDisponibleAsync(nroEquipo.Value);
+        var equipo = await _donacionService.ObtenerDetalleDisponibleAsync(formulario.NroEquipo.Value);
 
         if (equipo is null)
         {
             formulario.EquipoDisponible = false;
-            return View(formulario);
+            return;
         }
 
         formulario.TipoEquipo = equipo.TipoEquipo;
         formulario.MarcaYModelo = equipo.MarcaYModelo;
-        formulario.Candidatas = CandidatasDeEjemplo(nroEquipo.Value);
-        formulario.NroSolicitudSeleccionada = formulario.Candidatas.FirstOrDefault()?.NroSolicitud;
+        formulario.Candidatas = await _asignacionService.ObtenerCandidatasAsync(formulario.NroEquipo.Value);
 
-        return View(formulario);
-    }
-
-    // TODO: reemplazar por las solicitudes pendientes reales del equipo, ordenadas por la regla de prioridad (#122)
-    private static IReadOnlyList<SolicitudCandidataViewModel> CandidatasDeEjemplo(int nroEquipo)
-    {
-        if (nroEquipo % 5 == 0)
+        // si no llegó una elección válida, se preselecciona la sugerida
+        if (formulario.NroSolicitudSeleccionada is null
+            || formulario.Candidatas.All(c => c.NroSolicitud != formulario.NroSolicitudSeleccionada))
         {
-            return [];
+            formulario.NroSolicitudSeleccionada = formulario.Candidatas.FirstOrDefault()?.NroSolicitud;
         }
-
-        var pendientes = new List<SolicitudCandidataViewModel>();
-
-        if (nroEquipo % 2 == 0)
-        {
-            pendientes.Add(new() { NroSolicitud = 28, Solicitante = "Julieta Sosa", TipoSolicitante = TipoSolicitante.Particular, OrigenSolicitud = OrigenSolicitud.Autoservicio, FechaSolicitud = new DateTime(2026, 9, 1) });
-            pendientes.Add(new() { NroSolicitud = 30, Solicitante = "Roberto Quiroga", TipoSolicitante = TipoSolicitante.OrganizacionSocial, OrigenSolicitud = OrigenSolicitud.Asistida, FechaSolicitud = new DateTime(2026, 9, 5) });
-            pendientes.Add(new() { NroSolicitud = 29, Solicitante = "Laura Pereyra", TipoSolicitante = TipoSolicitante.Escuela, OrigenSolicitud = OrigenSolicitud.Autoservicio, FechaSolicitud = new DateTime(2026, 9, 3) });
-        }
-        else
-        {
-            pendientes.Add(new() { NroSolicitud = 31, Solicitante = "Valeria Acosta", TipoSolicitante = TipoSolicitante.Particular, OrigenSolicitud = OrigenSolicitud.Autoservicio, FechaSolicitud = new DateTime(2026, 9, 8) });
-        }
-
-        return pendientes
-            .OrderBy(s => s.TipoSolicitante == TipoSolicitante.Particular ? 1 : 0)
-            .ThenBy(s => s.FechaSolicitud)
-            .ToList();
     }
 
     private static IReadOnlyList<HitoViewModel> ArmarHitos(AsignacionEjemplo asignacion)
