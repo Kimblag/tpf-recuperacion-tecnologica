@@ -30,6 +30,14 @@ public class EntregaConfiguration : IEntityTypeConfiguration<Entrega>
             .HasForeignKey(e => e.CodigoCoordinador)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(e => e.NombreQuienRetira)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        // una asignación se entrega una sola vez: última defensa contra dos entregas simultáneas
+        builder.HasIndex(e => e.NroAsignacion)
+            .IsUnique();
+
         builder.Property(e => e.DocumentoIdentidadQuienRetira)
             .IsRequired()
             .HasMaxLength(20);

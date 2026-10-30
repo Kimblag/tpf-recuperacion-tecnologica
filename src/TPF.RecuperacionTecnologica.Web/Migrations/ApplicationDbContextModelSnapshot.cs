@@ -443,6 +443,11 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
+                    b.Property<string>("NombreQuienRetira")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int>("NroAsignacion")
                         .HasColumnType("int");
 
@@ -456,7 +461,8 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
 
                     b.HasIndex("CodigoCoordinador");
 
-                    b.HasIndex("NroAsignacion");
+                    b.HasIndex("NroAsignacion")
+                        .IsUnique();
 
                     b.HasIndex("NroEquipo");
 

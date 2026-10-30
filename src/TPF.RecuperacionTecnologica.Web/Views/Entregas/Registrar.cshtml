@@ -233,8 +233,7 @@
             </div>
             <div class="form-actions">
                 <a class="btn btn-secondary btn-lg" asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@Model.NroAsignacion">Cancelar</a>
-                @* TODO: habilitar el registro cuando exista el servicio de entregas (#124) *@
-                <button type="submit" class="btn btn-primary btn-lg" disabled><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></button>
+                <button type="submit" class="btn btn-primary btn-lg" id="registrar-entrega"><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></button>
             </div>
         </form>
     }
@@ -242,4 +241,12 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // evita registrar dos veces con un doble clic: el servidor también lo impide con un índice único
+        document.getElementById('f-entrega')?.addEventListener('submit', function (e) {
+            if (!e.defaultPrevented) {
+                document.getElementById('registrar-entrega').disabled = true;
+            }
+        });
+    </script>
 }

@@ -263,6 +263,21 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             return hitos;
         }
 
+        // nunca llegó a asignarse: se cerró porque el equipo se entregó a otra solicitud
+        if (solicitud.Estado == EstadoSolicitud.Cerrada && asignacion is null)
+        {
+            hitos.Add(new HitoViewModel
+            {
+                Titulo = "Solicitud cerrada",
+                Fecha = solicitud.FechaCierre,
+                Icono = "clock",
+                Estado = EstadoHito.Cancelado,
+                Texto = "El equipo se entregó a otra solicitud."
+            });
+
+            return hitos;
+        }
+
         hitos.Add(new HitoViewModel
         {
             Titulo = "Equipo asignado",

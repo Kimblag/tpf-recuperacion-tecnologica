@@ -22,5 +22,7 @@ public class Entrega
 
     public DateTime FechaEntrega { get; set; }
 
+    public string NombreQuienRetira { get; set; } = string.Empty;
+
     public string DocumentoIdentidadQuienRetira { get; set; } = string.Empty;
 }
