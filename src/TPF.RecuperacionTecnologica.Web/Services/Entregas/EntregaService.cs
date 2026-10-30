@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Entregas;
@@ -266,5 +267,175 @@ public class EntregaService : IEntregaService
         }
 
         return ResultadoEntrega.Ok(entrega.NroEntrega);
+    }
+
+    public async Task<ResultadoPaginado<EntregaFilaViewModel>> ListarAsync(
+        string? busqueda, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina)
+    {
+        if (desde is not null && hasta is not null && desde.Value.Date > hasta.Value.Date)
+        {
+            throw new ArgumentException("La fecha desde no puede ser posterior a la fecha hasta.", nameof(desde));
+        }
+
+        var consulta = _context.Entregas.AsNoTracking();
+
+        if (desde is not null)
+        {
+            var inicio = desde.Value.Date;
+            consulta = consulta.Where(e => e.FechaEntrega >= inicio);
+        }
+
+        if (hasta is not null)
+        {
+            // se incluye todo el día elegido
+            var fin = hasta.Value.Date.AddDays(1);
+            consulta = consulta.Where(e => e.FechaEntrega < fin);
+        }
+
+        var texto = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(texto))
+        {
+            consulta = consulta.Where(e =>
+                ("ENT-" + (1000000 + e.NroEntrega).ToString().Substring(1)).Contains(texto)
+                || ("ASG-" + (1000000 + e.NroAsignacion).ToString().Substring(1)).Contains(texto)
+                || ("SOL-" + (1000000 + e.NroSolicitud).ToString().Substring(1)).Contains(texto)
+                || (1000000 + e.NroEquipo).ToString().Substring(1).Contains(texto)
+                || (e.Equipo.Marca + " " + e.Equipo.Modelo).Contains(texto)
+                || e.NombreQuienRetira.Contains(texto)
+                || e.DocumentoIdentidadQuienRetira.Contains(texto));
+        }
+
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        var filas = await consulta
+            .OrderByDescending(e => e.FechaEntrega)
+            .ThenByDescending(e => e.NroEntrega)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .Select(e => new
+            {
+                e.NroEntrega,
+                e.NroAsignacion,
+                e.NroSolicitud,
+                e.NroEquipo,
+                e.Equipo.TipoEquipo,
+                e.Equipo.Marca,
+                e.Equipo.Modelo,
+                e.Solicitud.Usuario.RazonSocial,
+                e.Solicitud.Usuario.Nombre,
+                e.Solicitud.Usuario.Apellido,
+                CoordinadorNombre = e.Coordinador.Nombre,
+                CoordinadorApellido = e.Coordinador.Apellido,
+                e.FechaEntrega,
+                e.NombreQuienRetira,
+                e.DocumentoIdentidadQuienRetira
+            })
+            .ToListAsync();
+
+        return new ResultadoPaginado<EntregaFilaViewModel>
+        {
+            Elementos = filas.Select(f => new EntregaFilaViewModel
+            {
+                NroEntrega = f.NroEntrega,
+                NroAsignacion = f.NroAsignacion,
+                NroSolicitud = f.NroSolicitud,
+                NroEquipo = f.NroEquipo,
+                TipoEquipo = f.TipoEquipo,
+                MarcaYModelo = $"{f.Marca} {f.Modelo}",
+                Solicitante = NombreSolicitante(f.RazonSocial, f.Nombre, f.Apellido),
+                Coordinador = $"{f.CoordinadorNombre} {f.CoordinadorApellido}",
+                FechaEntrega = f.FechaEntrega,
+                NombreQuienRetira = f.NombreQuienRetira,
+                DocumentoQuienRetira = f.DocumentoIdentidadQuienRetira
+            }).ToList(),
+            Total = total,
+            Pagina = pagina
+        };
+    }
+
+    public async Task<EntregaDetalleViewModel?> ObtenerDetalleAsync(int nroEntrega)
+    {
+        var datos = await _context.Entregas
+            .AsNoTracking()
+            .Where(e => e.NroEntrega == nroEntrega)
+            .Select(e => new
+            {
+                e.NroEntrega,
+                e.NroAsignacion,
+                e.NroSolicitud,
+                e.NroEquipo,
+                e.Equipo.TipoEquipo,
+                e.Equipo.Marca,
+                e.Equipo.Modelo,
+                e.Solicitud.TipoSolicitante,
+                e.Solicitud.Usuario.RazonSocial,
+                e.Solicitud.Usuario.Nombre,
+                e.Solicitud.Usuario.Apellido,
+                CoordinadorNombre = e.Coordinador.Nombre,
+                CoordinadorApellido = e.Coordinador.Apellido,
+                AsignacionCoordinadorNombre = e.Asignacion.Coordinador.Nombre,
+                AsignacionCoordinadorApellido = e.Asignacion.Coordinador.Apellido,
+                e.Asignacion.FechaAsignacion,
+                e.Asignacion.FechaLimiteRetiro,
+                e.FechaEntrega,
+                e.NombreQuienRetira,
+                e.DocumentoIdentidadQuienRetira
+            })
+            .FirstOrDefaultAsync();
+
+        if (datos is null)
+        {
+            return null;
+        }
+
+        var coordinadorAsignacion = $"{datos.AsignacionCoordinadorNombre} {datos.AsignacionCoordinadorApellido}";
+
+        return new EntregaDetalleViewModel
+        {
+            NroEntrega = datos.NroEntrega,
+            NroAsignacion = datos.NroAsignacion,
+            NroSolicitud = datos.NroSolicitud,
+            NroEquipo = datos.NroEquipo,
+            TipoEquipo = datos.TipoEquipo,
+            MarcaYModelo = $"{datos.Marca} {datos.Modelo}",
+            Solicitante = NombreSolicitante(datos.RazonSocial, datos.Nombre, datos.Apellido),
+            TipoSolicitante = datos.TipoSolicitante,
+            Coordinador = $"{datos.CoordinadorNombre} {datos.CoordinadorApellido}",
+            FechaAsignacion = datos.FechaAsignacion,
+            FechaLimiteRetiro = datos.FechaLimiteRetiro,
+            FechaEntrega = datos.FechaEntrega,
+            NombreQuienRetira = datos.NombreQuienRetira,
+            DocumentoQuienRetira = datos.DocumentoIdentidadQuienRetira,
+            Hitos =
+            [
+                new HitoViewModel
+                {
+                    Titulo = "Asignación registrada",
+                    Fecha = datos.FechaAsignacion,
+                    Icono = "swap",
+                    Estado = EstadoHito.Completado,
+                    Texto = $"Registrada por {coordinadorAsignacion}."
+                },
+                new HitoViewModel
+                {
+                    Titulo = "Plazo de retiro",
+                    Fecha = datos.FechaLimiteRetiro,
+                    Icono = "clock",
+                    Estado = EstadoHito.Completado,
+                    Texto = "Fecha límite para retirar el equipo."
+                },
+                new HitoViewModel
+                {
+                    Titulo = "Entrega completada",
+                    Fecha = datos.FechaEntrega,
+                    Icono = "truck",
+                    Estado = EstadoHito.Completado,
+                    Texto = $"Retiró {datos.NombreQuienRetira}."
+                }
+            ]
+        };
     }
 }

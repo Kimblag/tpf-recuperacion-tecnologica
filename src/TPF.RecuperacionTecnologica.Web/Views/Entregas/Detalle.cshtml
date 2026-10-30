@@ -35,7 +35,7 @@
                         <dt>Coordinador</dt>
                         <dd>@Model.Coordinador</dd>
                         <dt>Equipo</dt>
-                        <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
+                        <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">@Model.CodigoEquipo</a></div></dd>
                     </dl>
                 </div>
             </section>
@@ -53,8 +53,7 @@
                         <dd><a class="mono" asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@Model.NroAsignacion">@Model.CodigoAsignacion</a></dd>
                         <dt>Solicitud</dt>
                         <dd>
-                            @* TODO: enlazar a Solicitudes/DetalleInterno cuando las entregas sean reales (#152) *@
-                            <span class="mono">@Model.CodigoSolicitud</span>
+                            <a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@Model.NroSolicitud">@Model.CodigoSolicitud</a>
                         </dd>
                         <dt>Solicitante</dt>
                         <dd>@Model.Solicitante · @Html.DisplayFor(m => m.TipoSolicitante)</dd>
