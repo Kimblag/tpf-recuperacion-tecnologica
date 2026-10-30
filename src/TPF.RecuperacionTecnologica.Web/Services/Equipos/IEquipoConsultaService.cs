@@ -29,4 +29,11 @@ public interface IEquipoConsultaService
     /// </summary>
     /// <returns>El historial, o null si el equipo no existe.</returns>
     Task<HistorialDiagnosticosViewModel?> ObtenerHistorialAsync(int nroEquipo);
+
+    /// <summary>
+    /// Devuelve el legajo completo de un equipo para el Coordinador y el Administrador: sus datos, el donante
+    /// (sin documento), todos sus diagnósticos, solicitudes y asignaciones en orden cronológico, y su entrega si existe.
+    /// </summary>
+    /// <returns>El legajo, o null si el equipo no existe.</returns>
+    Task<LegajoEquipoViewModel?> ObtenerLegajoAsync(int nroEquipo);
 }

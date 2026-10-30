@@ -262,4 +262,217 @@ public class EquipoConsultaService : IEquipoConsultaService
             Diagnosticos = diagnosticos
         };
     }
+
+    public async Task<LegajoEquipoViewModel?> ObtenerLegajoAsync(int nroEquipo)
+    {
+        var equipo = await _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo)
+            .Select(e => new
+            {
+                e.NroEquipo,
+                e.TipoEquipo,
+                e.Marca,
+                e.Modelo,
+                e.EstadoInicialDeclarado,
+                e.Observaciones,
+                e.EstadoEquipo,
+                e.FechaRegistro,
+                e.FechaDisponibilidad,
+                e.FechaCancelacion,
+                e.MotivoCancelacion,
+                e.UsuarioDonante.TipoUsuario,
+                e.UsuarioDonante.Nombre,
+                e.UsuarioDonante.Apellido,
+                e.UsuarioDonante.RazonSocial
+            })
+            .FirstOrDefaultAsync();
+
+        if (equipo is null)
+        {
+            return null;
+        }
+
+        var diagnosticos = await _context.Diagnosticos
+            .AsNoTracking()
+            .Where(d => d.NroEquipo == nroEquipo)
+            .OrderBy(d => d.FechaDiagnostico)
+            .ThenBy(d => d.NroDiagnostico)
+            .Select(d => new DiagnosticoFilaViewModel
+            {
+                NroDiagnostico = d.NroDiagnostico,
+                NroEquipo = d.NroEquipo,
+                TipoDiagnostico = d.TipoDiagnostico,
+                FechaDiagnostico = d.FechaDiagnostico,
+                CodigoTecnico = d.CodigoTecnico,
+                DictamenTecnico = d.DictamenTecnico,
+                EsVigente = d.EsVigente,
+                NroDiagnosticoRectificado = d.DiagnosticoRectificadoId,
+                NroDiagnosticoReemplazante = _context.Diagnosticos
+                    .Where(r => r.DiagnosticoRectificadoId == d.NroDiagnostico)
+                    .Select(r => (int?)r.NroDiagnostico)
+                    .FirstOrDefault()
+            })
+            .ToListAsync();
+
+        // consulta de solicitudes por equipo; la tarjeta del detalle del equipo (#228) puede reutilizarla
+        var solicitudes = await _context.Solicitudes
+            .AsNoTracking()
+            .Where(s => s.NroEquipoRequerido == nroEquipo)
+            .OrderBy(s => s.FechaSolicitud)
+            .ThenBy(s => s.NroSolicitud)
+            .Select(s => new
+            {
+                s.NroSolicitud,
+                s.Usuario.RazonSocial,
+                s.Usuario.Nombre,
+                s.Usuario.Apellido,
+                s.TipoSolicitante,
+                s.OrigenSolicitud,
+                s.FechaSolicitud,
+                s.EstadoSolicitud,
+                s.FechaCancelacion
+            })
+            .ToListAsync();
+
+        var asignaciones = await _context.Asignaciones
+            .AsNoTracking()
+            .Where(a => a.NroEquipo == nroEquipo)
+            .OrderBy(a => a.FechaAsignacion)
+            .ThenBy(a => a.NroAsignacion)
+            .Select(a => new AsignacionLegajoViewModel
+            {
+                NroAsignacion = a.NroAsignacion,
+                NroSolicitud = a.NroSolicitud,
+                Coordinador = a.Coordinador.Nombre + " " + a.Coordinador.Apellido,
+                FechaAsignacion = a.FechaAsignacion,
+                FechaLimiteRetiro = a.FechaLimiteRetiro,
+                EstadoAsignacion = a.EstadoAsignacion,
+                FechaLiberacion = a.FechaLiberacion,
+                MotivoLiberacion = a.MotivoLiberacion
+            })
+            .ToListAsync();
+
+        // el documento de quien retiró no se proyecta
+        var entrega = await _context.Entregas
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo)
+            .OrderByDescending(e => e.FechaEntrega)
+            .Select(e => new EntregaLegajoViewModel
+            {
+                NroEntrega = e.NroEntrega,
+                NroAsignacion = e.NroAsignacion,
+                NroSolicitud = e.NroSolicitud,
+                Coordinador = e.Coordinador.Nombre + " " + e.Coordinador.Apellido,
+                FechaEntrega = e.FechaEntrega
+            })
+            .FirstOrDefaultAsync();
+
+        var filasSolicitudes = solicitudes.Select(s => new SolicitudLegajoViewModel
+        {
+            NroSolicitud = s.NroSolicitud,
+            Solicitante = !string.IsNullOrWhiteSpace(s.RazonSocial) ? s.RazonSocial : $"{s.Nombre} {s.Apellido}".Trim(),
+            TipoSolicitante = s.TipoSolicitante,
+            OrigenSolicitud = s.OrigenSolicitud,
+            FechaSolicitud = s.FechaSolicitud,
+            EstadoSolicitud = s.EstadoSolicitud,
+            FechaCancelacion = s.FechaCancelacion
+        }).ToList();
+
+        var donante = equipo.TipoUsuario == TipoUsuario.Persona
+            ? $"{equipo.Nombre} {equipo.Apellido}".Trim()
+            : equipo.RazonSocial ?? string.Empty;
+
+        return new LegajoEquipoViewModel
+        {
+            NroEquipo = equipo.NroEquipo,
+            TipoEquipo = equipo.TipoEquipo,
+            Marca = equipo.Marca,
+            Modelo = equipo.Modelo,
+            EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
+            Observaciones = equipo.Observaciones,
+            EstadoEquipo = equipo.EstadoEquipo,
+            FechaRegistro = equipo.FechaRegistro,
+            FechaDisponibilidad = equipo.FechaDisponibilidad,
+            FechaCancelacion = equipo.FechaCancelacion,
+            MotivoCancelacion = equipo.MotivoCancelacion,
+            Donante = donante,
+            TipoCuentaDonante = equipo.TipoUsuario,
+            Diagnosticos = diagnosticos,
+            Solicitudes = filasSolicitudes,
+            Asignaciones = asignaciones,
+            Entrega = entrega,
+            LineaDeTiempo = ArmarLineaDeTiempo(
+                equipo.FechaRegistro, equipo.FechaDisponibilidad, equipo.FechaCancelacion,
+                diagnosticos, filasSolicitudes, asignaciones, entrega)
+        };
+    }
+
+    private static List<HitoViewModel> ArmarLineaDeTiempo(
+        DateTime fechaRegistro, DateTime? fechaDisponibilidad, DateTime? fechaCancelacion,
+        IEnumerable<DiagnosticoFilaViewModel> diagnosticos, IEnumerable<SolicitudLegajoViewModel> solicitudes,
+        IEnumerable<AsignacionLegajoViewModel> asignaciones, EntregaLegajoViewModel? entrega)
+    {
+        var hitos = new List<HitoViewModel>
+        {
+            new() { Titulo = "Donación registrada", Fecha = fechaRegistro, Icono = "gift" }
+        };
+
+        hitos.AddRange(diagnosticos.Select(d => new HitoViewModel
+        {
+            Titulo = d.TipoDiagnostico switch
+            {
+                TipoDiagnostico.Rectificacion => $"Rectificación {d.CodigoDiagnostico}",
+                TipoDiagnostico.Segundo => $"Segundo diagnóstico {d.CodigoDiagnostico}",
+                _ => $"Diagnóstico {d.CodigoDiagnostico}"
+            },
+            Fecha = d.FechaDiagnostico,
+            Icono = d.TipoDiagnostico == TipoDiagnostico.Rectificacion ? "edit" : "wrench"
+        }));
+
+        if (fechaDisponibilidad is not null)
+        {
+            hitos.Add(new() { Titulo = "Disponible en el catálogo", Fecha = fechaDisponibilidad, Icono = "check" });
+        }
+
+        foreach (var solicitud in solicitudes)
+        {
+            hitos.Add(new() { Titulo = $"Solicitud {solicitud.Codigo} de {solicitud.Solicitante}", Fecha = solicitud.FechaSolicitud, Icono = "tray" });
+
+            if (solicitud.FechaCancelacion is not null)
+            {
+                hitos.Add(new() { Titulo = $"Solicitud {solicitud.Codigo} cancelada", Fecha = solicitud.FechaCancelacion, Icono = "x-circle", Estado = EstadoHito.Cancelado });
+            }
+        }
+
+        foreach (var asignacion in asignaciones)
+        {
+            hitos.Add(new() { Titulo = $"Asignación {asignacion.Codigo} a {asignacion.CodigoSolicitud}", Fecha = asignacion.FechaAsignacion, Icono = "swap" });
+
+            if (asignacion.FechaLiberacion is not null)
+            {
+                hitos.Add(new()
+                {
+                    Titulo = $"Asignación {asignacion.Codigo} liberada",
+                    Fecha = asignacion.FechaLiberacion,
+                    Icono = "undo",
+                    Estado = EstadoHito.Cancelado,
+                    Texto = asignacion.MotivoLiberacion
+                });
+            }
+        }
+
+        if (entrega is not null)
+        {
+            hitos.Add(new() { Titulo = $"Entrega {entrega.Codigo}", Fecha = entrega.FechaEntrega, Icono = "truck" });
+        }
+
+        if (fechaCancelacion is not null)
+        {
+            hitos.Add(new() { Titulo = "Donación cancelada", Fecha = fechaCancelacion, Icono = "x-circle", Estado = EstadoHito.Cancelado });
+        }
+
+        // orden estable: a igual fecha se respeta el orden en que se agregaron
+        return hitos.OrderBy(h => h.Fecha).ToList();
+    }
 }

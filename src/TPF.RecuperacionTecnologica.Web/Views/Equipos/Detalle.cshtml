@@ -6,7 +6,6 @@
     var esTecnico = User.IsInRole(nameof(RolPersonal.Tecnico));
     var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
     var verSolicitudes = esCoordinador || User.IsInRole(nameof(RolPersonal.Administrador));
-    var textoHistorial = esCoordinador ? "Historial de equipo" : "Historial de diagnósticos";
 
     string? Enlace(string accion) => Url.Action(accion, "Diagnosticos", new { nroEquipo = Model.NroEquipo });
 }
@@ -27,7 +26,14 @@
             <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
-            <a class="btn btn-secondary" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>@textoHistorial</span></a>
+            @if (verSolicitudes)
+            {
+                <a class="btn btn-secondary" asp-action="Legajo" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>Historial de equipo</span></a>
+            }
+            else
+            {
+                <a class="btn btn-secondary" asp-action="Historial" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("history")" /><span>Historial de diagnósticos</span></a>
+            }
             @if (esTecnico)
             {
                 if (Model.EstadoEquipo != EstadoEquipo.Cancelado)
