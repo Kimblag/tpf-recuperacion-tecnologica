@@ -1,4 +1,16 @@
 @model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria.AuditoriaFilaViewModel>
+@{
+    // detalle interno de cada entidad; todas estas pantallas las puede ver el Administrador
+    static (string Controlador, string Accion)? DestinoDe(string entidad) => entidad switch
+    {
+        "Solicitud" => ("Solicitudes", "DetalleInterno"),
+        "Equipo" => ("Equipos", "Detalle"),
+        "Asignacion" => ("Asignaciones", "Detalle"),
+        "Entrega" => ("Entregas", "Detalle"),
+        "Personal" => ("Personal", "Detalle"),
+        _ => null
+    };
+}
 <div class="table-wrap">
     <table class="table table-stack">
         <caption class="visually-hidden">Registro de auditoría</caption>
@@ -15,15 +27,17 @@
         <tbody>
             @foreach (var fila in Model)
             {
+                var destino = DestinoDe(fila.Entidad);
+
                 <tr>
                     <td data-label="Fecha y hora"><span class="nowrap">@fila.FechaHora.ToString("dd/MM/yyyy HH:mm")</span></td>
-                    <td data-label="Personal"><span class="mono">@fila.Personal</span></td>
+                    <td data-label="Personal">@fila.Personal</td>
                     <td data-label="Operación"><span class="tag">@Html.DisplayFor(m => fila.Operacion)</span></td>
-                    <td data-label="Entidad">@fila.Entidad</td>
+                    <td data-label="Entidad">@fila.EtiquetaEntidad</td>
                     <td data-label="Identificador">
-                        @if (fila.Entidad == "Personal")
+                        @if (destino is not null)
                         {
-                            <a class="mono" asp-controller="Personal" asp-action="Detalle" asp-route-id="@fila.IdEntidad">@fila.Identificador</a>
+                            <a class="mono" asp-controller="@destino.Value.Controlador" asp-action="@destino.Value.Accion" asp-route-id="@fila.IdEntidad">@fila.Identificador</a>
                         }
                         else
                         {

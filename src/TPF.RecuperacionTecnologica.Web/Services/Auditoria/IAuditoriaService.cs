@@ -1,4 +1,6 @@
 ﻿using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 
@@ -15,4 +17,13 @@ public interface IAuditoriaService
     /// <param name="idEntidadAfectada">Identificador de la entidad afectada.</param>
     /// <param name="detalle">Descripción corta opcional del evento.</param>
     Task RegistrarEventoAsync(TipoOperacionAuditoria tipoOperacion, int? codigoPersonal, string entidadAfectada, int idEntidadAfectada, string? detalle);
+
+    /// <summary>
+    /// Consulta la bitácora paginada, de la más reciente a la más antigua.
+    /// Cada filtro se aplica solo si viene informado; <paramref name="hasta"/> incluye todo ese día.
+    /// </summary>
+    /// <exception cref="ArgumentException">Si <paramref name="desde"/> es posterior a <paramref name="hasta"/>.</exception>
+    Task<ResultadoPaginado<AuditoriaFilaViewModel>> ConsultarAsync(
+        DateTime? desde, DateTime? hasta, TipoOperacionAuditoria? tipoOperacion, int? codigoPersonal,
+        string? entidadAfectada, int? idEntidadAfectada, int pagina, int tamanoPagina);
 }
