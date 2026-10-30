@@ -62,6 +62,15 @@ public class EquiposController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> Legajo(int id)
+    {
+        var legajo = await _equipoConsultaService.ObtenerLegajoAsync(id);
+
+        return legajo is null ? NotFound() : View(legajo);
+    }
+
+    [HttpGet]
     [Authorize(Policy = "SoloTecnico")]
     public async Task<IActionResult> CargarImagen(int id)
     {
