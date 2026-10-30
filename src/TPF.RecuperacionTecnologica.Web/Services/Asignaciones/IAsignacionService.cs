@@ -21,6 +21,8 @@ public interface IAsignacionService
 
     Task<AsignacionDetalleViewModel?> ObtenerDetalleAsync(int nroAsignacion);
 
+    Task<ResultadoAsignacion> LiberarAsync(string identityUserIdCoordinador, int nroAsignacion, string? motivoLiberacion);
+
     Task<ResultadoAsignacion> AsignarAsync(
         string identityUserIdCoordinador, int nroEquipo, int nroSolicitud, string? justificacionCambio);
 }

@@ -8,6 +8,9 @@ public enum ErrorAsignacion
     SolicitudDeOtroEquipo,
     JustificacionRequerida,
     ConfiguracionNoEncontrada,
+    AsignacionNoEncontrada,
+    AsignacionNoVigente,
+    MotivoRequerido,
     AsignacionConcurrente,
     Fallido
 }

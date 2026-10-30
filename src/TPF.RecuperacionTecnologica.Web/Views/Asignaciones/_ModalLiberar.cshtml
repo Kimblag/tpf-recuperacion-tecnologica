@@ -2,24 +2,25 @@
 
 <div class="modal fade" id="modal-liberar-asignacion" tabindex="-1" aria-labelledby="modal-liberar-asignacion-titulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <form class="modal-content" method="post" asp-action="Liberar" asp-route-id="@Model.NroAsignacion" novalidate>
             <div class="modal-header">
                 <h2 class="modal-title" id="modal-liberar-asignacion-titulo"><partial name="_Icon" model="@("undo")" />Liberar asignación</h2>
                 <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
             </div>
             <div class="modal-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                 <p>Se va a liberar la asignación <span class="mono">@Model.Codigo</span>.</p>
                 <p>El equipo <span class="mono">@Model.CodigoEquipo</span> volverá a estar <b>Disponible</b> y la solicitud <span class="mono">@Model.CodigoSolicitud</span> quedará cerrada.</p>
                 <div class="field">
-                    <label class="form-label" for="MotivoLiberacion">Motivo de la liberación<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                    <textarea id="MotivoLiberacion" name="MotivoLiberacion" class="form-control" rows="3" maxlength="300"></textarea>
+                    <label class="form-label" for="Liberacion_MotivoLiberacion">Motivo de la liberación<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                    <textarea asp-for="Liberacion.MotivoLiberacion" class="form-control" rows="3" maxlength="300"></textarea>
+                    <span asp-validation-for="Liberacion.MotivoLiberacion"></span>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
-                @* TODO: habilitar la liberación cuando exista la acción Liberar (#123) *@
-                <button type="button" class="btn btn-danger" disabled>Liberar asignación</button>
+                <button type="submit" class="btn btn-danger">Liberar asignación</button>
             </div>
-        </div>
+        </form>
     </div>
 </div>

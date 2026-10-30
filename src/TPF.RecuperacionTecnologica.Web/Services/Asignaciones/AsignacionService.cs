@@ -13,6 +13,10 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Asignaciones;
 public class AsignacionService : IAsignacionService
 {
     private const int MaximoJustificacion = 300;
+    private const int MaximoMotivoLiberacion = 300;
+
+    private const string MensajeConcurrenciaLiberacion =
+        "La asignación cambió mientras se liberaba: otra persona pudo entregarla o liberarla. No se guardó nada. Volver a abrir el detalle e intentar nuevamente.";
 
     private const string MensajeConcurrencia =
         "La solicitud o el equipo cambiaron mientras se asignaba: otra persona pudo asignar el equipo, o la solicitud se editó o se canceló. No se guardó nada. Volver a abrir la pantalla e intentar nuevamente.";
@@ -467,5 +471,100 @@ public class AsignacionService : IAsignacionService
         }
 
         return ResultadoAsignacion.Ok(asignacion.NroAsignacion);
+    }
+
+    public async Task<ResultadoAsignacion> LiberarAsync(
+        string identityUserIdCoordinador, int nroAsignacion, string? motivoLiberacion)
+    {
+        var codigoCoordinador = await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.IdentityUserId == identityUserIdCoordinador
+                && p.RolAsignado == RolPersonal.Coordinador
+                && p.EstadoPersonal == EstadoPersonal.Activo)
+            .Select(p => (int?)p.CodigoPersonal)
+            .FirstOrDefaultAsync();
+
+        if (codigoCoordinador is null)
+        {
+            return ResultadoAsignacion.Fallo(ErrorAsignacion.CoordinadorNoHabilitado,
+                "La cuenta no está habilitada para liberar asignaciones.");
+        }
+
+        var motivo = motivoLiberacion?.Trim();
+
+        if (string.IsNullOrEmpty(motivo))
+        {
+            return ResultadoAsignacion.Fallo(ErrorAsignacion.MotivoRequerido,
+                "El motivo de la liberación es obligatorio.");
+        }
+
+        if (motivo.Length > MaximoMotivoLiberacion)
+        {
+            return ResultadoAsignacion.Fallo(ErrorAsignacion.MotivoRequerido,
+                $"El motivo de la liberación no puede superar los {MaximoMotivoLiberacion} caracteres.");
+        }
+
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // con seguimiento: el RowVersion de los tres detecta una entrega o una liberación concurrente
+            var asignacion = await _context.Asignaciones
+                .Include(a => a.Equipo)
+                .Include(a => a.Solicitud)
+                .FirstOrDefaultAsync(a => a.NroAsignacion == nroAsignacion);
+
+            if (asignacion is null)
+            {
+                return ResultadoAsignacion.Fallo(ErrorAsignacion.AsignacionNoEncontrada,
+                    "No se encontró la asignación.");
+            }
+
+            if (asignacion.EstadoAsignacion != EstadoAsignacion.Vigente)
+            {
+                return ResultadoAsignacion.Fallo(ErrorAsignacion.AsignacionNoVigente,
+                    "La asignación ya no está Vigente: se entregó o se liberó. Solo se puede liberar una asignación Vigente.");
+            }
+
+            var ahora = DateTime.UtcNow;
+
+            asignacion.EstadoAsignacion = EstadoAsignacion.Liberada;
+            asignacion.FechaLiberacion = ahora;
+            asignacion.MotivoLiberacion = motivo;
+            asignacion.FechaUltimaModificacion = ahora;
+
+            asignacion.Equipo.EstadoEquipo = EstadoEquipo.Disponible;
+            asignacion.Equipo.FechaUltimaModificacion = ahora;
+
+            asignacion.Solicitud.EstadoSolicitud = EstadoSolicitud.Cerrada;
+            asignacion.Solicitud.FechaCierre = ahora;
+            asignacion.Solicitud.FechaUltimaModificacion = ahora;
+
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return ResultadoAsignacion.Fallo(ErrorAsignacion.AsignacionConcurrente, MensajeConcurrenciaLiberacion);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la liberación de la Asignación {NroAsignacion}", nroAsignacion);
+            return ResultadoAsignacion.Fallo(ErrorAsignacion.Fallido,
+                "No se pudo liberar la asignación. No se guardó nada. Intentar nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.Liberacion, codigoCoordinador, nameof(Asignacion),
+                nroAsignacion, $"Liberación de la asignación {nroAsignacion}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la liberación de la Asignación {NroAsignacion}", nroAsignacion);
+        }
+
+        return ResultadoAsignacion.Ok(nroAsignacion);
     }
 }

@@ -80,6 +80,45 @@ public class AsignacionesController : Controller
         return View(asignacion);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> Liberar(
+        int id, [Bind(Prefix = nameof(AsignacionDetalleViewModel.Liberacion))] LiberarAsignacionViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        if (ModelState.IsValid)
+        {
+            var resultado = await _asignacionService.LiberarAsync(identityUserId, id, formulario.MotivoLiberacion);
+
+            if (resultado.Exitoso)
+            {
+                TempData["Mensaje"] = "La asignación se liberó correctamente. El equipo volvió a estar Disponible.";
+                return RedirectToAction(nameof(Detalle), new { id });
+            }
+
+            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+        }
+
+        var detalle = await _asignacionService.ObtenerDetalleAsync(id);
+
+        if (detalle is null)
+        {
+            return NotFound();
+        }
+
+        // se conserva lo escrito para no perderlo al mostrar el error
+        detalle.Liberacion.MotivoLiberacion = formulario.MotivoLiberacion;
+
+        return View(nameof(Detalle), detalle);
+    }
+
     [HttpGet]
     [Authorize(Policy = "SoloCoordinador")]
     public async Task<IActionResult> Asignar(int? nroEquipo, string? busquedaEquipo)
