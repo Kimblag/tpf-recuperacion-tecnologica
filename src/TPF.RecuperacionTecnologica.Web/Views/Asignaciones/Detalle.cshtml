@@ -4,6 +4,8 @@
     ViewData["Title"] = "Detalle de asignación";
 
     var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
+    var esVigenteEditable = esCoordinador && Model.EsVigente;
+    var hayErrores = !ViewData.ModelState.IsValid;
 
     var explicacionEstado = Model.EstadoAsignacion switch
     {
@@ -47,6 +49,19 @@
             }
         </div>
     </div>
+
+    @if (!esVigenteEditable && ViewData.ModelState[string.Empty] is { Errors.Count: > 0 } erroresGenerales)
+    {
+        <div class="alert alert-danger" role="alert">
+            <partial name="_Icon" model="@("x-circle")" />
+            <div class="alert-body">
+                @foreach (var error in erroresGenerales.Errors)
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        </div>
+    }
 
     @if (Model.PlazoVencido)
     {
@@ -120,7 +135,17 @@
     </div>
 </div>
 
-@if (esCoordinador && Model.EsVigente)
+@if (esVigenteEditable)
 {
     <partial name="_ModalLiberar" model="Model" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @if (esVigenteEditable && hayErrores)
+    {
+        <script>
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-liberar-asignacion')).show();
+        </script>
+    }
 }
