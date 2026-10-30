@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
-public class EntregaListadoViewModel
+public class EntregaListadoViewModel : IValidatableObject
 {
     private string? _busqueda;
 
@@ -10,8 +12,10 @@ public class EntregaListadoViewModel
         set => _busqueda = value is { Length: > 60 } ? value[..60] : value;
     }
 
+    [Display(Name = "Desde")]
     public DateTime? FechaDesde { get; set; }
 
+    [Display(Name = "Hasta")]
     public DateTime? FechaHasta { get; set; }
 
     public IReadOnlyList<EntregaFilaViewModel> Filas { get; set; } = [];
@@ -34,4 +38,13 @@ public class EntregaListadoViewModel
         !string.IsNullOrWhiteSpace(Busqueda)
         || FechaDesde is not null
         || FechaHasta is not null;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (FechaDesde is not null && FechaHasta is not null && FechaDesde.Value.Date > FechaHasta.Value.Date)
+        {
+            yield return new ValidationResult(
+                "La fecha desde no puede ser posterior a la fecha hasta.", [nameof(FechaDesde)]);
+        }
+    }
 }

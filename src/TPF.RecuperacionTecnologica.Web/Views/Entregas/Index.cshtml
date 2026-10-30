@@ -33,6 +33,8 @@
         }
     </div>
 
+    <partial name="_ResumenErrores" />
+
     <section class="card overflow" aria-label="Entregas" data-listado data-filas-carga="5">
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
             <div class="filter grow">
@@ -42,6 +44,7 @@
             <div class="filter">
                 <label for="FechaDesde">Desde</label>
                 <input asp-for="FechaDesde" type="date" class="form-control sm" />
+                <span asp-validation-for="FechaDesde"></span>
             </div>
             <div class="filter">
                 <label for="FechaHasta">Hasta</label>
@@ -56,7 +59,16 @@
         </form>
 
         <div class="card-body flush">
-            @if (Model.ErrorAlCargar)
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>Revisar los filtros</h3>
+                    <p>Corregir el rango de fechas para ver las entregas.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Ver todas</a>
+                </div>
+            }
+            else if (Model.ErrorAlCargar)
             {
                 <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las entregas. Se puede intentar de nuevo en unos minutos.")" />
             }
@@ -100,13 +112,12 @@
                                 <tr>
                                     <td data-label="Entrega"><span class="mono">@fila.Codigo</span></td>
                                     <td data-label="Solicitud">
-                                        @* TODO: enlazar a Solicitudes/DetalleInterno cuando las entregas sean reales (#152) *@
-                                        <span class="mono">@fila.CodigoSolicitud</span>
+                                        <a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud">@fila.CodigoSolicitud</a>
                                         <div class="card-sub">@fila.Solicitante</div>
                                     </td>
                                     <td data-label="Equipo">
                                         <div>@fila.MarcaYModelo</div>
-                                        <div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <span class="mono">@fila.CodigoEquipo</span></div>
+                                        <div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></div>
                                     </td>
                                     <td data-label="Quién retiró">
                                         <div>@fila.NombreQuienRetira</div>

@@ -1,3 +1,4 @@
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Entregas;
@@ -16,4 +17,17 @@ public interface IEntregaService
 
     Task<ResultadoEntrega> RegistrarAsync(
         string identityUserIdCoordinador, int nroAsignacion, string? nombreQuienRetira, string? documentoQuienRetira);
+
+    /// <summary>
+    /// Historial de entregas, de la más reciente a la más antigua. La búsqueda y las fechas son opcionales;
+    /// <paramref name="hasta"/> incluye todo ese día.
+    /// </summary>
+    /// <exception cref="ArgumentException">Si <paramref name="desde"/> es posterior a <paramref name="hasta"/>.</exception>
+    Task<ResultadoPaginado<EntregaFilaViewModel>> ListarAsync(
+        string? busqueda, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina);
+
+    /// <summary>
+    /// Detalle de solo lectura de una entrega; null si no existe.
+    /// </summary>
+    Task<EntregaDetalleViewModel?> ObtenerDetalleAsync(int nroEntrega);
 }
