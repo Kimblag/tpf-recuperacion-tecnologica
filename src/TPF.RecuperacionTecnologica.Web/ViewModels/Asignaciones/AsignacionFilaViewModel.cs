@@ -22,6 +22,12 @@ public class AsignacionFilaViewModel
 
     public EstadoAsignacion EstadoAsignacion { get; set; }
 
+    public string Solicitante { get; set; } = string.Empty;
+
+    public bool PlazoVencido { get; set; }
+
+    public bool PlazoPorVencer { get; set; }
+
     public string Codigo => $"ASG-{NroAsignacion:D6}";
 
     public string CodigoSolicitud => $"SOL-{NroSolicitud:D6}";

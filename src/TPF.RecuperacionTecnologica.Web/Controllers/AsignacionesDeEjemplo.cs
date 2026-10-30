@@ -9,7 +9,7 @@ internal sealed record AsignacionEjemplo(
     string? Justificacion = null, DateTime? FechaLiberacion = null, string? MotivoLiberacion = null,
     DateTime? FechaEntrega = null);
 
-// TODO: reemplazar estos datos de ejemplo por las asignaciones reales (#150)
+// TODO: reemplazar estos datos de ejemplo por las entregas reales (#152); el listado de asignaciones ya no los usa
 internal static class AsignacionesDeEjemplo
 {
     private static readonly DateTime Hoy = DateTime.Today;

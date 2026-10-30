@@ -22,94 +22,62 @@ public class AsignacionesController : Controller
     private readonly IPersonalService _personalService;
     private readonly IConfiguracionService _configuracionService;
     private readonly IAsignacionService _asignacionService;
+    private readonly ILogger<AsignacionesController> _logger;
 
     public AsignacionesController(
         IDonacionService donacionService,
         IPersonalService personalService,
         IConfiguracionService configuracionService,
-        IAsignacionService asignacionService)
+        IAsignacionService asignacionService,
+        ILogger<AsignacionesController> logger)
     {
         _donacionService = donacionService;
         _personalService = personalService;
         _configuracionService = configuracionService;
         _asignacionService = asignacionService;
+        _logger = logger;
     }
 
     [HttpGet]
     [Authorize(Policy = "Coordinacion")]
-    public IActionResult Index(AsignacionListadoViewModel filtros)
+    public async Task<IActionResult> Index(AsignacionListadoViewModel filtros)
     {
         if (!Request.Query.ContainsKey(nameof(AsignacionListadoViewModel.Estado)))
         {
             filtros.Estado = EstadoAsignacion.Vigente;
         }
 
-        // TODO: reemplazar por la consulta real con filtros y paginación (#150)
-        var texto = filtros.Busqueda?.Trim();
+        try
+        {
+            var resultado = await _asignacionService.ListarAsync(
+                filtros.Busqueda, filtros.Estado, filtros.Plazo,
+                filtros.Pagina, AsignacionListadoViewModel.TamanoPagina);
 
-        var filtradas = AsignacionesDeEjemplo.Todas
-            .Where(a => (filtros.Estado is null || a.Estado == filtros.Estado)
-                && (string.IsNullOrEmpty(texto)
-                    || $"ASG-{a.NroAsignacion:D6}".Contains(texto, StringComparison.OrdinalIgnoreCase)
-                    || $"SOL-{a.NroSolicitud:D6}".Contains(texto, StringComparison.OrdinalIgnoreCase)
-                    || a.NroEquipo.ToString("D6").Contains(texto)
-                    || a.MarcaYModelo.Contains(texto, StringComparison.OrdinalIgnoreCase)))
-            .OrderByDescending(a => a.Fecha)
-            .ThenByDescending(a => a.NroAsignacion)
-            .ToList();
-
-        filtros.Total = filtradas.Count;
-        filtros.Pagina = Math.Clamp(filtros.Pagina, 1, filtros.TotalPaginas);
-        filtros.Filas = filtradas
-            .Skip((filtros.Pagina - 1) * AsignacionListadoViewModel.TamanoPagina)
-            .Take(AsignacionListadoViewModel.TamanoPagina)
-            .Select(a => new AsignacionFilaViewModel
-            {
-                NroAsignacion = a.NroAsignacion,
-                NroSolicitud = a.NroSolicitud,
-                NroEquipo = a.NroEquipo,
-                TipoEquipo = a.TipoEquipo,
-                MarcaYModelo = a.MarcaYModelo,
-                Coordinador = a.Coordinador,
-                FechaAsignacion = a.Fecha,
-                FechaLimiteRetiro = a.Limite,
-                EstadoAsignacion = a.Estado
-            })
-            .ToList();
+            filtros.Filas = resultado.Elementos;
+            filtros.Total = resultado.Total;
+            filtros.Pagina = resultado.Pagina;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo cargar el listado de asignaciones");
+            filtros.ErrorAlCargar = true;
+        }
 
         return View(filtros);
     }
 
     [HttpGet]
     [Authorize(Policy = "Coordinacion")]
-    public IActionResult Detalle(int id)
+    public async Task<IActionResult> Detalle(int id)
     {
-        // TODO: reemplazar por la consulta real de la asignación (#150)
-        var asignacion = AsignacionesDeEjemplo.Todas.FirstOrDefault(a => a.NroAsignacion == id);
+        var asignacion = await _asignacionService.ObtenerDetalleAsync(id);
 
         if (asignacion is null)
         {
             return NotFound();
         }
 
-        return View(new AsignacionDetalleViewModel
-        {
-            NroAsignacion = asignacion.NroAsignacion,
-            NroSolicitud = asignacion.NroSolicitud,
-            Solicitante = asignacion.Solicitante,
-            TipoSolicitante = asignacion.TipoSolicitante,
-            NroEquipo = asignacion.NroEquipo,
-            TipoEquipo = asignacion.TipoEquipo,
-            MarcaYModelo = asignacion.MarcaYModelo,
-            Coordinador = asignacion.Coordinador,
-            FechaAsignacion = asignacion.Fecha,
-            FechaLimiteRetiro = asignacion.Limite,
-            EstadoAsignacion = asignacion.Estado,
-            CambioPrioridad = asignacion.CambioPrioridad,
-            JustificacionCambio = asignacion.Justificacion,
-            Hitos = ArmarHitos(asignacion),
-            Liberacion = new LiberarAsignacionViewModel { NroAsignacion = asignacion.NroAsignacion }
-        });
+        return View(asignacion);
     }
 
     [HttpGet]
@@ -200,64 +168,5 @@ public class AsignacionesController : Controller
         {
             formulario.NroSolicitudSeleccionada = formulario.Candidatas.FirstOrDefault()?.NroSolicitud;
         }
-    }
-
-    private static IReadOnlyList<HitoViewModel> ArmarHitos(AsignacionEjemplo asignacion)
-    {
-        var hitos = new List<HitoViewModel>
-        {
-            new()
-            {
-                Titulo = "Asignación registrada",
-                Fecha = asignacion.Fecha,
-                Icono = "swap",
-                Estado = EstadoHito.Completado,
-                Texto = $"Registrada por {asignacion.Coordinador}."
-            }
-        };
-
-        switch (asignacion.Estado)
-        {
-            case EstadoAsignacion.Vigente:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Plazo de retiro",
-                    Icono = "clock",
-                    Estado = EstadoHito.Actual,
-                    Texto = $"Hasta el {asignacion.Limite:dd/MM/yyyy}."
-                });
-                hitos.Add(new HitoViewModel { Titulo = "Entrega del equipo", Icono = "truck", Estado = EstadoHito.Pendiente });
-                break;
-
-            case EstadoAsignacion.Concretada:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Plazo de retiro",
-                    Fecha = asignacion.Limite,
-                    Icono = "clock",
-                    Estado = EstadoHito.Completado
-                });
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Entrega completada",
-                    Fecha = asignacion.FechaEntrega,
-                    Icono = "truck",
-                    Estado = EstadoHito.Completado
-                });
-                break;
-
-            default:
-                hitos.Add(new HitoViewModel
-                {
-                    Titulo = "Asignación liberada",
-                    Fecha = asignacion.FechaLiberacion,
-                    Icono = "undo",
-                    Estado = EstadoHito.Cancelado,
-                    Texto = asignacion.MotivoLiberacion
-                });
-                break;
-        }
-
-        return hitos;
     }
 }

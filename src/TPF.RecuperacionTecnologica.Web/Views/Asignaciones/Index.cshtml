@@ -1,5 +1,6 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones.AsignacionListadoViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones
 @{
     ViewData["Title"] = "Asignaciones";
 
@@ -9,6 +10,7 @@
     {
         Busqueda = Model.Busqueda,
         Estado = Model.Estado,
+        Plazo = Model.Plazo,
         Pagina = pagina
     });
 }
@@ -38,12 +40,21 @@
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
-                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de asignación, solicitud o equipo" maxlength="60" data-filtro-texto />
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de asignación, solicitud o equipo, marca o solicitante" maxlength="60" data-filtro-texto />
             </div>
             <div class="filter">
                 <label for="Estado">Estado</label>
                 <div class="select">
                     <select asp-for="Estado" class="form-select sm" asp-items="Html.GetEnumSelectList<EstadoAsignacion>()">
+                        <option value="">Todos</option>
+                    </select>
+                    <partial name="_Icon" model="@("chevron-down")" />
+                </div>
+            </div>
+            <div class="filter">
+                <label for="Plazo">Plazo de retiro</label>
+                <div class="select">
+                    <select asp-for="Plazo" class="form-select sm" asp-items="Html.GetEnumSelectList<FiltroPlazoAsignacion>()">
                         <option value="">Todos</option>
                     </select>
                     <partial name="_Icon" model="@("chevron-down")" />
@@ -101,14 +112,27 @@
                             {
                                 <tr>
                                     <td data-label="Asignación"><span class="mono">@fila.Codigo</span></td>
-                                    <td data-label="Solicitud"><a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud">@fila.CodigoSolicitud</a></td>
+                                    <td data-label="Solicitud">
+                                        <a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud">@fila.CodigoSolicitud</a>
+                                        <div class="card-sub">@fila.Solicitante</div>
+                                    </td>
                                     <td data-label="Equipo">
                                         <div>@fila.MarcaYModelo</div>
                                         <div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></div>
                                     </td>
                                     <td data-label="Coordinador">@fila.Coordinador</td>
                                     <td data-label="Asignada">@fila.FechaAsignacion.ToString("dd/MM/yyyy")</td>
-                                    <td data-label="Retiro hasta">@fila.FechaLimiteRetiro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Retiro hasta">
+                                        <div>@fila.FechaLimiteRetiro.ToString("dd/MM/yyyy")</div>
+                                        @if (fila.PlazoVencido)
+                                        {
+                                            <partial name="_Badge" model="@(("Vencida", "danger"))" />
+                                        }
+                                        else if (fila.PlazoPorVencer)
+                                        {
+                                            <partial name="_Badge" model="@(("Por vencer", "warn"))" />
+                                        }
+                                    </td>
                                     <td data-label="Estado"><partial name="_EstadoAsignacionBadge" model="fila.EstadoAsignacion" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroAsignacion" aria-label="Ver asignación @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
