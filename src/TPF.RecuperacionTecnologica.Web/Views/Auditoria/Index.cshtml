@@ -3,6 +3,19 @@
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria
 @{
     ViewData["Title"] = "Auditoría";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        FechaDesde = Model.FechaDesde?.ToString("yyyy-MM-dd"),
+        FechaHasta = Model.FechaHasta?.ToString("yyyy-MM-dd"),
+        Operacion = Model.Operacion,
+        CodigoPersonal = Model.CodigoPersonal,
+        Entidad = Model.Entidad,
+        Identificador = Model.Identificador,
+        Pagina = pagina
+    });
+
+    var filtrosValidos = ViewData.ModelState.IsValid;
 }
 
 @section Migas {
@@ -18,15 +31,18 @@
         </div>
     </div>
 
-    <section class="card overflow" aria-label="Registro de auditoría">
+    <partial name="_ResumenErrores" />
+
+    <section class="card overflow" aria-label="Registro de auditoría" data-listado data-filas-carga="6">
         <form class="filters" role="search" method="get" asp-action="Index">
             <div class="filter">
-                <label for="Desde">Desde</label>
-                <input asp-for="Desde" type="date" class="form-control sm" />
+                <label asp-for="FechaDesde">Desde</label>
+                <input asp-for="FechaDesde" type="date" class="form-control sm" />
+                <span asp-validation-for="FechaDesde"></span>
             </div>
             <div class="filter">
-                <label for="Hasta">Hasta</label>
-                <input asp-for="Hasta" type="date" class="form-control sm" />
+                <label asp-for="FechaHasta">Hasta</label>
+                <input asp-for="FechaHasta" type="date" class="form-control sm" />
             </div>
             <div class="filter">
                 <label for="Operacion">Tipo de operación</label>
@@ -38,54 +54,73 @@
                 </div>
             </div>
             <div class="filter">
-                <label for="CodigoPersonal">Código de personal</label>
-                <input asp-for="CodigoPersonal" class="form-control sm" placeholder="PER-0000" />
+                <label asp-for="CodigoPersonal">Código de personal</label>
+                <input asp-for="CodigoPersonal" class="form-control sm" placeholder="Ej.: PER-0002" maxlength="20" />
+                <span asp-validation-for="CodigoPersonal"></span>
             </div>
             <div class="filter">
                 <label for="Entidad">Entidad</label>
                 <div class="select">
-                    <select asp-for="Entidad" class="form-select sm" asp-items="@(AuditoriaListadoViewModel.EntidadesDisponibles.Select(e => new SelectListItem(e, e)))">
+                    <select asp-for="Entidad" class="form-select sm" asp-items="@(AuditoriaListadoViewModel.EntidadesDisponibles.Select(e => new SelectListItem(e.Value, e.Key)))">
                         <option value="">Todas</option>
                     </select>
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
             </div>
             <div class="filter">
-                <label for="Identificador">Identificador</label>
-                <input asp-for="Identificador" class="form-control sm" placeholder="Ej.: DON-000048" />
+                <label asp-for="Identificador">Identificador</label>
+                <input asp-for="Identificador" class="form-control sm" placeholder="Ej.: SOL-000030" maxlength="20" />
+                <span asp-validation-for="Identificador"></span>
             </div>
             <div class="filter" style="min-width:0">
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>
             </div>
             <div class="filter" style="min-width:0">
-                <a class="btn btn-ghost" asp-action="Index">Limpiar</a>
+                <a class="btn btn-ghost" asp-action="Index" data-muestra-carga>Limpiar</a>
             </div>
         </form>
 
         <div class="card-body flush">
-            @if (Model.Filas.Count == 0)
+            @if (!filtrosValidos)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>Revisar los filtros</h3>
+                    <p>Corregir los filtros marcados para ver el registro de auditoría.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.ErrorAlCargar)
+            {
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener el registro de auditoría. Se puede intentar de nuevo en unos minutos.")" />
+            }
+            else if (Model.Filas.Count == 0 && Model.HayFiltros)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
+                    <h3>Sin operaciones para los filtros elegidos</h3>
+                    <p>Probar con un rango de fechas más amplio o quitar algún filtro.</p>
+                    <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("history")" /></span>
-                    <h3>Sin operaciones para los filtros elegidos</h3>
-                    <p>Amplíe el rango de fechas o quite algún filtro.</p>
+                    <h3>No hay operaciones registradas</h3>
+                    <p>Las operaciones realizadas en la plataforma aparecerán aquí.</p>
                 </div>
             }
             else
             {
                 <partial name="_TablaAuditoria" model="Model.Filas" />
 
-                <div class="card-foot">
-                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
-                    <nav aria-label="Paginación">
-                        <div class="pagination">
-                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
-                            <button type="button" class="page-btn" aria-current="page">1</button>
-                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
-                        </div>
-                    </nav>
-                </div>
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
+
+        <template data-plantilla-carga>
+            <div class="load-note" role="status"><partial name="_Icon" model="@("clock")" /><span>Cargando datos…</span></div>
+        </template>
     </section>
 </div>
