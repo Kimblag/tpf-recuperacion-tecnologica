@@ -112,6 +112,240 @@ public class AsignacionService : IAsignacionService
             .ToList();
     }
 
+    // se usa solo si todavía no existe la fila de configuración
+    private const int DiasAvisoVencimientoPorDefecto = 3;
+
+    private async Task<int> ObtenerDiasAvisoAsync() =>
+        (await _configuracionService.ObtenerAsync())?.DiasAvisoVencimiento ?? DiasAvisoVencimientoPorDefecto;
+
+    private static IQueryable<Asignacion> FiltrarPorTexto(IQueryable<Asignacion> consulta, string? busqueda)
+    {
+        var texto = busqueda?.Trim();
+
+        if (string.IsNullOrEmpty(texto))
+        {
+            return consulta;
+        }
+
+        return consulta.Where(a =>
+            ("ASG-" + (1000000 + a.NroAsignacion).ToString().Substring(1)).Contains(texto)
+            || ("SOL-" + (1000000 + a.NroSolicitud).ToString().Substring(1)).Contains(texto)
+            || (1000000 + a.NroEquipo).ToString().Substring(1).Contains(texto)
+            || (a.Equipo.Marca + " " + a.Equipo.Modelo).Contains(texto)
+            || (a.Solicitud.Usuario.RazonSocial ?? (a.Solicitud.Usuario.Nombre + " " + a.Solicitud.Usuario.Apellido)).Contains(texto));
+    }
+
+    public async Task<ResultadoPaginado<AsignacionFilaViewModel>> ListarAsync(
+        string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina)
+    {
+        // "hoy" es el día UTC, igual que en el inicio del Coordinador
+        var hoy = DateTime.UtcNow.Date;
+        var limiteAviso = hoy.AddDays(await ObtenerDiasAvisoAsync());
+
+        var consulta = _context.Asignaciones.AsNoTracking().AsQueryable();
+
+        if (plazo is not null)
+        {
+            // el plazo solo tiene sentido en las Vigentes, sin importar el estado elegido
+            consulta = consulta.Where(a => a.EstadoAsignacion == EstadoAsignacion.Vigente);
+
+            consulta = plazo == FiltroPlazoAsignacion.Vencidas
+                ? consulta.Where(a => a.FechaLimiteRetiro.Date < hoy)
+                : consulta.Where(a => a.FechaLimiteRetiro.Date >= hoy && a.FechaLimiteRetiro.Date <= limiteAviso);
+        }
+        else if (estado is not null)
+        {
+            consulta = consulta.Where(a => a.EstadoAsignacion == estado);
+        }
+
+        consulta = FiltrarPorTexto(consulta, busqueda);
+
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        var filas = await consulta
+            .OrderByDescending(a => a.FechaAsignacion)
+            .ThenByDescending(a => a.NroAsignacion)
+            .Skip((pagina - 1) * tamanoPagina)
+            .Take(tamanoPagina)
+            .Select(a => new
+            {
+                a.NroAsignacion,
+                a.NroSolicitud,
+                a.NroEquipo,
+                a.Equipo.TipoEquipo,
+                a.Equipo.Marca,
+                a.Equipo.Modelo,
+                CoordinadorNombre = a.Coordinador.Nombre,
+                CoordinadorApellido = a.Coordinador.Apellido,
+                a.FechaAsignacion,
+                a.FechaLimiteRetiro,
+                a.EstadoAsignacion,
+                a.Solicitud.Usuario.RazonSocial,
+                a.Solicitud.Usuario.Nombre,
+                a.Solicitud.Usuario.Apellido
+            })
+            .ToListAsync();
+
+        return new ResultadoPaginado<AsignacionFilaViewModel>
+        {
+            Elementos = filas.Select(f =>
+            {
+                var vigente = f.EstadoAsignacion == EstadoAsignacion.Vigente;
+
+                return new AsignacionFilaViewModel
+                {
+                    NroAsignacion = f.NroAsignacion,
+                    NroSolicitud = f.NroSolicitud,
+                    NroEquipo = f.NroEquipo,
+                    TipoEquipo = f.TipoEquipo,
+                    MarcaYModelo = $"{f.Marca} {f.Modelo}",
+                    Coordinador = $"{f.CoordinadorNombre} {f.CoordinadorApellido}",
+                    FechaAsignacion = f.FechaAsignacion,
+                    FechaLimiteRetiro = f.FechaLimiteRetiro,
+                    EstadoAsignacion = f.EstadoAsignacion,
+                    Solicitante = NombreSolicitante(f.RazonSocial, f.Nombre, f.Apellido),
+                    PlazoVencido = vigente && f.FechaLimiteRetiro.Date < hoy,
+                    PlazoPorVencer = vigente && f.FechaLimiteRetiro.Date >= hoy && f.FechaLimiteRetiro.Date <= limiteAviso
+                };
+            }).ToList(),
+            Total = total,
+            Pagina = pagina
+        };
+    }
+
+    public async Task<AsignacionDetalleViewModel?> ObtenerDetalleAsync(int nroAsignacion)
+    {
+        var datos = await _context.Asignaciones
+            .AsNoTracking()
+            .Where(a => a.NroAsignacion == nroAsignacion)
+            .Select(a => new
+            {
+                a.NroAsignacion,
+                a.NroSolicitud,
+                a.NroEquipo,
+                a.Equipo.TipoEquipo,
+                a.Equipo.Marca,
+                a.Equipo.Modelo,
+                a.Solicitud.TipoSolicitante,
+                a.Solicitud.Usuario.RazonSocial,
+                a.Solicitud.Usuario.Nombre,
+                a.Solicitud.Usuario.Apellido,
+                CoordinadorNombre = a.Coordinador.Nombre,
+                CoordinadorApellido = a.Coordinador.Apellido,
+                a.CodigoCoordinador,
+                a.FechaAsignacion,
+                a.FechaLimiteRetiro,
+                a.EstadoAsignacion,
+                a.JustificacionCambio,
+                a.FechaLiberacion,
+                a.MotivoLiberacion
+            })
+            .FirstOrDefaultAsync();
+
+        if (datos is null)
+        {
+            return null;
+        }
+
+        var fechaEntrega = await _context.Entregas
+            .AsNoTracking()
+            .Where(e => e.NroAsignacion == nroAsignacion)
+            .Select(e => (DateTime?)e.FechaEntrega)
+            .FirstOrDefaultAsync();
+
+        var coordinador = $"{datos.CoordinadorNombre} {datos.CoordinadorApellido} · PER-{datos.CodigoCoordinador:D4}";
+        var vencido = datos.EstadoAsignacion == EstadoAsignacion.Vigente
+            && datos.FechaLimiteRetiro.Date < DateTime.UtcNow.Date;
+
+        return new AsignacionDetalleViewModel
+        {
+            NroAsignacion = datos.NroAsignacion,
+            NroSolicitud = datos.NroSolicitud,
+            Solicitante = NombreSolicitante(datos.RazonSocial, datos.Nombre, datos.Apellido),
+            TipoSolicitante = datos.TipoSolicitante,
+            NroEquipo = datos.NroEquipo,
+            TipoEquipo = datos.TipoEquipo,
+            MarcaYModelo = $"{datos.Marca} {datos.Modelo}",
+            Coordinador = coordinador,
+            FechaAsignacion = datos.FechaAsignacion,
+            FechaLimiteRetiro = datos.FechaLimiteRetiro,
+            EstadoAsignacion = datos.EstadoAsignacion,
+            CambioPrioridad = !string.IsNullOrWhiteSpace(datos.JustificacionCambio),
+            JustificacionCambio = datos.JustificacionCambio,
+            PlazoVencido = vencido,
+            FechaLiberacion = datos.FechaLiberacion,
+            MotivoLiberacion = datos.MotivoLiberacion,
+            Hitos = ArmarHitos(datos.EstadoAsignacion, datos.FechaAsignacion, datos.FechaLimiteRetiro, vencido,
+                coordinador, fechaEntrega, datos.FechaLiberacion, datos.MotivoLiberacion),
+            Liberacion = new LiberarAsignacionViewModel { NroAsignacion = datos.NroAsignacion }
+        };
+    }
+
+    private static List<HitoViewModel> ArmarHitos(
+        EstadoAsignacion estado, DateTime fechaAsignacion, DateTime fechaLimite, bool vencido,
+        string coordinador, DateTime? fechaEntrega, DateTime? fechaLiberacion, string? motivoLiberacion)
+    {
+        var hitos = new List<HitoViewModel>
+        {
+            new()
+            {
+                Titulo = "Asignación registrada",
+                Fecha = fechaAsignacion,
+                Icono = "swap",
+                Estado = EstadoHito.Completado,
+                Texto = $"Registrada por {coordinador}."
+            }
+        };
+
+        switch (estado)
+        {
+            case EstadoAsignacion.Vigente:
+                hitos.Add(new HitoViewModel
+                {
+                    Titulo = vencido ? "Plazo de retiro vencido" : "Plazo de retiro",
+                    Icono = "clock",
+                    Estado = vencido ? EstadoHito.Cancelado : EstadoHito.Actual,
+                    Texto = vencido
+                        ? $"Venció el {fechaLimite:dd/MM/yyyy}. Solo se puede liberar."
+                        : $"Hasta el {fechaLimite:dd/MM/yyyy}."
+                });
+                hitos.Add(new HitoViewModel { Titulo = "Entrega del equipo", Icono = "truck", Estado = EstadoHito.Pendiente });
+                break;
+
+            case EstadoAsignacion.Concretada:
+                hitos.Add(new HitoViewModel
+                {
+                    Titulo = "Plazo de retiro",
+                    Fecha = fechaLimite,
+                    Icono = "clock",
+                    Estado = EstadoHito.Completado
+                });
+                hitos.Add(new HitoViewModel
+                {
+                    Titulo = "Entrega completada",
+                    Fecha = fechaEntrega,
+                    Icono = "truck",
+                    Estado = EstadoHito.Completado
+                });
+                break;
+
+            default:
+                hitos.Add(new HitoViewModel
+                {
+                    Titulo = "Asignación liberada",
+                    Fecha = fechaLiberacion,
+                    Icono = "undo",
+                    Estado = EstadoHito.Cancelado,
+                    Texto = motivoLiberacion
+                });
+                break;
+        }
+
+        return hitos;
+    }
+
     public async Task<ResultadoAsignacion> AsignarAsync(
         string identityUserIdCoordinador, int nroEquipo, int nroSolicitud, string? justificacionCambio)
     {

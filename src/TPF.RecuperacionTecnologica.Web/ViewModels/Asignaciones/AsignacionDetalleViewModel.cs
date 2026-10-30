@@ -31,6 +31,12 @@ public class AsignacionDetalleViewModel
 
     public string? JustificacionCambio { get; set; }
 
+    public bool PlazoVencido { get; set; }
+
+    public DateTime? FechaLiberacion { get; set; }
+
+    public string? MotivoLiberacion { get; set; }
+
     public IReadOnlyList<HitoViewModel> Hitos { get; set; } = [];
 
     public LiberarAsignacionViewModel Liberacion { get; set; } = new();

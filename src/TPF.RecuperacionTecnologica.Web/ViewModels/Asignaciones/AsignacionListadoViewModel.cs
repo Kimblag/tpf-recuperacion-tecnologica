@@ -14,6 +14,9 @@ public class AsignacionListadoViewModel
 
     public EstadoAsignacion? Estado { get; set; }
 
+    // solo aplica a las Vigentes: una asignación liberada o concretada ya no tiene plazo
+    public FiltroPlazoAsignacion? Plazo { get; set; }
+
     public IReadOnlyList<AsignacionFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }
@@ -32,5 +35,6 @@ public class AsignacionListadoViewModel
 
     public bool HayFiltros =>
         !string.IsNullOrWhiteSpace(Busqueda)
-        || Estado is not null;
+        || Estado is not null
+        || Plazo is not null;
 }

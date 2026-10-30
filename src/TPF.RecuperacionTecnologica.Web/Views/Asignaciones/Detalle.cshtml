@@ -35,7 +35,10 @@
                 if (Model.EsVigente)
                 {
                     <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-liberar-asignacion"><partial name="_Icon" model="@("undo")" /><span>Liberar asignación</span></button>
-                    <a class="btn btn-primary" asp-controller="Entregas" asp-action="Registrar" asp-route-nroAsignacion="@Model.NroAsignacion"><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></a>
+                    @if (!Model.PlazoVencido)
+                    {
+                        <a class="btn btn-primary" asp-controller="Entregas" asp-action="Registrar" asp-route-nroAsignacion="@Model.NroAsignacion"><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></a>
+                    }
                 }
                 else
                 {
@@ -44,6 +47,17 @@
             }
         </div>
     </div>
+
+    @if (Model.PlazoVencido)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">
+                <div class="alert-title">El plazo de retiro venció el @Model.FechaLimiteRetiro.ToString("dd/MM/yyyy")</div>
+                <div>Ya no se puede entregar el equipo: la única acción disponible es liberar la asignación.</div>
+            </div>
+        </div>
+    }
 
     @if (!Model.EsVigente)
     {
@@ -78,6 +92,13 @@
                     {
                         <dt>Justificación del cambio</dt>
                         <dd>@Model.JustificacionCambio</dd>
+                    }
+                    @if (Model.FechaLiberacion is not null)
+                    {
+                        <dt>Fecha de liberación</dt>
+                        <dd>@Model.FechaLiberacion.Value.ToString("dd/MM/yyyy")</dd>
+                        <dt>Motivo de la liberación</dt>
+                        <dd>@Model.MotivoLiberacion</dd>
                     }
                     <dt>Estado</dt>
                     <dd>

@@ -1,3 +1,4 @@
+using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
@@ -14,6 +15,11 @@ public interface IAsignacionService
     /// Equipos Disponibles que tienen al menos una solicitud pendiente, los más recientes primero.
     /// </summary>
     Task<IReadOnlyList<EquipoSeleccionableViewModel>> ObtenerEquiposConSolicitudPendienteAsync(string? busqueda, int cantidad);
+
+    Task<ResultadoPaginado<AsignacionFilaViewModel>> ListarAsync(
+        string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina);
+
+    Task<AsignacionDetalleViewModel?> ObtenerDetalleAsync(int nroAsignacion);
 
     Task<ResultadoAsignacion> AsignarAsync(
         string identityUserIdCoordinador, int nroEquipo, int nroSolicitud, string? justificacionCambio);
