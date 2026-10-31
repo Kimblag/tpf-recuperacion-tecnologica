@@ -48,5 +48,8 @@ public enum TipoOperacionAuditoria
     BloqueoCuenta,
 
     [Display(Name = "Edición de personal")]
-    EdicionPersonal
+    EdicionPersonal,
+
+    [Display(Name = "Imagen de equipo")]
+    ImagenEquipo
 }

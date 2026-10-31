@@ -1150,3 +1150,157 @@ th[aria-sort] .orden-link {
 .lightbox-nav {
     flex: 0 0 auto;
 }
+
+.fotos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.foto-item {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--radius-lg);
+    background-color: var(--app-surface-low);
+}
+
+.foto-imagen {
+    display: block;
+    aspect-ratio: 4 / 3;
+    background-color: var(--app-surface-low);
+}
+
+    .foto-imagen img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .foto-imagen:focus-visible {
+        outline: 2px solid var(--bs-primary);
+        outline-offset: -2px;
+    }
+
+.foto-datos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.foto-titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.foto-angulo {
+    display: flex;
+    gap: 8px;
+}
+
+    .foto-angulo .form-select {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 28px 16px;
+    border: 2px dashed var(--app-border-strong);
+    border-radius: var(--radius-lg);
+    background-color: var(--app-surface-low);
+    text-align: center;
+    cursor: pointer;
+}
+
+    .dropzone:hover,
+    .dropzone:focus-within,
+    .dropzone.dropzone-activa {
+        border-color: var(--bs-primary);
+    }
+
+    .dropzone:focus-within {
+        outline: 2px solid var(--bs-primary);
+        outline-offset: 2px;
+    }
+
+.dropzone-titulo {
+    font-weight: 600;
+}
+
+.dropzone-ayuda {
+    color: var(--bs-secondary-color);
+    font-size: calc(12px * var(--fs));
+}
+
+.fotos-previa {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.foto-previa-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--radius-lg);
+}
+
+    .foto-previa-item img {
+        flex: 0 0 auto;
+        width: 84px;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        border-radius: var(--radius-md);
+    }
+
+.foto-previa-datos {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.foto-previa-nombre {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dialogo-confirmar {
+    width: min(92vw, 420px);
+    padding: 20px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--radius-lg);
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+}
+
+    .dialogo-confirmar::backdrop {
+        background-color: rgb(0 0 0 / 0.6);
+    }
+
+.dialogo-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}

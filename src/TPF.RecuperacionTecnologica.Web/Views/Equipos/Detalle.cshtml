@@ -36,10 +36,7 @@
             }
             @if (esTecnico)
             {
-                if (Model.EstadoEquipo != EstadoEquipo.Cancelado)
-                {
-                    <a class="btn btn-secondary" asp-action="CargarImagen" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("plus")" /><span>Cargar imagen</span></a>
-                }
+                <a class="btn btn-secondary" asp-action="Fotos" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("laptop")" /><span>Gestionar fotos</span></a>
 
                 if (Model.PuedeRectificar)
                 {
