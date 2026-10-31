@@ -14,4 +14,13 @@ public static class ConsultasImagenesEquipo
             .ThenBy(i => i.NroImagen)
             .Select(i => new FotoEquipoViewModel(i.UrlImagen, i.Angulo))
             .ToListAsync();
+
+    public static async Task<List<FotoEquipoViewModel>> ObtenerFotosDeDiagnosticoAsync(this ApplicationDbContext context, int nroDiagnostico) =>
+    await context.ImagenesEquipo
+        .AsNoTracking()
+        .Where(i => i.NroDiagnostico == nroDiagnostico)
+        .OrderBy(i => i.FechaCarga)
+        .ThenBy(i => i.NroImagen)
+        .Select(i => new FotoEquipoViewModel(i.UrlImagen, i.Angulo))
+        .ToListAsync();
 }

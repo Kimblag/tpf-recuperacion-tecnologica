@@ -98,9 +98,7 @@ public class EquiposController : Controller
             return Forbid();
         }
 
-        var archivos = modelo.Archivos
-            .Select((archivo, indice) => new ArchivoImagen(archivo, indice < modelo.Angulos.Count ? modelo.Angulos[indice] : null))
-            .ToList();
+        var archivos = ArchivoImagen.Combinar(modelo.Archivos, modelo.Angulos);
 
         var resultado = await _imagenEquipoService.AgregarAsync(id, archivos, codigoTecnico.Value);
 

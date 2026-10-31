@@ -25,7 +25,7 @@
     </div>
     @if (primeraFoto is null)
     {
-        <p class="gallery-cap">Este equipo todavía no tiene fotos cargadas.</p>
+        <p class="gallery-cap">@(ViewData["TextoSinFotos"] as string ?? "Este equipo todavía no tiene fotos cargadas.")</p>
     }
     else
     {

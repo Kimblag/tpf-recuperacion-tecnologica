@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
@@ -100,4 +101,10 @@ public class DiagnosticoFormularioViewModel
     };
 
     public bool RequiereReparaciones => TipoDiagnostico == TipoDiagnostico.Segundo;
+
+    public List<IFormFile> Archivos { get; set; } = [];
+
+    public List<string?> Angulos { get; set; } = [];
+
+    public IReadOnlyList<FotoEquipoViewModel> FotosExistentes { get; set; } = [];
 }

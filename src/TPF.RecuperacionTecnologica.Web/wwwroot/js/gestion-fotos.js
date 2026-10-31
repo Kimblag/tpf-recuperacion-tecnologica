@@ -2,17 +2,21 @@
     iniciarCarga(document.querySelector('[data-carga-fotos]'));
     iniciarEliminacion(document.querySelector('[data-eliminar-dialogo]'));
 
-    function iniciarCarga(formulario) {
-        if (!formulario) return;
+    function iniciarCarga(contenedor) {
+        if (!contenedor) return;
 
-        var entrada = formulario.querySelector('[data-fotos-entrada]');
-        var zona = formulario.querySelector('[data-fotos-zona]');
-        var lista = formulario.querySelector('[data-fotos-lista]');
-        var aviso = formulario.querySelector('[data-fotos-aviso]');
+        var formulario = contenedor.closest('form');
+        var entrada = contenedor.querySelector('[data-fotos-entrada]');
+        var zona = contenedor.querySelector('[data-fotos-zona]');
+        var lista = contenedor.querySelector('[data-fotos-lista]');
+        var aviso = contenedor.querySelector('[data-fotos-aviso]');
+        var plantilla = contenedor.querySelector('[data-fotos-plantilla]');
         var enviar = formulario.querySelector('[data-fotos-enviar]');
-        var plantilla = formulario.querySelector('[data-fotos-plantilla]');
-        var maximo = parseInt(formulario.dataset.maxArchivos, 10);
-        var maximoBytes = parseInt(formulario.dataset.maxBytes, 10);
+        var dictamen = formulario.querySelector('[data-dictamen]');
+        var existentes = parseInt(contenedor.dataset.existentes, 10) || 0;
+        var maximo = parseInt(contenedor.dataset.maxArchivos, 10);
+        var maximoBytes = parseInt(contenedor.dataset.maxBytes, 10);
+        var dictamenQueExigeFoto = formulario.dataset.requiereFotoCon;
         var tiposValidos = ['image/jpeg', 'image/png'];
 
         function mostrarAviso(mensajes) {
@@ -38,7 +42,10 @@
             });
 
             entrada.files = transferencia.files;
-            enviar.disabled = transferencia.files.length === 0;
+
+            if (enviar && enviar.hasAttribute('data-fotos-enviar-con-fotos')) {
+                enviar.disabled = transferencia.files.length === 0;
+            }
         }
 
         function repetido(archivo) {
@@ -126,9 +133,20 @@
             agregar(e.dataTransfer.files);
         });
 
-        formulario.addEventListener('submit', function () {
-            enviar.disabled = true;
-            enviar.textContent = 'Cargando…';
+        formulario.addEventListener('submit', function (evento) {
+            var exigeFoto = dictamen && dictamenQueExigeFoto !== undefined && dictamen.value === dictamenQueExigeFoto;
+
+            if (exigeFoto && existentes + actuales().length === 0) {
+                evento.preventDefault();
+                mostrarAviso(['Para dejar el equipo disponible se necesita al menos una foto.']);
+                entrada.focus();
+                return;
+            }
+
+            if (enviar) {
+                enviar.disabled = true;
+                enviar.textContent = enviar.dataset.textoEnviando || 'Cargando…';
+            }
         });
     }
 

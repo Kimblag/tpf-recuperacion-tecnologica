@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
@@ -14,15 +15,18 @@ public class DiagnosticoService : IDiagnosticoService
 {
     private readonly ApplicationDbContext _context;
     private readonly IAuditoriaService _auditoriaService;
+    private readonly IImagenEquipoService _imagenEquipoService;
     private readonly ILogger<DiagnosticoService> _logger;
 
     public DiagnosticoService(
         ApplicationDbContext context,
         IAuditoriaService auditoriaService,
+        IImagenEquipoService imagenEquipoService,
         ILogger<DiagnosticoService> logger)
     {
         _context = context;
         _auditoriaService = auditoriaService;
+        _imagenEquipoService = imagenEquipoService;
         _logger = logger;
     }
 
@@ -90,8 +94,9 @@ public class DiagnosticoService : IDiagnosticoService
         };
     }
 
-    public async Task<DiagnosticoDetalleViewModel?> ObtenerDetalleAsync(int nroDiagnostico) =>
-        await _context.Diagnosticos
+    public async Task<DiagnosticoDetalleViewModel?> ObtenerDetalleAsync(int nroDiagnostico)
+    {
+        var detalle = await _context.Diagnosticos
             .AsNoTracking()
             .Where(d => d.NroDiagnostico == nroDiagnostico)
             .Select(d => new DiagnosticoDetalleViewModel
@@ -123,11 +128,57 @@ public class DiagnosticoService : IDiagnosticoService
                 EstadoBateria = d.EspecificacionesVerificadas.EstadoBateria,
                 Otros = d.EspecificacionesVerificadas.Otros
             })
-            .FirstOrDefaultAsync();
+                        .FirstOrDefaultAsync();
+
+        detalle?.Fotos = await _context.ObtenerFotosDeDiagnosticoAsync(nroDiagnostico);
+
+        return detalle;
+    }
 
     // los opcionales vacíos se guardan como null para no llenar la base de textos en blanco
     private static string? TextoOpcional(string? texto) =>
         string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
+
+    private async Task<IdentityResult?> ValidarFotosParaDisponibleAsync(int nroEquipo, DictamenTecnico dictamen, int nuevas)
+    {
+        if (dictamen != DictamenTecnico.Funcional)
+        {
+            return null;
+        }
+
+        var existentes = await _context.ImagenesEquipo.CountAsync(i => i.NroEquipo == nroEquipo);
+
+        return existentes + nuevas == 0
+            ? Fallo("FotosRequeridas", "Para dejar el equipo disponible se necesita al menos una foto. Agregar una antes de guardar.")
+            : null;
+    }
+
+    private void AdjuntarImagenes(Diagnostico diagnostico, ResultadoLoteImagenes lote)
+    {
+        foreach (var imagen in lote.Imagenes)
+        {
+            imagen.Diagnostico = diagnostico;
+        }
+
+        _context.ImagenesEquipo.AddRange(lote.Imagenes);
+    }
+
+    private static string? ArmarComplemento(int solicitudesCerradas, int fotos)
+    {
+        var partes = new List<string>();
+
+        if (solicitudesCerradas > 0)
+        {
+            partes.Add($"Solicitudes pendientes cerradas: {solicitudesCerradas}");
+        }
+
+        if (fotos > 0)
+        {
+            partes.Add($"Fotos cargadas: {fotos}");
+        }
+
+        return partes.Count == 0 ? null : string.Join(". ", partes);
+    }
 
     private static IdentityResult Fallo(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
@@ -225,13 +276,24 @@ public class DiagnosticoService : IDiagnosticoService
 
         if (yaDiagnosticado) return Fallo("DiagnosticoInicialExistente", "El equipo ya tiene un diagnóstico inicial.");
 
+        var archivos = ArchivoImagen.Combinar(modelo.Archivos, modelo.Angulos);
+        var errorFotos = await ValidarFotosParaDisponibleAsync(equipo.NroEquipo, dictamen, archivos.Count);
+
+        if (errorFotos is not null) return errorFotos;
+
         var ahora = DateTime.UtcNow;
         var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Inicial, dictamen, modelo, ahora);
+        var lote = await _imagenEquipoService.PrepararAsync(equipo.NroEquipo, archivos);
+
+        if (!lote.Resultado.Succeeded) return lote.Resultado;
+
+        AdjuntarImagenes(diagnostico, lote);
 
         AplicarDictamen(equipo, dictamen, ahora);
         _context.Diagnosticos.Add(diagnostico);
 
-        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Diagnóstico inicial");
+        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Diagnóstico inicial",
+            ArmarComplemento(0, lote.Imagenes.Count), lote);
     }
 
     public async Task<IdentityResult> RegistrarSegundoAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -254,6 +316,11 @@ public class DiagnosticoService : IDiagnosticoService
         if (equipo.EstadoEquipo != EstadoEquipo.EnReparacion) return Fallo("EquipoNoDiagnosticable",
                 "El equipo ya no está en reparación, por lo que no admite un segundo diagnóstico.");
 
+        var archivos = ArchivoImagen.Combinar(modelo.Archivos, modelo.Angulos);
+        var errorFotos = await ValidarFotosParaDisponibleAsync(equipo.NroEquipo, dictamen, archivos.Count);
+
+        if (errorFotos is not null) return errorFotos;
+
         var ahora = DateTime.UtcNow;
 
         // el diagnóstico que estaba vigente pasa a ser histórico
@@ -267,13 +334,18 @@ public class DiagnosticoService : IDiagnosticoService
         }
 
         var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Segundo, dictamen, modelo, ahora);
+        var lote = await _imagenEquipoService.PrepararAsync(equipo.NroEquipo, archivos);
+
+        if (!lote.Resultado.Succeeded) return lote.Resultado;
+
+        AdjuntarImagenes(diagnostico, lote);
 
         AplicarDictamen(equipo, dictamen, ahora);
         var cerradas = await CerrarSolicitudesPendientesAsync(equipo, ahora);
         _context.Diagnosticos.Add(diagnostico);
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico",
-            cerradas > 0 ? $"Solicitudes pendientes cerradas: {cerradas}" : null);
+            ArmarComplemento(cerradas, lote.Imagenes.Count), lote);
     }
 
     public async Task<IdentityResult> RegistrarRectificacionAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -299,12 +371,22 @@ public class DiagnosticoService : IDiagnosticoService
 
         if (vigente is null) return Fallo("SinDiagnosticoVigente", "El equipo no tiene un diagnóstico vigente para rectificar.");
 
+        var archivos = ArchivoImagen.Combinar(modelo.Archivos, modelo.Angulos);
+        var errorFotos = await ValidarFotosParaDisponibleAsync(equipo.NroEquipo, dictamen, archivos.Count);
+
+        if (errorFotos is not null) return errorFotos;
+
         var ahora = DateTime.UtcNow;
 
         // el diagnóstico original queda en el historial como no vigente
         vigente.EsVigente = false;
 
         var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Rectificacion, dictamen, modelo, ahora);
+        var lote = await _imagenEquipoService.PrepararAsync(equipo.NroEquipo, archivos);
+
+        if (!lote.Resultado.Succeeded) return lote.Resultado;
+
+        AdjuntarImagenes(diagnostico, lote);
         diagnostico.DiagnosticoRectificadoId = vigente.NroDiagnostico;
 
         AplicarDictamen(equipo, dictamen, ahora);
@@ -313,12 +395,13 @@ public class DiagnosticoService : IDiagnosticoService
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico,
             $"Rectificación del diagnóstico {vigente.NroDiagnostico}",
-            cerradas > 0 ? $"Solicitudes pendientes cerradas: {cerradas}" : null);
+            ArmarComplemento(cerradas, lote.Imagenes.Count), lote);
     }
 
-    // el diagnóstico y el cambio de estado se guardan juntos en una sola operación
+    // el diagnóstico, el cambio de estado y las fotos se guardan juntos en una sola operación
     private async Task<IdentityResult> GuardarYAuditarAsync(
-        Equipo equipo, Diagnostico diagnostico, int codigoTecnico, string descripcion, string? complemento = null)
+        Equipo equipo, Diagnostico diagnostico, int codigoTecnico, string descripcion, string? complemento = null,
+        ResultadoLoteImagenes? lote = null)
     {
         try
         {
@@ -326,11 +409,14 @@ public class DiagnosticoService : IDiagnosticoService
         }
         catch (DbUpdateConcurrencyException)
         {
+            DescartarArchivos(lote);
+
             return Fallo("EquipoModificado",
                 "El equipo cambió mientras se registraba el diagnóstico. Vuelva a abrirlo e intente nuevamente.");
         }
         catch (Exception ex)
         {
+            DescartarArchivos(lote);
             _logger.LogError(ex, "Falló el registro del diagnóstico {Tipo} del Equipo {NroEquipo}",
                 diagnostico.TipoDiagnostico, equipo.NroEquipo);
             return Fallo("RegistroFallido", "No se pudo registrar el diagnóstico. Intente nuevamente.");
@@ -349,5 +435,13 @@ public class DiagnosticoService : IDiagnosticoService
         }
 
         return IdentityResult.Success;
+    }
+
+    private void DescartarArchivos(ResultadoLoteImagenes? lote)
+    {
+        if (lote is not null)
+        {
+            _imagenEquipoService.DescartarArchivos(lote);
+        }
     }
 }

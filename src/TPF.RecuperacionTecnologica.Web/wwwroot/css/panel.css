@@ -1286,6 +1286,15 @@ th[aria-sort] .orden-link {
     white-space: nowrap;
 }
 
+.fotos-existentes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
 .dialogo-confirmar {
     width: min(92vw, 420px);
     padding: 20px;

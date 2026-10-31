@@ -95,11 +95,6 @@ public class ImagenEquipoService : IImagenEquipoService
             return Rechazo("EquipoNoEncontrado", "No se encontró el equipo.");
         }
 
-        if (!EstadoPermiteEditar(equipo.EstadoEquipo))
-        {
-            return Rechazo("EquipoNoEditable", MensajeNoEditable(equipo.EstadoEquipo));
-        }
-
         if (archivos.Count == 0)
         {
             return new ResultadoLoteImagenes();
@@ -177,6 +172,22 @@ public class ImagenEquipoService : IImagenEquipoService
         if (archivos.Count == 0)
         {
             return Fallo("ArchivoRequerido", "Seleccione al menos una imagen.");
+        }
+
+        var estado = await _context.Equipos
+            .AsNoTracking()
+            .Where(e => e.NroEquipo == nroEquipo)
+            .Select(e => (EstadoEquipo?)e.EstadoEquipo)
+            .FirstOrDefaultAsync();
+
+        if (estado is null)
+        {
+            return Fallo("EquipoNoEncontrado", "No se encontró el equipo.");
+        }
+
+        if (!EstadoPermiteEditar(estado.Value))
+        {
+            return Fallo("EquipoNoEditable", MensajeNoEditable(estado.Value));
         }
 
         var lote = await PrepararAsync(nroEquipo, archivos);

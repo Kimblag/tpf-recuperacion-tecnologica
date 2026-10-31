@@ -1,0 +1,50 @@
+@model int
+@using Microsoft.Extensions.Options
+@using TPF.RecuperacionTecnologica.Web.Services.Equipos
+@inject IOptions<ImagenesOptions> Opciones
+@{
+    var opciones = Opciones.Value;
+    var maximoNuevas = Math.Min(opciones.MaximoPorEnvio, Math.Max(0, opciones.MaximoPorEquipo - Model));
+}
+
+@if (maximoNuevas == 0)
+{
+    <div class="alert alert-info" role="status">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body">Se alcanzó el máximo de @opciones.MaximoPorEquipo fotos por equipo. Eliminar alguna desde la gestión de fotos para poder cargar otra.</div>
+    </div>
+}
+else
+{
+    <div class="stack" style="gap:16px" data-carga-fotos data-existentes="@Model" data-max-archivos="@maximoNuevas" data-max-bytes="@opciones.TamanoMaximoBytes">
+        <label class="dropzone" for="Archivos" data-fotos-zona>
+            <partial name="_Icon" model="@("plus")" />
+            <span class="dropzone-titulo">Arrastrar las fotos aquí o hacer clic para elegirlas</span>
+            <span class="dropzone-ayuda"><partial name="_RequisitosImagenes" /></span>
+            <input id="Archivos" name="Archivos" type="file" class="visually-hidden" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-fotos-entrada />
+        </label>
+
+        <p class="form-text text-danger mb-0" role="status" aria-live="polite" data-fotos-aviso hidden></p>
+
+        <ul class="fotos-previa" aria-label="Fotos elegidas para cargar" data-fotos-lista></ul>
+
+        <template data-fotos-plantilla>
+            <li class="foto-previa-item">
+                <img src="" alt="" />
+                <div class="foto-previa-datos">
+                    <span class="foto-previa-nombre" data-previa-nombre></span>
+                    <span class="card-sub" data-previa-tamano></span>
+                    <label class="visually-hidden" data-previa-etiqueta>Ángulo</label>
+                    <select name="Angulos" class="form-select sm" data-previa-angulo>
+                        <option value="">Sin ángulo</option>
+                        @foreach (var opcion in AngulosFoto.Opciones)
+                        {
+                            <option value="@opcion">@opcion</option>
+                        }
+                    </select>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" data-previa-quitar><partial name="_Icon" model="@("x")" /><span>Quitar</span></button>
+            </li>
+        </template>
+    </div>
+}

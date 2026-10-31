@@ -129,8 +129,7 @@
     }
     else if (Model.PuedeEditar)
     {
-        <form class="card" asp-action="AgregarFotos" asp-route-id="@Model.NroEquipo" method="post" enctype="multipart/form-data" novalidate aria-labelledby="titulo-agregar-fotos"
-              data-carga-fotos data-max-archivos="@maximoNuevas" data-max-bytes="@Model.TamanoMaximoBytes">
+        <form class="card" asp-action="AgregarFotos" asp-route-id="@Model.NroEquipo" method="post" enctype="multipart/form-data" novalidate aria-labelledby="titulo-agregar-fotos">
             <div class="card-header">
                 <div>
                     <h2 class="card-title" id="titulo-agregar-fotos">Agregar fotos</h2>
@@ -138,41 +137,11 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="stack" style="gap:16px">
-                    <label class="dropzone" for="Archivos" data-fotos-zona>
-                        <partial name="_Icon" model="@("plus")" />
-                        <span class="dropzone-titulo">Arrastrar las fotos aquí o hacer clic para elegirlas</span>
-                        <span class="dropzone-ayuda"><partial name="_RequisitosImagenes" /></span>
-                        <input id="Archivos" name="Archivos" type="file" class="visually-hidden" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-fotos-entrada />
-                    </label>
-
-                    <p class="form-text text-danger mb-0" role="status" aria-live="polite" data-fotos-aviso hidden></p>
-
-                    <ul class="fotos-previa" aria-label="Fotos elegidas para cargar" data-fotos-lista></ul>
-
-                    <template data-fotos-plantilla>
-                        <li class="foto-previa-item">
-                            <img src="" alt="" />
-                            <div class="foto-previa-datos">
-                                <span class="foto-previa-nombre" data-previa-nombre></span>
-                                <span class="card-sub" data-previa-tamano></span>
-                                <label class="visually-hidden" data-previa-etiqueta>Ángulo</label>
-                                <select name="Angulos" class="form-select sm" data-previa-angulo>
-                                    <option value="">Sin ángulo</option>
-                                    @foreach (var opcion in AngulosFoto.Opciones)
-                                    {
-                                        <option value="@opcion">@opcion</option>
-                                    }
-                                </select>
-                            </div>
-                            <button type="button" class="btn btn-ghost btn-sm" data-previa-quitar><partial name="_Icon" model="@("x")" /><span>Quitar</span></button>
-                        </li>
-                    </template>
-                </div>
+                <partial name="_CargaFotos" model="cantidad" />
             </div>
             <div class="form-actions">
                 <a class="btn btn-secondary btn-lg" asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
-                <button type="submit" class="btn btn-primary btn-lg" disabled data-fotos-enviar>Cargar fotos</button>
+                <button type="submit" class="btn btn-primary btn-lg" disabled data-fotos-enviar data-fotos-enviar-con-fotos>Cargar fotos</button>
             </div>
         </form>
     }

@@ -70,54 +70,73 @@
             </section>
         </div>
 
-        <section class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">Características verificadas</h2>
-                    <p class="card-sub">Confirmadas por el técnico</p>
+        <div class="stack">
+            <section class="card" aria-labelledby="titulo-fotos">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title" id="titulo-fotos">Fotos del diagnóstico</h2>
+                        <p class="card-sub">@(Model.Fotos.Count == 0 ? "Sin fotos asociadas" : Model.Fotos.Count == 1 ? "1 foto" : $"{Model.Fotos.Count} fotos")</p>
+                    </div>
                 </div>
-            </div>
-            <div class="card-body">
-                @if (Model.TieneEspecificaciones)
-                {
-                    <dl class="dl">
-                        @if (!string.IsNullOrWhiteSpace(Model.Procesador))
-                        {
-                            <dt>Procesador</dt>
-                            <dd>@Model.Procesador</dd>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(Model.MemoriaRam))
-                        {
-                            <dt>Memoria RAM</dt>
-                            <dd>@Model.MemoriaRam</dd>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(Model.Almacenamiento))
-                        {
-                            <dt>Almacenamiento</dt>
-                            <dd>@Model.Almacenamiento</dd>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(Model.TamanoPantalla))
-                        {
-                            <dt>Tamaño de pantalla</dt>
-                            <dd>@Model.TamanoPantalla</dd>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(Model.EstadoBateria))
-                        {
-                            <dt>Estado de la batería</dt>
-                            <dd>@Model.EstadoBateria</dd>
-                        }
-                        @if (!string.IsNullOrWhiteSpace(Model.Otros))
-                        {
-                            <dt>Otros datos</dt>
-                            <dd>@Model.Otros</dd>
-                        }
-                    </dl>
-                }
-                else
-                {
-                    <p class="muted">No se verificaron características técnicas.</p>
-                }
-            </div>
-        </section>
+                <div class="card-body">
+                    <partial name="_GaleriaEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.Modelo, Model.MarcaYModelo))"
+                             view-data='new ViewDataDictionary(ViewData) { ["TextoSinFotos"] = "Este diagnóstico no tiene fotos asociadas." }' />
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Características verificadas</h2>
+                        <p class="card-sub">Confirmadas por el técnico</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.TieneEspecificaciones)
+                    {
+                        <dl class="dl">
+                            @if (!string.IsNullOrWhiteSpace(Model.Procesador))
+                            {
+                                <dt>Procesador</dt>
+                                <dd>@Model.Procesador</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.MemoriaRam))
+                            {
+                                <dt>Memoria RAM</dt>
+                                <dd>@Model.MemoriaRam</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Almacenamiento))
+                            {
+                                <dt>Almacenamiento</dt>
+                                <dd>@Model.Almacenamiento</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.TamanoPantalla))
+                            {
+                                <dt>Tamaño de pantalla</dt>
+                                <dd>@Model.TamanoPantalla</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.EstadoBateria))
+                            {
+                                <dt>Estado de la batería</dt>
+                                <dd>@Model.EstadoBateria</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(Model.Otros))
+                            {
+                                <dt>Otros datos</dt>
+                                <dd>@Model.Otros</dd>
+                            }
+                        </dl>
+                    }
+                    else
+                    {
+                        <p class="muted">No se verificaron características técnicas.</p>
+                    }
+                </div>
+            </section>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
+}
