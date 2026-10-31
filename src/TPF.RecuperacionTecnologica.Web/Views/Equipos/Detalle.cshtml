@@ -78,48 +78,41 @@
         </div>
     }
 
-    <div class="grid-3-1">
+    <div class="g-detail">
+        <partial name="_TarjetaFotosEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.Modelo, Model.MarcaYModelo))" />
+
         <div class="stack">
             <section class="card">
                 <div class="card-header">
-                    <div><h2 class="card-title">Datos del equipo</h2></div>
+                    <div>
+                        <h2 class="card-title">Evaluación vigente</h2>
+                        <p class="card-sub">Último dictamen técnico</p>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <dl class="dl">
-                        <dt>Número de equipo</dt>
-                        <dd><span class="mono">@Model.CodigoEquipo</span></dd>
-                        <dt>Tipo de equipo</dt>
-                        <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
-                        <dt>Marca</dt>
-                        <dd>@Model.Marca</dd>
-                        <dt>Modelo</dt>
-                        <dd>@Model.Modelo</dd>
-                        @if (!esCoordinador)
-                        {
-                            <dt>Condición declarada</dt>
-                            <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
-                            <dt>Observaciones</dt>
-                            <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
-                            <dt>Donante</dt>
-                            <dd>@Model.Donante</dd>
-                            <dt>Fecha de registro</dt>
-                            <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
-                        }
-                        @if (Model.FechaDisponibilidad is not null)
-                        {
-                            <dt>Disponible desde</dt>
-                            <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
-                        }
-                        @if (Model.EstadoEquipo == EstadoEquipo.Cancelado)
-                        {
-                            <dt>Fecha de cancelación</dt>
-                            <dd>@(Model.FechaCancelacion?.ToString("dd/MM/yyyy") ?? "—")</dd>
-                            <dt>Motivo de cancelación</dt>
-                            <dd>@(string.IsNullOrWhiteSpace(Model.MotivoCancelacion) ? "—" : Model.MotivoCancelacion)</dd>
-                        }
-                        <dt>Estado actual</dt>
-                        <dd><partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" /></dd>
-                    </dl>
+                    @if (Model.DiagnosticoVigente is { } vigente)
+                    {
+                        <dl class="dl">
+                            <dt>Diagnóstico</dt>
+                            <dd><span class="mono">@vigente.CodigoDiagnostico</span></dd>
+                            <dt>Tipo</dt>
+                            <dd>@Html.DisplayFor(m => vigente.TipoDiagnostico)</dd>
+                            <dt>Fecha</dt>
+                            <dd>@vigente.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
+                            <dt>Técnico</dt>
+                            <dd>@vigente.Tecnico</dd>
+                            <dt>Dictamen</dt>
+                            <dd><partial name="_DictamenBadge" model="vigente.DictamenTecnico" /></dd>
+                        </dl>
+                    }
+                    else
+                    {
+                        <div class="state">
+                            <span class="state-ic"><partial name="_Icon" model="@("wrench")" /></span>
+                            <h3>Sin diagnóstico</h3>
+                            <p>Este equipo todavía no fue evaluado.</p>
+                        </div>
+                    }
                 </div>
             </section>
 
@@ -187,17 +180,19 @@
             }
             else
             {
-            <section class="card">
-                <div class="card-header">
-                    <div>
-                        <h2 class="card-title">Características declaradas</h2>
-                        <p class="card-sub">Informadas por el donante</p>
+                <section class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Declarado por el donante</h2>
+                            <p class="card-sub">Para contrastar con lo que se encuentra en el equipo</p>
+                        </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    @if (Model.TieneEspecificaciones)
-                    {
+                    <div class="card-body">
                         <dl class="dl">
+                            <dt>Condición declarada</dt>
+                            <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
+                            <dt>Observaciones</dt>
+                            <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
                             @if (!string.IsNullOrWhiteSpace(Model.Procesador))
                             {
                                 <dt>Procesador</dt>
@@ -228,50 +223,48 @@
                                 <dt>Otros datos</dt>
                                 <dd>@Model.Otros</dd>
                             }
+                            @if (!Model.TieneEspecificaciones)
+                            {
+                                <dt>Características técnicas</dt>
+                                <dd><span class="muted">No se declararon</span></dd>
+                            }
                         </dl>
-                    }
-                    else
-                    {
-                        <p class="muted">No se declararon características técnicas.</p>
-                    }
-                </div>
-            </section>
+                    </div>
+                </section>
+            }
+
+            @if (!esCoordinador || Model.FechaDisponibilidad is not null || Model.EstadoEquipo == EstadoEquipo.Cancelado)
+            {
+                <section class="card">
+                    <div class="card-header">
+                        <div><h2 class="card-title">Datos del registro</h2></div>
+                    </div>
+                    <div class="card-body">
+                        <dl class="dl">
+                            @if (!esCoordinador)
+                            {
+                                <dt>Donante</dt>
+                                <dd>@Model.Donante</dd>
+                                <dt>Fecha de registro</dt>
+                                <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                            }
+                            @if (Model.FechaDisponibilidad is not null)
+                            {
+                                <dt>Disponible desde</dt>
+                                <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                            }
+                            @if (Model.EstadoEquipo == EstadoEquipo.Cancelado)
+                            {
+                                <dt>Fecha de cancelación</dt>
+                                <dd>@(Model.FechaCancelacion?.ToString("dd/MM/yyyy") ?? "—")</dd>
+                                <dt>Motivo de cancelación</dt>
+                                <dd>@(string.IsNullOrWhiteSpace(Model.MotivoCancelacion) ? "—" : Model.MotivoCancelacion)</dd>
+                            }
+                        </dl>
+                    </div>
+                </section>
             }
         </div>
-
-        <section class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">Evaluación vigente</h2>
-                    <p class="card-sub">Último dictamen técnico</p>
-                </div>
-            </div>
-            <div class="card-body">
-                @if (Model.DiagnosticoVigente is { } vigente)
-                {
-                    <dl class="dl">
-                        <dt>Diagnóstico</dt>
-                        <dd><span class="mono">@vigente.CodigoDiagnostico</span></dd>
-                        <dt>Tipo</dt>
-                        <dd>@Html.DisplayFor(m => vigente.TipoDiagnostico)</dd>
-                        <dt>Fecha</dt>
-                        <dd>@vigente.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
-                        <dt>Técnico</dt>
-                        <dd>@vigente.Tecnico</dd>
-                        <dt>Dictamen</dt>
-                        <dd><partial name="_DictamenBadge" model="vigente.DictamenTecnico" /></dd>
-                    </dl>
-                }
-                else
-                {
-                    <div class="state">
-                        <span class="state-ic"><partial name="_Icon" model="@("wrench")" /></span>
-                        <h3>Sin diagnóstico</h3>
-                        <p>Este equipo todavía no fue evaluado.</p>
-                    </div>
-                }
-            </div>
-        </section>
     </div>
 
     @if (verSolicitudes)
@@ -294,3 +287,7 @@
         </section>
     }
 </div>
+
+@section Scripts {
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
+}

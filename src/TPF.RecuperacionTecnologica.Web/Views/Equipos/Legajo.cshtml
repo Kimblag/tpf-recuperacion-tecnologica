@@ -72,6 +72,8 @@
         </section>
 
         <div class="stack">
+            <partial name="_TarjetaFotosEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.Modelo, Model.MarcaYModelo))" />
+
             <section class="card">
                 <div class="card-header">
                     <div><h2 class="card-title">Donante</h2></div>
@@ -314,3 +316,7 @@
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
+}

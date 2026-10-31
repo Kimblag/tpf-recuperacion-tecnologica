@@ -6,6 +6,7 @@ using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
@@ -577,6 +578,8 @@ public class DonacionService : IDonacionService
             .Select(e => (DateTime?)e.FechaEntrega)
             .FirstOrDefaultAsync();
 
+        var fotos = await _context.ObtenerFotosAsync(nroEquipo);
+
         var donante = equipo.TipoUsuario == TipoUsuario.Persona
             ? $"{equipo.Nombre} {equipo.Apellido}".Trim()
             : equipo.RazonSocial ?? string.Empty;
@@ -594,6 +597,7 @@ public class DonacionService : IDonacionService
             EstadoEquipo = equipo.EstadoEquipo,
             Donante = donante,
             Observaciones = equipo.Observaciones,
+            Fotos = fotos,
             EspecificacionesVerificadas = verificadas,
             Procesador = verificadas ? diagnostico!.Procesador : equipo.Procesador,
             MemoriaRam = verificadas ? diagnostico!.MemoriaRam : equipo.MemoriaRam,
@@ -655,7 +659,6 @@ public class DonacionService : IDonacionService
 
         return IdentityResult.Success;
     }
-
 
     public async Task<ResultadoCatalogo> ObtenerDisponiblesAsync(
     string? busqueda, string? marca, TipoEquipo? tipo, OrdenCatalogo orden, int pagina, int tamanoPagina)
@@ -789,15 +792,8 @@ public class DonacionService : IDonacionService
             return null;
         }
 
-        var imagenes = await _context.ImagenesEquipo
-            .AsNoTracking()
-            .Where(i => i.NroEquipo == nroEquipo)
-            .OrderBy(i => i.FechaCarga)
-            .Select(i => new { i.UrlImagen, i.Angulo })
-            .ToListAsync();
-
-        detalle.Imagenes = imagenes.Select(i => (i.UrlImagen, i.Angulo)).ToList();
-        detalle.ImagenUrl = imagenes.FirstOrDefault()?.UrlImagen;
+        detalle.Imagenes = await _context.ObtenerFotosAsync(nroEquipo);
+        detalle.ImagenUrl = detalle.Imagenes.FirstOrDefault()?.UrlImagen;
 
         return detalle;
     }
@@ -866,7 +862,6 @@ public class DonacionService : IDonacionService
 
         return historial;
     }
-
 
     private static HitoViewModel Hito(string titulo, DateTime? fecha, string icono, EstadoHito estado, string? texto = null) => new()
     {

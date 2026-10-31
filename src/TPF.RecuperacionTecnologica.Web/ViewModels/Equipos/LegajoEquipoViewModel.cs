@@ -37,6 +37,7 @@ public class LegajoEquipoViewModel
     public IReadOnlyList<SolicitudLegajoViewModel> Solicitudes { get; set; } = [];
 
     public IReadOnlyList<AsignacionLegajoViewModel> Asignaciones { get; set; } = [];
+    public IReadOnlyList<FotoEquipoViewModel> Fotos { get; set; } = [];
 
     public EntregaLegajoViewModel? Entrega { get; set; }
 

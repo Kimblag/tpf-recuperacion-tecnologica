@@ -1,0 +1,62 @@
+@model (IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.FotoEquipoViewModel> Fotos, TPF.RecuperacionTecnologica.Web.Models.Enums.TipoEquipo Tipo, string Modelo, string MarcaYModelo)
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
+@{
+    var fotos = Model.Fotos;
+    var cantidadFotos = fotos.Count;
+    var primeraFoto = cantidadFotos > 0 ? fotos[0] : null;
+
+    string AltFoto(FotoEquipoViewModel foto) =>
+        $"Foto de {Model.MarcaYModelo}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $", vista {foto.Angulo}");
+}
+
+<div data-galeria>
+    <div class="gallery-main">
+        @if (primeraFoto is not null)
+        {
+            <button type="button" class="gallery-zoom" aria-label="Ampliar la foto" data-galeria-ampliar>
+                <img src="@Url.Content(primeraFoto.UrlImagen)" alt="@AltFoto(primeraFoto)" data-angulo="@primeraFoto.Angulo" data-galeria-principal />
+                <span class="gallery-zoom-hint" aria-hidden="true">Ampliar</span>
+            </button>
+        }
+        else
+        {
+            <span class="eq-ilustracion"><partial name="_IlustracionEquipo" model="@((Model.Tipo, Model.Modelo))" /></span>
+        }
+    </div>
+    @if (primeraFoto is null)
+    {
+        <p class="gallery-cap">Este equipo todavía no tiene fotos cargadas.</p>
+    }
+    else
+    {
+        <p class="gallery-cap" role="status" aria-live="polite" data-galeria-leyenda>Foto 1 de @cantidadFotos@(string.IsNullOrWhiteSpace(primeraFoto.Angulo) ? string.Empty : $" · {primeraFoto.Angulo}")</p>
+        @if (cantidadFotos > 1)
+        {
+            <ul class="gallery-thumbs" aria-label="Fotos del equipo">
+                @for (var indice = 0; indice < cantidadFotos; indice++)
+                {
+                    var foto = fotos[indice];
+
+                    <li>
+                        <a class="thumb" href="@Url.Content(foto.UrlImagen)" aria-label="Ver foto @(indice + 1) de @cantidadFotos" aria-current="@(indice == 0 ? "true" : null)"
+                           data-miniatura data-src="@Url.Content(foto.UrlImagen)" data-alt="@AltFoto(foto)" data-numero="@(indice + 1)" data-angulo="@foto.Angulo">
+                            <img src="@Url.Content(foto.UrlImagen)" alt="" loading="lazy" />
+                        </a>
+                    </li>
+                }
+            </ul>
+        }
+
+        <dialog class="lightbox" aria-label="Foto ampliada" data-lightbox>
+            <div class="lightbox-bar">
+                <p class="lightbox-cap" role="status" aria-live="polite" data-lightbox-leyenda></p>
+                <button type="button" class="btn btn-secondary btn-sm" data-lightbox-cerrar><partial name="_Icon" model="@("x")" /><span>Cerrar</span></button>
+            </div>
+            <div class="lightbox-body">
+                <button type="button" class="btn btn-secondary btn-icon lightbox-nav" aria-label="Foto anterior" data-lightbox-anterior @(cantidadFotos > 1 ? null : "hidden")><partial name="_Icon" model="@("chevron-left")" /></button>
+                <img src="" alt="" data-lightbox-img />
+                <button type="button" class="btn btn-secondary btn-icon lightbox-nav" aria-label="Foto siguiente" data-lightbox-siguiente @(cantidadFotos > 1 ? null : "hidden")><partial name="_Icon" model="@("chevron-right")" /></button>
+            </div>
+        </dialog>
+    }
+</div>
