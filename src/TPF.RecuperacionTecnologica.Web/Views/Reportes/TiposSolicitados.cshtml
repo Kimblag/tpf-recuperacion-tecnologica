@@ -26,7 +26,15 @@
 <div class="stack">
     <partial name="_EncabezadoReporte" model="@(("Tipos de equipo más solicitados", "Ranking según la cantidad de solicitudes registradas.", Model.PeriodoConsultado))" />
 
-    @if (Model.Total == 0)
+    @if (Model.ErrorAlCargar)
+    {
+        <section class="card">
+            <div class="card-body">
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al generar el informe de tipos más solicitados. Se puede intentar de nuevo en unos minutos.")" />
+            </div>
+        </section>
+    }
+    else if (Model.Total == 0)
     {
         <partial name="_ReporteVacio" />
     }

@@ -4,7 +4,8 @@
     static (string Controlador, string Accion)? DestinoDe(string entidad) => entidad switch
     {
         "Solicitud" => ("Solicitudes", "DetalleInterno"),
-        "Equipo" => ("Equipos", "Detalle"),
+        // un equipo lleva a su legajo (#127): historial completo, visible para el Administrador
+        "Equipo" => ("Equipos", "Legajo"),
         "Asignacion" => ("Asignaciones", "Detalle"),
         "Entrega" => ("Entregas", "Detalle"),
         "Personal" => ("Personal", "Detalle"),
