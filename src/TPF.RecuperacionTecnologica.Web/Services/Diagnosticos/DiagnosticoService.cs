@@ -159,20 +159,50 @@ public class DiagnosticoService : IDiagnosticoService
     // el estado del equipo sigue al dictamen; un equipo que pasa a Disponible registra desde cuándo lo está
     private static void AplicarDictamen(Equipo equipo, DictamenTecnico dictamen, DateTime fecha)
     {
-        // una rectificación sobre un equipo que ya estaba Disponible no cambia desde cuándo lo está
-        if (dictamen == DictamenTecnico.Funcional && equipo.EstadoEquipo != EstadoEquipo.Disponible)
-        {
-            equipo.FechaDisponibilidad = fecha;
-        }
-
-        equipo.EstadoEquipo = dictamen switch
+        var nuevoEstado = dictamen switch
         {
             DictamenTecnico.Funcional => EstadoEquipo.Disponible,
             DictamenTecnico.NecesitaReparacion => EstadoEquipo.EnReparacion,
             _ => EstadoEquipo.Baja
         };
 
+        if (nuevoEstado == EstadoEquipo.Disponible)
+        {
+            // una rectificación sobre un equipo que ya estaba Disponible no cambia desde cuándo lo está
+            if (equipo.EstadoEquipo != EstadoEquipo.Disponible)
+            {
+                equipo.FechaDisponibilidad = fecha;
+            }
+        }
+        else
+        {
+            equipo.FechaDisponibilidad = null;
+        }
+
+        equipo.EstadoEquipo = nuevoEstado;
         equipo.FechaUltimaModificacion = fecha;
+    }
+
+    private async Task<int> CerrarSolicitudesPendientesAsync(Equipo equipo, DateTime fecha)
+    {
+        if (equipo.EstadoEquipo != EstadoEquipo.Baja)
+        {
+            return 0;
+        }
+
+        var pendientes = await _context.Solicitudes
+            .Where(s => s.NroEquipoRequerido == equipo.NroEquipo
+                && s.EstadoSolicitud == EstadoSolicitud.Pendiente)
+            .ToListAsync();
+
+        foreach (var solicitud in pendientes)
+        {
+            solicitud.EstadoSolicitud = EstadoSolicitud.Cerrada;
+            solicitud.FechaCierre = fecha;
+            solicitud.FechaUltimaModificacion = fecha;
+        }
+
+        return pendientes.Count;
     }
 
     public async Task<IdentityResult> RegistrarInicialAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -239,9 +269,11 @@ public class DiagnosticoService : IDiagnosticoService
         var diagnostico = ArmarDiagnostico(equipo, codigoTecnico, TipoDiagnostico.Segundo, dictamen, modelo, ahora);
 
         AplicarDictamen(equipo, dictamen, ahora);
+        var cerradas = await CerrarSolicitudesPendientesAsync(equipo, ahora);
         _context.Diagnosticos.Add(diagnostico);
 
-        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico");
+        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico",
+            cerradas > 0 ? $"Solicitudes pendientes cerradas: {cerradas}" : null);
     }
 
     public async Task<IdentityResult> RegistrarRectificacionAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -276,15 +308,17 @@ public class DiagnosticoService : IDiagnosticoService
         diagnostico.DiagnosticoRectificadoId = vigente.NroDiagnostico;
 
         AplicarDictamen(equipo, dictamen, ahora);
+        var cerradas = await CerrarSolicitudesPendientesAsync(equipo, ahora);
         _context.Diagnosticos.Add(diagnostico);
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico,
-            $"Rectificación del diagnóstico {vigente.NroDiagnostico}");
+            $"Rectificación del diagnóstico {vigente.NroDiagnostico}",
+            cerradas > 0 ? $"Solicitudes pendientes cerradas: {cerradas}" : null);
     }
 
     // el diagnóstico y el cambio de estado se guardan juntos en una sola operación
     private async Task<IdentityResult> GuardarYAuditarAsync(
-        Equipo equipo, Diagnostico diagnostico, int codigoTecnico, string descripcion)
+        Equipo equipo, Diagnostico diagnostico, int codigoTecnico, string descripcion, string? complemento = null)
     {
         try
         {
@@ -306,7 +340,7 @@ public class DiagnosticoService : IDiagnosticoService
         {
             await _auditoriaService.RegistrarEventoAsync(
                 TipoOperacionAuditoria.Diagnostico, codigoTecnico, nameof(Diagnostico), diagnostico.NroDiagnostico,
-                $"{descripcion} del equipo {equipo.NroEquipo}");
+                $"{descripcion} del equipo {equipo.NroEquipo}" + (complemento is null ? string.Empty : $". {complemento}"));
         }
         catch (Exception ex)
         {
