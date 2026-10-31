@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Asignaciones;
@@ -44,6 +46,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddMemoryCache();
+
+builder.Services
+    .AddOptions<ImagenesOptions>()
+    .Bind(builder.Configuration.GetSection(ImagenesOptions.Seccion))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddScoped<LimitePeticionImagenesFilter>();
 
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICuentaService, CuentaService>();
@@ -158,6 +168,20 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+var imagenes = app.Services.GetRequiredService<IOptions<ImagenesOptions>>().Value;
+
+if (!string.IsNullOrWhiteSpace(imagenes.CarpetaFisica))
+{
+    Directory.CreateDirectory(imagenes.CarpetaFisica);
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(imagenes.CarpetaFisica),
+        RequestPath = "/" + ImagenesOptions.RutaPublica
+    });
+}
+
 app.UseRouting();
 
 app.UseAuthentication();

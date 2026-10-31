@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
@@ -9,24 +10,23 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Equipos;
 
 public class ImagenEquipoService : IImagenEquipoService
 {
-    public const long TamanoMaximoBytes = 5 * 1024 * 1024;
-
-    private const string CarpetaRelativa = "uploads/equipos";
-
     private static readonly byte[] FirmaJpg = [0xFF, 0xD8, 0xFF];
     private static readonly byte[] FirmaPng = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _entorno;
     private readonly ILogger<ImagenEquipoService> _logger;
+    private readonly ImagenesOptions _opciones;
 
     public ImagenEquipoService(
         ApplicationDbContext context,
         IWebHostEnvironment entorno,
+        IOptions<ImagenesOptions> opciones,
         ILogger<ImagenEquipoService> logger)
     {
         _context = context;
         _entorno = entorno;
+        _opciones = opciones.Value;
         _logger = logger;
     }
 
@@ -37,9 +37,9 @@ public class ImagenEquipoService : IImagenEquipoService
             return Fallo("ArchivoRequerido", "Seleccione la imagen a cargar.");
         }
 
-        if (archivo.Length > TamanoMaximoBytes)
+        if (archivo.Length > _opciones.TamanoMaximoBytes)
         {
-            return Fallo("ArchivoMuyGrande", "La imagen supera el tamaño máximo de 5 MB.");
+            return Fallo("ArchivoMuyGrande", $"La imagen supera el tamaño máximo de {_opciones.TamanoMaximoMB} MB.");
         }
 
         var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
@@ -69,7 +69,7 @@ public class ImagenEquipoService : IImagenEquipoService
 
         // el nombre lo genera el sistema: el original no se usa para evitar rutas o colisiones
         var nombre = $"{Guid.NewGuid():N}{(extension == ".png" ? ".png" : ".jpg")}";
-        var carpeta = Path.Combine(_entorno.WebRootPath, CarpetaRelativa, equipo.NroEquipo.ToString());
+        var carpeta = Path.Combine(_opciones.ResolverCarpetaFisica(_entorno.WebRootPath), equipo.NroEquipo.ToString());
         var rutaFisica = Path.Combine(carpeta, nombre);
 
         try
@@ -84,7 +84,7 @@ public class ImagenEquipoService : IImagenEquipoService
             _context.ImagenesEquipo.Add(new ImagenEquipo
             {
                 NroEquipo = equipo.NroEquipo,
-                UrlImagen = $"~/{CarpetaRelativa}/{equipo.NroEquipo}/{nombre}",
+                UrlImagen = $"~/{ImagenesOptions.RutaPublica}/{equipo.NroEquipo}/{nombre}",
                 Angulo = string.IsNullOrWhiteSpace(modelo.Angulo) ? null : modelo.Angulo.Trim(),
                 FechaCarga = DateTime.UtcNow
             });

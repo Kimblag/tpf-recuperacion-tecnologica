@@ -92,6 +92,7 @@ public class EquiposController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "SoloTecnico")]
+    [ServiceFilter(typeof(LimitePeticionImagenesFilter), Order = 900)]
     public async Task<IActionResult> CargarImagen(int id, CargaImagenViewModel modelo)
     {
         var equipo = await _equipoConsultaService.ObtenerDetalleAsync(id);

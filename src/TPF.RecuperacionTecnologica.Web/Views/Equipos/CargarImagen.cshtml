@@ -39,7 +39,7 @@
                     <div class="field span-2">
                         <label class="form-label" for="Archivo">Imagen@(Html.Raw(etiquetaObligatorio))</label>
                         <input asp-for="Archivo" type="file" class="form-control" accept=".jpg,.jpeg,.png,image/jpeg,image/png" aria-describedby="Archivo-hint" />
-                        <div class="form-text" id="Archivo-hint">Formato JPG o PNG, de hasta 5 MB.</div>
+                        <div class="form-text" id="Archivo-hint"><partial name="_RequisitosImagenes" /></div>
                         <span asp-validation-for="Archivo"></span>
                     </div>
 

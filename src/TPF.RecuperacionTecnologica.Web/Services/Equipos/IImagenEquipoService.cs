@@ -7,7 +7,7 @@ public interface IImagenEquipoService
 {
     /// <summary>
     /// Guarda una imagen del equipo para que se muestre en el catálogo público.
-    /// Solo se aceptan archivos JPG o PNG de hasta 5 MB cuyo contenido coincida con su extensión.
+    /// Solo se aceptan archivos JPG o PNG de hasta el tamaño configurado cuyo contenido coincida con su extensión.
     /// </summary>
     /// <returns>
     /// Éxito, o el motivo por el que no se pudo cargar: el equipo no existe o está cancelado,

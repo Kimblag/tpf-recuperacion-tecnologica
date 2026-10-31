@@ -1,0 +1,7 @@
+@using Microsoft.Extensions.Options
+@using TPF.RecuperacionTecnologica.Web.Services.Equipos
+@inject IOptions<ImagenesOptions> Opciones
+@{
+    var opciones = Opciones.Value;
+}
+JPG o PNG, hasta @opciones.TamanoMaximoMB MB cada una y hasta @opciones.MaximoPorEquipo fotos por equipo.
