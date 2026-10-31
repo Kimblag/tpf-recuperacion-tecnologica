@@ -159,19 +159,27 @@ public class DiagnosticoService : IDiagnosticoService
     // el estado del equipo sigue al dictamen; un equipo que pasa a Disponible registra desde cuándo lo está
     private static void AplicarDictamen(Equipo equipo, DictamenTecnico dictamen, DateTime fecha)
     {
-        // una rectificación sobre un equipo que ya estaba Disponible no cambia desde cuándo lo está
-        if (dictamen == DictamenTecnico.Funcional && equipo.EstadoEquipo != EstadoEquipo.Disponible)
-        {
-            equipo.FechaDisponibilidad = fecha;
-        }
-
-        equipo.EstadoEquipo = dictamen switch
+        var nuevoEstado = dictamen switch
         {
             DictamenTecnico.Funcional => EstadoEquipo.Disponible,
             DictamenTecnico.NecesitaReparacion => EstadoEquipo.EnReparacion,
             _ => EstadoEquipo.Baja
         };
 
+        if (nuevoEstado == EstadoEquipo.Disponible)
+        {
+            // una rectificación sobre un equipo que ya estaba Disponible no cambia desde cuándo lo está
+            if (equipo.EstadoEquipo != EstadoEquipo.Disponible)
+            {
+                equipo.FechaDisponibilidad = fecha;
+            }
+        }
+        else
+        {
+            equipo.FechaDisponibilidad = null;
+        }
+
+        equipo.EstadoEquipo = nuevoEstado;
         equipo.FechaUltimaModificacion = fecha;
     }
 
