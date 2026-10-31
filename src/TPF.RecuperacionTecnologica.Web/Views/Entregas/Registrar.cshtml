@@ -168,6 +168,9 @@
                 <div><h2 class="card-title" id="titulo-resumen">Qué se entrega</h2></div>
             </div>
             <div class="card-body">
+                <div class="galeria-compacta mb-3">
+                    <partial name="_GaleriaEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.MarcaYModelo, Model.MarcaYModelo))" />
+                </div>
                 <dl class="dl">
                     <dt>Equipo</dt>
                     <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
@@ -241,6 +244,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
     <script>
         // evita registrar dos veces con un doble clic: el servidor también lo impide con un índice único
         document.getElementById('f-entrega')?.addEventListener('submit', function (e) {

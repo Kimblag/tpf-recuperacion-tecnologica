@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
@@ -115,6 +116,8 @@ public class EntregaService : IEntregaService
             return null;
         }
 
+        var fotos = await _context.ObtenerFotosAsync(datos.NroEquipo);
+
         return new RegistroEntregaViewModel
         {
             NroAsignacion = nroAsignacion,
@@ -125,6 +128,7 @@ public class EntregaService : IEntregaService
             NroEquipo = datos.NroEquipo,
             TipoEquipo = datos.TipoEquipo,
             MarcaYModelo = $"{datos.Marca} {datos.Modelo}",
+            Fotos = fotos,
             FechaLimiteRetiro = datos.FechaLimiteRetiro,
             Situacion = datos.EstadoAsignacion != EstadoAsignacion.Vigente
                 ? SituacionEntrega.NoVigente

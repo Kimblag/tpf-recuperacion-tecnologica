@@ -11,6 +11,8 @@ public class EquipoSeleccionableViewModel
 
     public string MarcaYModelo { get; set; } = string.Empty;
 
+    public string? ImagenUrl { get; set; }
+
     public string CodigoEquipo => NroEquipo.ToString("D6");
 }
 

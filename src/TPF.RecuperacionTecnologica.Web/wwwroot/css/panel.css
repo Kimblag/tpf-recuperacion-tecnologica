@@ -1286,6 +1286,32 @@ th[aria-sort] .orden-link {
     white-space: nowrap;
 }
 
+.galeria-compacta .gallery-main {
+    max-height: 220px;
+}
+
+.eq-miniatura {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--app-surface-low);
+}
+
+.eq-sin-foto {
+    color: var(--bs-secondary-color);
+}
+
+    .eq-sin-foto svg {
+        width: 22px;
+        height: 22px;
+    }
+
 .fotos-existentes {
     display: flex;
     flex-wrap: wrap;

@@ -469,7 +469,8 @@ public class SolicitudesController : Controller
                 {
                     NroEquipo = equipo.NroEquipo,
                     TipoEquipo = equipo.TipoEquipo,
-                    MarcaYModelo = equipo.MarcaYModelo
+                    MarcaYModelo = equipo.MarcaYModelo,
+                    ImagenUrl = equipo.ImagenUrl
                 };
             }
         }
@@ -485,7 +486,8 @@ public class SolicitudesController : Controller
                 {
                     NroEquipo = e.NroEquipo,
                     TipoEquipo = e.TipoEquipo,
-                    MarcaYModelo = e.MarcaYModelo
+                    MarcaYModelo = e.MarcaYModelo,
+                    ImagenUrl = e.ImagenUrl
                 })
                 .ToList();
         }
