@@ -14,6 +14,7 @@ using TPF.RecuperacionTecnologica.Web.Services.Entregas;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.Services.Home;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Reportes;
 using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
@@ -59,6 +60,7 @@ builder.Services.AddScoped<ISolicitudConsultaService, SolicitudConsultaService>(
 builder.Services.AddScoped<IConfiguracionService, ConfiguracionService>();
 builder.Services.AddScoped<IAsignacionService, AsignacionService>();
 builder.Services.AddScoped<IEntregaService, EntregaService>();
+builder.Services.AddScoped<IReporteService, ReporteService>();
 
 builder.Services
     .AddIdentity<IdentityUser, IdentityRole>(options =>

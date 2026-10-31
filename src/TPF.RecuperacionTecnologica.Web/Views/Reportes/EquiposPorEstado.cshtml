@@ -33,7 +33,15 @@
 <div class="stack">
     <partial name="_EncabezadoReporte" model="@(("Equipos por estado", "Situación actual del inventario.", Model.PeriodoConsultado))" />
 
-    @if (Model.Total == 0)
+    @if (Model.ErrorAlCargar)
+    {
+        <section class="card">
+            <div class="card-body">
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al generar el informe de equipos por estado. Se puede intentar de nuevo en unos minutos.")" />
+            </div>
+        </section>
+    }
+    else if (Model.Total == 0)
     {
         <partial name="_ReporteVacio" />
     }

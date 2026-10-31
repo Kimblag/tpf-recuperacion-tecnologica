@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Reportes;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Reportes;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
@@ -8,6 +8,15 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 [Authorize(Policy = "SoloAdministrador")]
 public class ReportesController : Controller
 {
+    private readonly IReporteService _reporteService;
+    private readonly ILogger<ReportesController> _logger;
+
+    public ReportesController(IReporteService reporteService, ILogger<ReportesController> logger)
+    {
+        _reporteService = reporteService;
+        _logger = logger;
+    }
+
     [HttpGet]
     public IActionResult Index()
     {
@@ -33,77 +42,86 @@ public class ReportesController : Controller
         };
     }
 
+    // los accesos rápidos llegan sin fechas e incluyen todo lo disponible
     [HttpGet]
-    public IActionResult EquiposPorEstado(DateTime? desde, DateTime? hasta)
+    public async Task<IActionResult> EquiposPorEstado(DateTime? desde, DateTime? hasta)
     {
-        // TODO: reemplazar estos datos de ejemplo por el cálculo real según el rango de fechas
-        return View(new ReporteEquiposPorEstadoViewModel
+        if (RangoInvertido(desde, hasta, TipoReporte.EquiposPorEstado) is { } rechazo)
         {
-            Desde = desde,
-            Hasta = hasta,
-            Estados =
-            [
-                new() { Estado = EstadoEquipo.Disponible, Cantidad = 42 },
-                new() { Estado = EstadoEquipo.PendienteRecepcion, Cantidad = 14 },
-                new() { Estado = EstadoEquipo.EnReparacion, Cantidad = 18 },
-                new() { Estado = EstadoEquipo.Asignado, Cantidad = 12 },
-                new() { Estado = EstadoEquipo.Entregado, Cantidad = 24 },
-                new() { Estado = EstadoEquipo.Baja, Cantidad = 8 }
-            ]
-        });
+            return rechazo;
+        }
+
+        var modelo = new ReporteEquiposPorEstadoViewModel { Desde = desde, Hasta = hasta };
+
+        try
+        {
+            modelo.Estados = await _reporteService.EquiposPorEstadoAsync(desde, hasta);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo generar el informe de equipos por estado");
+            modelo.ErrorAlCargar = true;
+        }
+
+        return View(modelo);
     }
 
     [HttpGet]
-    public IActionResult EntregasPorPeriodo(DateTime? desde, DateTime? hasta, AgrupacionPeriodo agrupacion = AgrupacionPeriodo.Mes)
+    public async Task<IActionResult> EntregasPorPeriodo(DateTime? desde, DateTime? hasta, AgrupacionPeriodo agrupacion = AgrupacionPeriodo.Mes)
     {
-        // TODO: reemplazar estos datos de ejemplo por el cálculo real según el rango y la agrupación
-        IReadOnlyList<PeriodoEntregasViewModel> filas = agrupacion switch
+        if (RangoInvertido(desde, hasta, TipoReporte.EntregasPorPeriodo) is { } rechazo)
         {
-            AgrupacionPeriodo.Trimestre =>
-            [
-                new() { Etiqueta = "2.º trimestre 2026", Cantidad = 36 },
-                new() { Etiqueta = "3.er trimestre 2026", Cantidad = 63 }
-            ],
-            AgrupacionPeriodo.Anio =>
-            [
-                new() { Etiqueta = "2026", Cantidad = 99 }
-            ],
-            _ =>
-            [
-                new() { Etiqueta = "Abril 2026", Cantidad = 9 },
-                new() { Etiqueta = "Mayo 2026", Cantidad = 12 },
-                new() { Etiqueta = "Junio 2026", Cantidad = 15 },
-                new() { Etiqueta = "Julio 2026", Cantidad = 18 },
-                new() { Etiqueta = "Agosto 2026", Cantidad = 21 },
-                new() { Etiqueta = "Septiembre 2026", Cantidad = 24 }
-            ]
-        };
+            return rechazo;
+        }
 
-        return View(new ReporteEntregasPorPeriodoViewModel
+        var modelo = new ReporteEntregasPorPeriodoViewModel { Desde = desde, Hasta = hasta, Agrupacion = agrupacion };
+
+        try
         {
-            Desde = desde,
-            Hasta = hasta,
-            Agrupacion = agrupacion,
-            Filas = filas
-        });
+            modelo.Filas = await _reporteService.EntregasPorPeriodoAsync(desde, hasta, agrupacion);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo generar el informe de entregas por período");
+            modelo.ErrorAlCargar = true;
+        }
+
+        return View(modelo);
     }
 
     [HttpGet]
-    public IActionResult TiposSolicitados(DateTime? desde, DateTime? hasta)
+    public async Task<IActionResult> TiposSolicitados(DateTime? desde, DateTime? hasta)
     {
-        // TODO: reemplazar estos datos de ejemplo por el cálculo real según el rango de fechas
-        return View(new ReporteTiposSolicitadosViewModel
+        if (RangoInvertido(desde, hasta, TipoReporte.TiposSolicitados) is { } rechazo)
         {
-            Desde = desde,
-            Hasta = hasta,
-            Filas =
-            [
-                new() { TipoEquipo = TipoEquipo.Notebook, Solicitudes = 38 },
-                new() { TipoEquipo = TipoEquipo.PcEscritorio, Solicitudes = 27 },
-                new() { TipoEquipo = TipoEquipo.Monitor, Solicitudes = 18 },
-                new() { TipoEquipo = TipoEquipo.Celular, Solicitudes = 9 },
-                new() { TipoEquipo = TipoEquipo.Periferico, Solicitudes = 6 }
-            ]
-        });
+            return rechazo;
+        }
+
+        var modelo = new ReporteTiposSolicitadosViewModel { Desde = desde, Hasta = hasta };
+
+        try
+        {
+            modelo.Filas = await _reporteService.TiposSolicitadosAsync(desde, hasta);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo generar el informe de tipos más solicitados");
+            modelo.ErrorAlCargar = true;
+        }
+
+        return View(modelo);
+    }
+
+    // un rango invertido escrito a mano en la dirección vuelve al formulario con el mismo mensaje que su validación
+    private ViewResult? RangoInvertido(DateTime? desde, DateTime? hasta, TipoReporte tipo)
+    {
+        if (desde is null || hasta is null || desde.Value.Date <= hasta.Value.Date)
+        {
+            return null;
+        }
+
+        ModelState.AddModelError(nameof(GenerarReporteViewModel.Hasta), "La fecha hasta no puede ser anterior a la fecha desde.");
+
+        return View(nameof(Index), new GenerarReporteViewModel { Desde = desde, Hasta = hasta, Tipo = tipo });
     }
 }
