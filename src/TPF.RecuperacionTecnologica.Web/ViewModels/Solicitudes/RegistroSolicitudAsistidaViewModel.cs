@@ -32,6 +32,8 @@ public class RegistroSolicitudAsistidaViewModel : IValidatableObject
 
     public string? ImpedimentoMensaje { get; set; }
 
+    public int? NroSolicitudExistente { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Usuario.Modo == ModoUsuarioAsistido.Existente)
