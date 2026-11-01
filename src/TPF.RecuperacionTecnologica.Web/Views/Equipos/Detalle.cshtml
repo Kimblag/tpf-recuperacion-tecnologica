@@ -266,20 +266,53 @@
 
     @if (verSolicitudes)
     {
-        @* TODO: reemplazar por las solicitudes reales del equipo cuando exista su listado (#151) *@
-        <section class="card">
+        <section class="card overflow" aria-labelledby="titulo-solicitudes-equipo">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">Solicitudes sobre este equipo</h2>
-                    <p class="card-sub">Cada solicitud es sobre un equipo específico</p>
+                    <h2 class="card-title" id="titulo-solicitudes-equipo">Solicitudes sobre este equipo</h2>
+                    <p class="card-sub">Las pendientes, en orden de prioridad: Escuela y Organización social antes que Particular, la más antigua primero</p>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="state">
-                    <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
-                    <h3>Sin solicitudes</h3>
-                    <p>Todavía nadie solicitó este equipo.</p>
-                </div>
+            <div class="card-body flush">
+                @if (Model.Solicitudes.Count == 0)
+                {
+                    <div class="state">
+                        <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
+                        <h3>Sin solicitudes</h3>
+                        <p>Todavía nadie solicitó este equipo.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-wrap">
+                        <table class="table table-stack">
+                            <caption class="visually-hidden">Solicitudes sobre el equipo</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Solicitud</th>
+                                    <th scope="col">Solicitante</th>
+                                    <th scope="col">Tipo de solicitante</th>
+                                    <th scope="col">Origen</th>
+                                    <th scope="col">Fecha</th>
+                                    <th scope="col">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var fila in Model.Solicitudes)
+                                {
+                                    <tr>
+                                        <td data-label="Solicitud"><a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud">@fila.Codigo</a></td>
+                                        <td data-label="Solicitante">@fila.Solicitante</td>
+                                        <td data-label="Tipo de solicitante">@Html.DisplayFor(m => fila.TipoSolicitante)</td>
+                                        <td data-label="Origen">@Html.DisplayFor(m => fila.OrigenSolicitud)</td>
+                                        <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                        <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
         </section>
     }
