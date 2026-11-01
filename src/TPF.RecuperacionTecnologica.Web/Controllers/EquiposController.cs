@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
@@ -9,15 +12,18 @@ public class EquiposController : Controller
 {
     private readonly IEquipoConsultaService _equipoConsultaService;
     private readonly IImagenEquipoService _imagenEquipoService;
+    private readonly IPersonalService _personalService;
     private readonly ILogger<EquiposController> _logger;
 
     public EquiposController(
         IEquipoConsultaService equipoConsultaService,
         IImagenEquipoService imagenEquipoService,
+        IPersonalService personalService,
         ILogger<EquiposController> logger)
     {
         _equipoConsultaService = equipoConsultaService;
         _imagenEquipoService = imagenEquipoService;
+        _personalService = personalService;
         _logger = logger;
     }
 
@@ -72,59 +78,88 @@ public class EquiposController : Controller
 
     [HttpGet]
     [Authorize(Policy = "SoloTecnico")]
-    public async Task<IActionResult> CargarImagen(int id)
+    public async Task<IActionResult> Fotos(int id)
     {
-        var equipo = await _equipoConsultaService.ObtenerDetalleAsync(id);
+        var gestion = await _imagenEquipoService.ObtenerGestionAsync(id);
 
-        if (equipo is null)
-        {
-            return NotFound();
-        }
-
-        return View(new CargaImagenViewModel
-        {
-            NroEquipo = id,
-            CodigoEquipo = equipo.CodigoEquipo,
-            MarcaYModelo = equipo.MarcaYModelo
-        });
+        return gestion is null ? NotFound() : View(gestion);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "SoloTecnico")]
-    public async Task<IActionResult> CargarImagen(int id, CargaImagenViewModel modelo)
+    [ServiceFilter(typeof(LimitePeticionImagenesFilter), Order = 900)]
+    public async Task<IActionResult> AgregarFotos(int id, CargaFotosViewModel modelo)
     {
-        var equipo = await _equipoConsultaService.ObtenerDetalleAsync(id);
+        var codigoTecnico = await ObtenerCodigoTecnicoAsync();
 
-        if (equipo is null)
+        if (codigoTecnico is null)
         {
-            return NotFound();
+            return Forbid();
         }
 
-        // el equipo lo define la ruta, no el formulario
-        modelo.NroEquipo = id;
-        modelo.CodigoEquipo = equipo.CodigoEquipo;
-        modelo.MarcaYModelo = equipo.MarcaYModelo;
+        var archivos = ArchivoImagen.Combinar(modelo.Archivos, modelo.Angulos);
 
-        if (!ModelState.IsValid)
-        {
-            return View(modelo);
-        }
-
-        var resultado = await _imagenEquipoService.CargarAsync(modelo);
+        var resultado = await _imagenEquipoService.AgregarAsync(id, archivos, codigoTecnico.Value);
 
         if (!resultado.Succeeded)
         {
-            foreach (var error in resultado.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-
-            return View(modelo);
+            return await FotosConErroresAsync(id, resultado);
         }
 
-        TempData["Mensaje"] = "La imagen se cargó correctamente.";
-        return RedirectToAction(nameof(Detalle), new { id });
+        TempData["Mensaje"] = archivos.Count == 1
+            ? "La foto se cargó correctamente."
+            : $"Se cargaron {archivos.Count} fotos correctamente.";
+
+        return RedirectToAction(nameof(Fotos), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloTecnico")]
+    public async Task<IActionResult> EliminarFoto(int id, int nroImagen)
+    {
+        var codigoTecnico = await ObtenerCodigoTecnicoAsync();
+
+        if (codigoTecnico is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _imagenEquipoService.EliminarAsync(id, nroImagen, codigoTecnico.Value);
+
+        if (!resultado.Succeeded)
+        {
+            return await FotosConErroresAsync(id, resultado);
+        }
+
+        TempData["Mensaje"] = "La foto se eliminó correctamente.";
+
+        return RedirectToAction(nameof(Fotos), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloTecnico")]
+    public async Task<IActionResult> ActualizarAnguloFoto(int id, int nroImagen, string? angulo)
+    {
+        var codigoTecnico = await ObtenerCodigoTecnicoAsync();
+
+        if (codigoTecnico is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _imagenEquipoService.ActualizarAnguloAsync(id, nroImagen, angulo, codigoTecnico.Value);
+
+        if (!resultado.Succeeded)
+        {
+            return await FotosConErroresAsync(id, resultado);
+        }
+
+        TempData["Mensaje"] = "El ángulo de la foto se actualizó correctamente.";
+
+        return RedirectToAction(nameof(Fotos), new { id });
     }
 
     private async Task CargarListadoAsync(EquipoListadoViewModel filtros, bool soloPendientesDeDiagnostico)
@@ -144,5 +179,24 @@ public class EquiposController : Controller
             _logger.LogError(ex, "No se pudo cargar el listado de equipos");
             filtros.ErrorAlCargar = true;
         }
+    }
+
+    private async Task<int?> ObtenerCodigoTecnicoAsync()
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return identityUserId is null ? null : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+    }
+
+    private async Task<IActionResult> FotosConErroresAsync(int id, IdentityResult resultado)
+    {
+        foreach (var error in resultado.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        var gestion = await _imagenEquipoService.ObtenerGestionAsync(id);
+
+        return gestion is null ? NotFound() : View("Fotos", gestion);
     }
 }

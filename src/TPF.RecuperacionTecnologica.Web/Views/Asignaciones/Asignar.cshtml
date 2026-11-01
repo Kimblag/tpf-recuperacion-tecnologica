@@ -178,6 +178,9 @@
                                 <div><h2 class="card-title" id="titulo-equipo">Equipo</h2></div>
                             </div>
                             <div class="card-body">
+                                <div class="galeria-compacta mb-3">
+                                    <partial name="_GaleriaEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.MarcaYModelo, Model.MarcaYModelo))" />
+                                </div>
                                 <dl class="dl">
                                     <dt>Número</dt>
                                     <dd><span class="mono">@Model.CodigoEquipo</span></dd>
@@ -199,4 +202,5 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
 }

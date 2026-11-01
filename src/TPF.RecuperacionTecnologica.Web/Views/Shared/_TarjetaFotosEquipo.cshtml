@@ -1,0 +1,16 @@
+@model (IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.FotoEquipoViewModel> Fotos, TPF.RecuperacionTecnologica.Web.Models.Enums.TipoEquipo Tipo, string Modelo, string MarcaYModelo)
+@{
+    var cantidad = Model.Fotos.Count;
+}
+
+<section class="card" aria-labelledby="titulo-fotos">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title" id="titulo-fotos">Fotos del equipo</h2>
+            <p class="card-sub">@(cantidad == 0 ? "Sin fotos cargadas" : cantidad == 1 ? "1 foto" : $"{cantidad} fotos")</p>
+        </div>
+    </div>
+    <div class="card-body">
+        <partial name="_GaleriaEquipo" model="Model" />
+    </div>
+</section>

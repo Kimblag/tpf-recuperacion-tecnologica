@@ -199,6 +199,7 @@ public class AsignacionesController : Controller
 
         formulario.TipoEquipo = equipo.TipoEquipo;
         formulario.MarcaYModelo = equipo.MarcaYModelo;
+        formulario.Fotos = equipo.Imagenes;
         formulario.Candidatas = await _asignacionService.ObtenerCandidatasAsync(formulario.NroEquipo.Value);
 
         // si no llegó una elección válida, se preselecciona la sugerida

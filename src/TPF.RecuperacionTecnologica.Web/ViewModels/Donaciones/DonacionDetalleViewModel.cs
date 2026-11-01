@@ -22,6 +22,7 @@ public class DonacionDetalleViewModel : DonacionFilaViewModel
     public string? Otros { get; set; }
 
     public IReadOnlyList<HitoViewModel> Historial { get; set; } = [];
+    public IReadOnlyList<FotoEquipoViewModel> Fotos { get; set; } = [];
 
     public bool EspecificacionesVerificadas { get; set; }
 

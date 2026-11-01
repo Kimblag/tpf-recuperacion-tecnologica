@@ -1,4 +1,5 @@
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
 
@@ -65,4 +66,6 @@ public class DiagnosticoDetalleViewModel
         || !string.IsNullOrWhiteSpace(TamanoPantalla)
         || !string.IsNullOrWhiteSpace(EstadoBateria)
         || !string.IsNullOrWhiteSpace(Otros);
+
+    public IReadOnlyList<FotoEquipoViewModel> Fotos { get; set; } = [];
 }

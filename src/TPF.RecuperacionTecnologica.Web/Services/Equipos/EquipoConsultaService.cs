@@ -166,6 +166,8 @@ public class EquipoConsultaService : IEquipoConsultaService
             })
             .FirstOrDefaultAsync();
 
+        var fotos = await _context.ObtenerFotosAsync(nroEquipo);
+
         var donante = datos.TipoUsuario == TipoUsuario.Persona
             ? $"{datos.Nombre} {datos.Apellido}".Trim()
             : datos.RazonSocial ?? string.Empty;
@@ -190,7 +192,8 @@ public class EquipoConsultaService : IEquipoConsultaService
             TamanoPantalla = datos.TamanoPantalla,
             EstadoBateria = datos.EstadoBateria,
             Otros = datos.Otros,
-            DiagnosticoVigente = vigente
+            DiagnosticoVigente = vigente,
+            Fotos = fotos
         };
     }
 
@@ -379,6 +382,8 @@ public class EquipoConsultaService : IEquipoConsultaService
             FechaCancelacion = s.FechaCancelacion
         }).ToList();
 
+        var fotos = await _context.ObtenerFotosAsync(nroEquipo);
+
         var donante = equipo.TipoUsuario == TipoUsuario.Persona
             ? $"{equipo.Nombre} {equipo.Apellido}".Trim()
             : equipo.RazonSocial ?? string.Empty;
@@ -399,6 +404,7 @@ public class EquipoConsultaService : IEquipoConsultaService
             Donante = donante,
             TipoCuentaDonante = equipo.TipoUsuario,
             Diagnosticos = diagnosticos,
+            Fotos = fotos,
             Solicitudes = filasSolicitudes,
             Asignaciones = asignaciones,
             Entrega = entrega,

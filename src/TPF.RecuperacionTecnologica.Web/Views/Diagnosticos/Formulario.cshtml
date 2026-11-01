@@ -4,6 +4,8 @@
     ViewData["Title"] = Model.Titulo;
 
     var etiquetaObligatorio = "<span class=\"req\" aria-hidden=\"true\">*</span><span class=\"visually-hidden\"> (obligatorio)</span>";
+
+    var cantidadExistentes = Model.FotosExistentes.Count;
 }
 
 @section Migas {
@@ -25,7 +27,8 @@
     </div>
 
     <div class="grid-3-1">
-        <form class="card" asp-action="@Model.Accion" asp-route-nroEquipo="@Model.NroEquipo" method="post" id="f-diagnostico" novalidate aria-labelledby="f-diagnostico-titulo">
+        <form class="card" asp-action="@Model.Accion" asp-route-nroEquipo="@Model.NroEquipo" method="post" enctype="multipart/form-data" id="f-diagnostico" novalidate aria-labelledby="f-diagnostico-titulo"
+              data-requiere-foto-con="@((int)DictamenTecnico.Funcional)">
             <div class="card-header">
                 <div><h2 class="card-title" id="f-diagnostico-titulo">Resultado de la evaluación</h2></div>
             </div>
@@ -39,7 +42,7 @@
                         <div class="field span-2">
                             <label class="form-label" for="DictamenTecnico">Dictamen técnico@(Html.Raw(etiquetaObligatorio))</label>
                             <div class="select">
-                                <select asp-for="DictamenTecnico" class="form-select" asp-items="Html.GetEnumSelectList<DictamenTecnico>()">
+                                <select asp-for="DictamenTecnico" class="form-select" asp-items="Html.GetEnumSelectList<DictamenTecnico>()" data-dictamen>
                                     <option value="">Seleccionar dictamen</option>
                                 </select>
                                 <partial name="_Icon" model="@("chevron-down")" />
@@ -126,17 +129,54 @@
                         <h3 class="span-2 sec-title">Fotos del equipo</h3>
 
                         <div class="field span-2">
-                            <label class="form-label" for="FotosDiagnostico">Fotos</label>
-                            <input id="FotosDiagnostico" type="file" class="form-control" disabled aria-describedby="FotosDiagnostico-hint" />
-                            @* TODO: habilitar la carga de fotos cuando se defina el almacenamiento de archivos *@
-                            <div class="form-text" id="FotosDiagnostico-hint">La carga de fotos todavía no está disponible.</div>
+                            <p class="form-text" id="FotosDiagnostico-hint">
+                                @if (cantidadExistentes == 0)
+                                {
+                                    <text>Obligatoria al menos una foto si el dictamen es Funcional, porque el equipo pasa a estar disponible en el catálogo.</text>
+                                }
+                                else
+                                {
+                                    <text>El equipo ya tiene @cantidadExistentes @(cantidadExistentes == 1 ? "foto" : "fotos"). Se pueden agregar más a este diagnóstico.</text>
+                                }
+                            </p>
+
+                            @if (cantidadExistentes > 0)
+                            {
+                                <ul class="fotos-existentes" aria-label="Fotos que ya tiene el equipo">
+                                    @for (var indice = 0; indice < cantidadExistentes; indice++)
+                                    {
+                                        var foto = Model.FotosExistentes[indice];
+                                        var textoAlt = $"Foto {indice + 1} de {Model.MarcaYModelo}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $", vista {foto.Angulo}");
+                                        var leyenda = $"Foto {indice + 1} de {cantidadExistentes}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $" · {foto.Angulo}");
+
+                                        <li>
+                                            <button type="button" class="thumb" aria-label="Ampliar la foto @(indice + 1)" data-visor-foto
+                                                    data-src="@Url.Content(foto.UrlImagen)" data-alt="@textoAlt" data-leyenda="@leyenda">
+                                                <img src="@Url.Content(foto.UrlImagen)" alt="@textoAlt" loading="lazy" />
+                                            </button>
+                                        </li>
+                                    }
+                                </ul>
+
+                                <partial name="_VisorFotos" />
+                            }
+
+                            @if (!ViewData.ModelState.IsValid && Model.Archivos.Count > 0)
+                            {
+                                <div class="alert alert-info" role="status">
+                                    <partial name="_Icon" model="@("info")" />
+                                    <div class="alert-body">Por seguridad del navegador, las fotos elegidas antes no se conservan. Volver a seleccionarlas para guardar el diagnóstico.</div>
+                                </div>
+                            }
+
+                            <partial name="_CargaFotos" model="cantidadExistentes" />
                         </div>
                     </div>
                 </div>
             </div>
             <div class="form-actions">
                 <a class="btn btn-secondary btn-lg" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
-                <button type="submit" class="btn btn-primary btn-lg">@Model.TextoGuardar</button>
+                <button type="submit" class="btn btn-primary btn-lg" data-fotos-enviar data-texto-enviando="Guardando…">@Model.TextoGuardar</button>
             </div>
         </form>
 
@@ -185,6 +225,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/gestion-fotos.js" asp-append-version="true"></script>
     <script>
         var resumen = document.getElementById('resumen-errores');
         if (resumen) resumen.focus();

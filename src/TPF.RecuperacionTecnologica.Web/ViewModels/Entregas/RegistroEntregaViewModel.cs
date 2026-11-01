@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
@@ -70,6 +71,8 @@ public class RegistroEntregaViewModel
     public TipoEquipo TipoEquipo { get; set; }
 
     public string MarcaYModelo { get; set; } = string.Empty;
+
+    public IReadOnlyList<FotoEquipoViewModel> Fotos { get; set; } = [];
 
     public DateTime FechaLimiteRetiro { get; set; }
 

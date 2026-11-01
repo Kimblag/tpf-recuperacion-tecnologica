@@ -103,7 +103,19 @@ public class AsignacionService : IAsignacionService
             .OrderByDescending(e => e.FechaDisponibilidad)
             .ThenByDescending(e => e.NroEquipo)
             .Take(cantidad)
-            .Select(e => new { e.NroEquipo, e.TipoEquipo, e.Marca, e.Modelo })
+            .Select(e => new
+            {
+                e.NroEquipo,
+                e.TipoEquipo,
+                e.Marca,
+                e.Modelo,
+                ImagenUrl = _context.ImagenesEquipo
+                    .Where(i => i.NroEquipo == e.NroEquipo)
+                    .OrderBy(i => i.FechaCarga)
+                    .ThenBy(i => i.NroImagen)
+                    .Select(i => i.UrlImagen)
+                    .FirstOrDefault()
+            })
             .ToListAsync();
 
         return equipos
@@ -111,7 +123,8 @@ public class AsignacionService : IAsignacionService
             {
                 NroEquipo = e.NroEquipo,
                 TipoEquipo = e.TipoEquipo,
-                MarcaYModelo = $"{e.Marca} {e.Modelo}"
+                MarcaYModelo = $"{e.Marca} {e.Modelo}",
+                ImagenUrl = e.ImagenUrl
             })
             .ToList();
     }

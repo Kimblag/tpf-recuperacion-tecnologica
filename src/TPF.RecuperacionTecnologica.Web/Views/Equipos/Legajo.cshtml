@@ -32,46 +32,38 @@
         </div>
     </div>
 
-    <div class="grid-3-1">
-        <section class="card">
-            <div class="card-header">
-                <div><h2 class="card-title">Datos del equipo</h2></div>
-            </div>
-            <div class="card-body">
-                <dl class="dl">
-                    <dt>Número de equipo</dt>
-                    <dd><span class="mono">@Model.CodigoEquipo</span></dd>
-                    <dt>Tipo de equipo</dt>
-                    <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
-                    <dt>Marca</dt>
-                    <dd>@Model.Marca</dd>
-                    <dt>Modelo</dt>
-                    <dd>@Model.Modelo</dd>
-                    <dt>Condición declarada</dt>
-                    <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
-                    <dt>Observaciones</dt>
-                    <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
-                    <dt>Fecha de registro</dt>
-                    <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
-                    @if (Model.FechaDisponibilidad is not null)
-                    {
-                        <dt>Disponible desde</dt>
-                        <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
-                    }
-                    @if (Model.EstadoEquipo == EstadoEquipo.Cancelado)
-                    {
-                        <dt>Fecha de cancelación</dt>
-                        <dd>@(Model.FechaCancelacion?.ToString("dd/MM/yyyy") ?? "—")</dd>
-                        <dt>Motivo de cancelación</dt>
-                        <dd>@(string.IsNullOrWhiteSpace(Model.MotivoCancelacion) ? "—" : Model.MotivoCancelacion)</dd>
-                    }
-                    <dt>Estado actual</dt>
-                    <dd><partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" /></dd>
-                </dl>
-            </div>
-        </section>
+    <div class="g-detail">
+        <partial name="_TarjetaFotosEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.Modelo, Model.MarcaYModelo))" />
 
         <div class="stack">
+            <section class="card">
+                <div class="card-header">
+                    <div><h2 class="card-title">Datos del equipo</h2></div>
+                </div>
+                <div class="card-body">
+                    <dl class="dl">
+                        <dt>Condición declarada</dt>
+                        <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
+                        <dt>Observaciones</dt>
+                        <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
+                        <dt>Fecha de registro</dt>
+                        <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                        @if (Model.FechaDisponibilidad is not null)
+                        {
+                            <dt>Disponible desde</dt>
+                            <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                        }
+                        @if (Model.EstadoEquipo == EstadoEquipo.Cancelado)
+                        {
+                            <dt>Fecha de cancelación</dt>
+                            <dd>@(Model.FechaCancelacion?.ToString("dd/MM/yyyy") ?? "—")</dd>
+                            <dt>Motivo de cancelación</dt>
+                            <dd>@(string.IsNullOrWhiteSpace(Model.MotivoCancelacion) ? "—" : Model.MotivoCancelacion)</dd>
+                        }
+                    </dl>
+                </div>
+            </section>
+
             <section class="card">
                 <div class="card-header">
                     <div><h2 class="card-title">Donante</h2></div>
@@ -85,20 +77,20 @@
                     </dl>
                 </div>
             </section>
-
-            <section class="card">
-                <div class="card-header">
-                    <div>
-                        <h2 class="card-title">Línea de tiempo</h2>
-                        <p class="card-sub">Todos los movimientos del equipo</p>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <partial name="_LineaDeTiempo" model="Model.LineaDeTiempo" />
-                </div>
-            </section>
         </div>
     </div>
+
+    <section class="card" aria-labelledby="titulo-linea-tiempo">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="titulo-linea-tiempo">Línea de tiempo</h2>
+                <p class="card-sub">Todos los movimientos del equipo, del más antiguo al más reciente</p>
+            </div>
+        </div>
+        <div class="card-body timeline-fechas">
+            <partial name="_LineaDeTiempo" model="Model.LineaDeTiempo" />
+        </div>
+    </section>
 
     <section class="card overflow" aria-label="Diagnósticos">
         <div class="card-header">
@@ -314,3 +306,7 @@
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script src="~/js/galeria-equipo.js" asp-append-version="true"></script>
+}

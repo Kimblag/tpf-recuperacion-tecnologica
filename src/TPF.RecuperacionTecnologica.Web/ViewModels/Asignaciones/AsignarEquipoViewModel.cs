@@ -29,6 +29,8 @@ public class AsignarEquipoViewModel
 
     public string MarcaYModelo { get; set; } = string.Empty;
 
+    public IReadOnlyList<FotoEquipoViewModel> Fotos { get; set; } = [];
+
     public IReadOnlyList<SolicitudCandidataViewModel> Candidatas { get; set; } = [];
 
     [Display(Name = "Solicitud a asignar")]
