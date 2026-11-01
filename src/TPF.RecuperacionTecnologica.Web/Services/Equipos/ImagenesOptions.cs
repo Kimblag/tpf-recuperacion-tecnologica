@@ -5,7 +5,7 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Equipos;
 public class ImagenesOptions : IValidatableObject
 {
     public const string Seccion = "Imagenes";
-    public const string RutaPublica = "upload/equipos";
+    public const string RutaPublica = "uploads/equipos";
 
     [Range(1, 50, ErrorMessage = "El tamaño máximo debe estar entre 1 y 50 MB.")]
     public int TamanoMaximoMB { get; set; } = 10;

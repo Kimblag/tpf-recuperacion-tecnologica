@@ -1,6 +1,65 @@
 (function () {
     iniciarCarga(document.querySelector('[data-carga-fotos]'));
     iniciarEliminacion(document.querySelector('[data-eliminar-dialogo]'));
+    iniciarVisor(document.querySelector('[data-visor]'));
+
+    function iniciarVisor(dialogo) {
+        var botones = Array.prototype.slice.call(document.querySelectorAll('[data-visor-foto]'));
+
+        if (!dialogo || typeof dialogo.showModal !== 'function' || botones.length === 0) return;
+
+        var imagen = dialogo.querySelector('[data-visor-img]');
+        var leyenda = dialogo.querySelector('[data-visor-leyenda]');
+        var anterior = dialogo.querySelector('[data-visor-anterior]');
+        var siguiente = dialogo.querySelector('[data-visor-siguiente]');
+        var actual = 0;
+
+        anterior.hidden = botones.length < 2;
+        siguiente.hidden = botones.length < 2;
+
+        function mostrar(indice) {
+            actual = (indice + botones.length) % botones.length;
+
+            imagen.src = botones[actual].dataset.src;
+            imagen.alt = botones[actual].dataset.alt;
+            leyenda.textContent = botones[actual].dataset.leyenda;
+        }
+
+        botones.forEach(function (boton, indice) {
+            boton.addEventListener('click', function () {
+                mostrar(indice);
+                dialogo.showModal();
+            });
+        });
+
+        anterior.addEventListener('click', function () {
+            mostrar(actual - 1);
+        });
+
+        siguiente.addEventListener('click', function () {
+            mostrar(actual + 1);
+        });
+
+        dialogo.querySelector('[data-visor-cerrar]').addEventListener('click', function () {
+            dialogo.close();
+        });
+
+        dialogo.addEventListener('click', function (evento) {
+            if (evento.target === dialogo) {
+                dialogo.close();
+            }
+        });
+
+        dialogo.addEventListener('keydown', function (evento) {
+            if (botones.length < 2) return;
+
+            if (evento.key === 'ArrowLeft') {
+                mostrar(actual - 1);
+            } else if (evento.key === 'ArrowRight') {
+                mostrar(actual + 1);
+            }
+        });
+    }
 
     function iniciarCarga(contenedor) {
         if (!contenedor) return;

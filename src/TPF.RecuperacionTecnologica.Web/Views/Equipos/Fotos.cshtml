@@ -66,11 +66,14 @@
                     {
                         var foto = Model.Fotos[indice];
                         var numero = indice + 1;
+                        var textoAlt = $"Foto {numero} de {Model.MarcaYModelo}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $", vista {foto.Angulo}");
+                        var leyenda = $"Foto {numero} de {cantidad}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $" · {foto.Angulo}");
 
                         <li class="foto-item">
-                            <a class="foto-imagen" href="@Url.Content(foto.UrlImagen)" target="_blank" rel="noopener" aria-label="Abrir la foto @numero en una pestaña nueva">
-                                <img src="@Url.Content(foto.UrlImagen)" alt="Foto @numero de @Model.MarcaYModelo@(string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $", vista {foto.Angulo}")" loading="lazy" />
-                            </a>
+                            <button type="button" class="foto-imagen" aria-label="Ampliar la foto @numero" data-visor-foto
+                                    data-src="@Url.Content(foto.UrlImagen)" data-alt="@textoAlt" data-leyenda="@leyenda">
+                                <img src="@Url.Content(foto.UrlImagen)" alt="@textoAlt" loading="lazy" />
+                            </button>
                             <div class="foto-datos">
                                 <div class="foto-titulo">
                                     <strong>Foto @numero</strong>
@@ -146,6 +149,11 @@
         </form>
     }
 </div>
+
+@if (cantidad > 0)
+{
+    <partial name="_VisorFotos" />
+}
 
 @if (Model.PuedeEditar)
 {

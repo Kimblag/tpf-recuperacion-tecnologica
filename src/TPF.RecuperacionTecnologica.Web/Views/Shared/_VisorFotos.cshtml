@@ -1,0 +1,11 @@
+<dialog class="lightbox" aria-label="Foto ampliada" data-visor>
+    <div class="lightbox-bar">
+        <p class="lightbox-cap" role="status" aria-live="polite" data-visor-leyenda></p>
+        <button type="button" class="btn btn-secondary btn-sm" data-visor-cerrar><partial name="_Icon" model="@("x")" /><span>Cerrar</span></button>
+    </div>
+    <div class="lightbox-body">
+        <button type="button" class="btn btn-secondary btn-icon lightbox-nav" aria-label="Foto anterior" data-visor-anterior><partial name="_Icon" model="@("chevron-left")" /></button>
+        <img src="" alt="" data-visor-img />
+        <button type="button" class="btn btn-secondary btn-icon lightbox-nav" aria-label="Foto siguiente" data-visor-siguiente><partial name="_Icon" model="@("chevron-right")" /></button>
+    </div>
+</dialog>

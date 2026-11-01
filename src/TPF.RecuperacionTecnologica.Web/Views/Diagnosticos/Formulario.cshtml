@@ -146,14 +146,19 @@
                                     @for (var indice = 0; indice < cantidadExistentes; indice++)
                                     {
                                         var foto = Model.FotosExistentes[indice];
+                                        var textoAlt = $"Foto {indice + 1} de {Model.MarcaYModelo}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $", vista {foto.Angulo}");
+                                        var leyenda = $"Foto {indice + 1} de {cantidadExistentes}" + (string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $" · {foto.Angulo}");
 
                                         <li>
-                                            <a class="thumb" href="@Url.Content(foto.UrlImagen)" target="_blank" rel="noopener" aria-label="Abrir la foto @(indice + 1) en una pestaña nueva">
-                                                <img src="@Url.Content(foto.UrlImagen)" alt="Foto @(indice + 1) de @Model.MarcaYModelo@(string.IsNullOrWhiteSpace(foto.Angulo) ? string.Empty : $", vista {foto.Angulo}")" loading="lazy" />
-                                            </a>
+                                            <button type="button" class="thumb" aria-label="Ampliar la foto @(indice + 1)" data-visor-foto
+                                                    data-src="@Url.Content(foto.UrlImagen)" data-alt="@textoAlt" data-leyenda="@leyenda">
+                                                <img src="@Url.Content(foto.UrlImagen)" alt="@textoAlt" loading="lazy" />
+                                            </button>
                                         </li>
                                     }
                                 </ul>
+
+                                <partial name="_VisorFotos" />
                             }
 
                             @if (!ViewData.ModelState.IsValid && Model.Archivos.Count > 0)
