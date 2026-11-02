@@ -5,6 +5,8 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
 public class DonacionDetalleViewModel : DonacionFilaViewModel
 {
+    public int NroUsuarioDonante { get; set; }
+
     public string Donante { get; set; } = string.Empty;
 
     public string? Observaciones { get; set; }

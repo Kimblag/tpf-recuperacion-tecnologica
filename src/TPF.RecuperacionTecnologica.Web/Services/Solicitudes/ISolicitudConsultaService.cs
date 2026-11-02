@@ -13,7 +13,7 @@ public interface ISolicitudConsultaService
 
     Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarTodasAsync(
         string? busqueda, TipoSolicitante? tipo, OrigenSolicitud? origen, EstadoSolicitud? estado,
-        int pagina, int tamanoPagina);
+        int pagina, int tamanoPagina, int? nroUsuario = null);
 
     Task<SolicitudDetalleViewModel?> ObtenerDetalleInternoAsync(int nroSolicitud);
 

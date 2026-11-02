@@ -9,6 +9,8 @@ public class SolicitudDetalleViewModel
 
     public int NroEquipo { get; set; }
 
+    public int NroUsuario { get; set; }
+
     public TipoEquipo TipoEquipo { get; set; }
 
     public string MarcaYModelo { get; set; } = string.Empty;

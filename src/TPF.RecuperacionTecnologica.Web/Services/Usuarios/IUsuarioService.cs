@@ -30,6 +30,13 @@ public interface IUsuarioService
     Task<UsuarioDetalleViewModel?> ObtenerDetalleAsync(int nroUsuario);
 
     /// <summary>
+    /// Devuelve los datos de contacto de un Usuario para la ficha del Coordinador, sin el documento,
+    /// e indica si la cuenta ya tiene contraseña. Las listas de solicitudes y donaciones quedan vacías.
+    /// </summary>
+    /// <returns>Los datos del Usuario, o null si no existe.</returns>
+    Task<FichaUsuarioViewModel?> ObtenerFichaAsync(int nroUsuario);
+
+    /// <summary>
     /// Devuelve los datos del Usuario asociado a una cuenta de Identity para editarlos,
     /// o null si la cuenta no corresponde a un Usuario.
     /// </summary>

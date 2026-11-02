@@ -182,6 +182,28 @@ public class UsuarioService : IUsuarioService
             .FirstOrDefaultAsync();
     }
 
+    public async Task<FichaUsuarioViewModel?> ObtenerFichaAsync(int nroUsuario)
+    {
+        return await _context.Usuarios
+            .AsNoTracking()
+            .Where(u => u.NroUsuario == nroUsuario)
+            .Select(u => new FichaUsuarioViewModel
+            {
+                NroUsuario = u.NroUsuario,
+                TipoUsuario = u.TipoUsuario,
+                Nombre = u.Nombre,
+                Apellido = u.Apellido,
+                RazonSocial = u.RazonSocial,
+                CorreoElectronico = u.CorreoElectronico,
+                Telefono = u.Telefono,
+                FechaAlta = u.FechaAlta,
+                EstadoUsuario = u.EstadoUsuario,
+                // una cuenta invitada no tiene contraseña hasta que la activa
+                TieneContrasena = _context.Users.Any(i => i.Id == u.IdentityUserId && i.PasswordHash != null)
+            })
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<EdicionUsuarioViewModel?> ObtenerEdicionAsync(string identityUserId)
     {
         return await _context.Usuarios
