@@ -5,6 +5,9 @@
 
     var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
 
+    // el Administrador va a su detalle de usuario; el Coordinador, a la ficha sin el documento
+    var esAdministrador = User.IsInRole(nameof(RolPersonal.Administrador));
+
     var explicacionEstado = Model.EstadoSolicitud switch
     {
         EstadoSolicitud.Pendiente => "Se está esperando poder asignar el equipo.",
@@ -58,7 +61,7 @@
                     <dt>Equipo solicitado</dt>
                     <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
                     <dt>Solicitante</dt>
-                    <dd>@Model.Solicitante<div class="card-sub">@Html.DisplayFor(m => m.TipoCuenta) · @Model.CorreoSolicitante</div></dd>
+                    <dd><a asp-controller="Usuarios" asp-action="@(esAdministrador ? "Detalle" : "Ficha")" asp-route-id="@Model.NroUsuario">@Model.Solicitante</a><div class="card-sub">@Html.DisplayFor(m => m.TipoCuenta) · @Model.CorreoSolicitante</div></dd>
                     <dt>Tipo de solicitante</dt>
                     <dd>@Html.DisplayFor(m => m.TipoSolicitante)</dd>
                     <dt>Motivo</dt>

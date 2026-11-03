@@ -1,6 +1,10 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.DonacionDetalleViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
     ViewData["Title"] = "Detalle de donación";
+
+    // el Administrador va a su detalle de usuario; el Coordinador, a la ficha sin el documento
+    var esAdministrador = User.IsInRole(nameof(RolPersonal.Administrador));
 }
 
 @section Migas {
@@ -32,7 +36,7 @@
                 <div class="card-body">
                     <dl class="dl">
                         <dt>Donante</dt>
-                        <dd>@Model.Donante</dd>
+                        <dd><a asp-controller="Usuarios" asp-action="@(esAdministrador ? "Detalle" : "Ficha")" asp-route-id="@Model.NroUsuarioDonante">@Model.Donante</a></dd>
                         <dt>Número de equipo</dt>
                         <dd><span class="mono">@Model.CodigoEquipo</span></dd>
                         <dt>Tipo de equipo</dt>

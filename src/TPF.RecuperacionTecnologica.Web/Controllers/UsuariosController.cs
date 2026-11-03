@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
+using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
@@ -10,13 +12,24 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
 public class UsuariosController : Controller
 {
+    // la ficha muestra las últimas solicitudes y donaciones de la persona
+    private const int CantidadEnFicha = 10;
+
     private readonly IUsuarioService _usuarioService;
     private readonly ICuentaService _cuentaService;
+    private readonly ISolicitudConsultaService _solicitudConsultaService;
+    private readonly IDonacionService _donacionService;
 
-    public UsuariosController(IUsuarioService usuarioService, ICuentaService cuentaService)
+    public UsuariosController(
+        IUsuarioService usuarioService,
+        ICuentaService cuentaService,
+        ISolicitudConsultaService solicitudConsultaService,
+        IDonacionService donacionService)
     {
         _usuarioService = usuarioService;
         _cuentaService = cuentaService;
+        _solicitudConsultaService = solicitudConsultaService;
+        _donacionService = donacionService;
     }
 
     [HttpGet]
@@ -33,6 +46,28 @@ public class UsuariosController : Controller
         var usuario = await _usuarioService.ObtenerDetalleAsync(id);
 
         return usuario is null ? NotFound() : View(usuario);
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> Ficha(int id)
+    {
+        var ficha = await _usuarioService.ObtenerFichaAsync(id);
+
+        if (ficha is null)
+        {
+            return NotFound();
+        }
+
+        var solicitudes = await _solicitudConsultaService.ListarTodasAsync(
+            null, null, null, null, 1, CantidadEnFicha, nroUsuario: id);
+        var donaciones = await _donacionService.ListarTodasAsync(
+            null, null, null, 1, CantidadEnFicha, nroUsuario: id);
+
+        ficha.Solicitudes = solicitudes.Elementos;
+        ficha.Donaciones = donaciones.Elementos;
+
+        return View(ficha);
     }
 
 

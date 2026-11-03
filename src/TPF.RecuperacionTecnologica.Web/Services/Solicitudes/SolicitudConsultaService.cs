@@ -46,9 +46,14 @@ public class SolicitudConsultaService : ISolicitudConsultaService
 
     public async Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarTodasAsync(
         string? busqueda, TipoSolicitante? tipo, OrigenSolicitud? origen, EstadoSolicitud? estado,
-        int pagina, int tamanoPagina)
+        int pagina, int tamanoPagina, int? nroUsuario = null)
     {
         var consulta = _context.Solicitudes.AsNoTracking();
+
+        if (nroUsuario is not null)
+        {
+            consulta = consulta.Where(s => s.NroUsuario == nroUsuario);
+        }
 
         if (tipo is not null)
         {
@@ -171,6 +176,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 s.FechaCancelacion,
                 s.MotivoCancelacion,
                 s.FechaCierre,
+                s.NroUsuario,
                 s.Usuario.RazonSocial,
                 s.Usuario.Nombre,
                 s.Usuario.Apellido,
@@ -207,6 +213,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             NroEquipo = datos.NroEquipoRequerido,
             TipoEquipo = datos.TipoEquipo,
             MarcaYModelo = $"{datos.Marca} {datos.Modelo}",
+            NroUsuario = datos.NroUsuario,
             Solicitante = NombreSolicitante(datos.RazonSocial, datos.Nombre, datos.Apellido),
             TipoCuenta = datos.TipoUsuario,
             CorreoSolicitante = datos.CorreoElectronico,
