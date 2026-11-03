@@ -154,7 +154,13 @@
                 {
                     <div class="alert alert-success" role="status">
                         <partial name="_Icon" model="@("check-circle")" />
-                        <div class="alert-body">@mensaje</div>
+                        <div class="alert-body">
+                            @mensaje
+                            @if (TempData["MensajeEnlace"] is string enlace && TempData["MensajeEnlaceTexto"] is string textoEnlace)
+                            {
+                                <a href="@enlace">@textoEnlace</a>
+                            }
+                        </div>
                     </div>
                 }
                 @RenderBody()

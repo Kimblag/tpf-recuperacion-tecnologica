@@ -448,9 +448,14 @@ public class DonacionService : IDonacionService
     }
 
     public async Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
-        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina)
+        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null)
     {
         var consulta = _context.Equipos.AsNoTracking();
+
+        if (nroUsuario is not null)
+        {
+            consulta = consulta.Where(e => e.NroUsuarioDonante == nroUsuario);
+        }
 
         if (estado is not null)
         {
@@ -537,6 +542,7 @@ public class DonacionService : IDonacionService
                 e.EspecificacionesDeclaradas.TamanoPantalla,
                 e.EspecificacionesDeclaradas.EstadoBateria,
                 e.EspecificacionesDeclaradas.Otros,
+                e.NroUsuarioDonante,
                 e.UsuarioDonante.TipoUsuario,
                 e.UsuarioDonante.Nombre,
                 e.UsuarioDonante.Apellido,
@@ -595,6 +601,7 @@ public class DonacionService : IDonacionService
             EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
             FechaRegistro = equipo.FechaRegistro,
             EstadoEquipo = equipo.EstadoEquipo,
+            NroUsuarioDonante = equipo.NroUsuarioDonante,
             Donante = donante,
             Observaciones = equipo.Observaciones,
             Fotos = fotos,

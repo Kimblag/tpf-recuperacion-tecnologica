@@ -1,0 +1,162 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.FichaUsuarioViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Ficha de la persona";
+
+    var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Ficha de la persona</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id">
+                <h1 tabindex="-1">@Model.NombreVisible</h1>
+                <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
+            </div>
+            <p class="page-sub">Usuario externo @Model.Codigo</p>
+        </div>
+    </div>
+
+    @if (!Model.TieneContrasena)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">
+                <div class="alert-title">La cuenta todavía no activó su contraseña</div>
+                <div>La persona recibió una invitación por correo y aún no la usó para ingresar.</div>
+            </div>
+        </div>
+    }
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Datos de contacto</h2>
+                <p class="card-sub">Solo lectura</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="dl">
+                <dt>Código</dt>
+                <dd><span class="mono">@Model.Codigo</span></dd>
+                <dt>@(esPersona ? "Nombre y apellido" : "Razón social")</dt>
+                <dd>@Model.NombreVisible</dd>
+                <dt>Tipo de cuenta</dt>
+                <dd>@Html.DisplayFor(m => m.TipoUsuario)</dd>
+                <dt>Correo electrónico</dt>
+                <dd>@Model.CorreoElectronico</dd>
+                <dt>Teléfono</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
+                <dt>Fecha de alta</dt>
+                <dd>@Model.FechaAlta.ToString("dd/MM/yyyy")</dd>
+                <dt>Estado de la cuenta</dt>
+                <dd><partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" /></dd>
+            </dl>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Solicitudes</h2>
+                <p class="card-sub">Las últimas 10, de la más reciente a la más antigua</p>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Solicitudes.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
+                    <h3>Sin solicitudes</h3>
+                    <p>Esta persona todavía no pidió ningún equipo.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Solicitudes de la persona</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Solicitud</th>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Solicitudes)
+                            {
+                                <tr>
+                                    <td data-label="Solicitud"><span class="mono">@fila.Codigo</span></td>
+                                    <td data-label="Equipo">@fila.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <span class="mono">@fila.CodigoEquipo</span></div></td>
+                                    <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud" aria-label="Ver solicitud @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Donaciones</h2>
+                <p class="card-sub">Las últimas 10, de la más reciente a la más antigua</p>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Donaciones.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("gift")" /></span>
+                    <h3>Sin donaciones</h3>
+                    <p>Esta persona todavía no donó ningún equipo.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Donaciones de la persona</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Número</th>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Registro</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Donaciones)
+                            {
+                                <tr>
+                                    <td data-label="Número"><span class="mono">@fila.CodigoEquipo</span></td>
+                                    <td data-label="Equipo">@fila.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></div></td>
+                                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-controller="Donaciones" asp-action="DetalleInterno" asp-route-id="@fila.NroEquipo" aria-label="Ver donación del equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </section>
+</div>

@@ -1,0 +1,84 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Entregas.ConstanciaEntregaViewModel
+@{
+    Layout = "_LayoutImpresion";
+    ViewData["Title"] = $"Constancia de entrega {Model.Entrega.Codigo}";
+    var entrega = Model.Entrega;
+}
+
+<div class="constancia-acciones no-imprimir">
+    <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@entrega.NroEntrega">Volver a la entrega</a>
+    <button type="button" class="btn btn-primary" data-imprimir>Imprimir</button>
+</div>
+
+<article class="constancia" aria-labelledby="titulo-constancia">
+    <header class="constancia-encabezado">
+        <p class="constancia-organizacion">@Model.NombreOrganizacion</p>
+        <h1 id="titulo-constancia">Constancia de entrega</h1>
+        <p class="constancia-numero">N.º <span class="mono">@entrega.Codigo</span></p>
+    </header>
+
+    <section aria-labelledby="titulo-entrega">
+        <h2 id="titulo-entrega">Entrega</h2>
+        <dl>
+            <dt>Número de entrega</dt>
+            <dd class="mono">@entrega.Codigo</dd>
+            <dt>Fecha de entrega</dt>
+            <dd>@entrega.FechaEntrega.ToString("dd/MM/yyyy")</dd>
+            <dt>Coordinador que entregó</dt>
+            <dd>@entrega.Coordinador</dd>
+        </dl>
+    </section>
+
+    <section aria-labelledby="titulo-equipo">
+        <h2 id="titulo-equipo">Equipo</h2>
+        <dl>
+            <dt>Tipo</dt>
+            <dd>@Html.DisplayFor(m => m.Entrega.TipoEquipo)</dd>
+            <dt>Marca y modelo</dt>
+            <dd>@entrega.MarcaYModelo</dd>
+            <dt>Número de equipo</dt>
+            <dd class="mono">@entrega.CodigoEquipo</dd>
+        </dl>
+    </section>
+
+    <section aria-labelledby="titulo-solicitud">
+        <h2 id="titulo-solicitud">Solicitud</h2>
+        <dl>
+            <dt>Número de solicitud</dt>
+            <dd class="mono">@entrega.CodigoSolicitud</dd>
+            <dt>Solicitante</dt>
+            <dd>@entrega.Solicitante · @Html.DisplayFor(m => m.Entrega.TipoSolicitante)</dd>
+        </dl>
+    </section>
+
+    <section aria-labelledby="titulo-retiro">
+        <h2 id="titulo-retiro">Quién retiró el equipo</h2>
+        <dl>
+            <dt>Nombre y apellido</dt>
+            <dd>@entrega.NombreQuienRetira</dd>
+            <dt>Documento</dt>
+            <dd class="mono">@entrega.DocumentoQuienRetira</dd>
+        </dl>
+    </section>
+
+    <p class="constancia-conformidad">Recibí el equipo descrito en buen estado de funcionamiento.</p>
+
+    <div class="constancia-firmas">
+        <div class="constancia-firma">
+            <div class="constancia-linea"></div>
+            <p>Firma de quien retira</p>
+            <div class="constancia-linea"></div>
+            <p>Aclaración</p>
+        </div>
+        <div class="constancia-firma">
+            <div class="constancia-linea"></div>
+            <p>Firma del Coordinador</p>
+            <div class="constancia-linea"></div>
+            <p>Aclaración</p>
+        </div>
+    </div>
+</article>
+
+@section Scripts {
+    <script src="~/js/imprimir.js" asp-append-version="true"></script>
+}

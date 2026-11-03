@@ -174,7 +174,7 @@ public class SolicitudesController : Controller
 
             if (impedimento is not null)
             {
-                AplicarImpedimento(formulario, impedimento.Error, impedimento.Mensaje);
+                AplicarImpedimento(formulario, impedimento.Error, impedimento.Mensaje, impedimento.NroSolicitudExistente);
             }
         }
 
@@ -190,10 +190,12 @@ public class SolicitudesController : Controller
         _ => "No se puede registrar la solicitud"
     };
 
-    private static void AplicarImpedimento(FormularioSolicitudViewModel formulario, ErrorRegistroSolicitud error, string mensaje)
+   private static void AplicarImpedimento(
+        FormularioSolicitudViewModel formulario, ErrorRegistroSolicitud error, string mensaje, int? nroSolicitudExistente = null)
     {
         formulario.ImpedimentoTitulo = TituloDelImpedimento(error);
         formulario.ImpedimentoMensaje = mensaje;
+        formulario.NroSolicitudExistente = nroSolicitudExistente;
     }
 
     private async Task AplicarImpedimentoAsistidoAsync(RegistroSolicitudAsistidaViewModel formulario)
@@ -212,6 +214,7 @@ public class SolicitudesController : Controller
         {
             formulario.ImpedimentoTitulo = TituloDelImpedimento(impedimento.Error);
             formulario.ImpedimentoMensaje = impedimento.Mensaje;
+            formulario.NroSolicitudExistente = impedimento.NroSolicitudExistente;
         }
     }
 
