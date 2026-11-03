@@ -243,8 +243,63 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [Authorize]
+    public IActionResult CambiarContrasena()
+    {
+        return View(new CambiarContrasenaViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> CambiarContrasena(CambiarContrasenaViewModel modelo)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(modelo);
+        }
+
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        var resultado = await _cuentaService.CambiarContrasenaAsync(identityUserId, modelo.ContrasenaActual, modelo.Password);
+
+        if (!resultado.Succeeded)
+        {
+            foreach (var error in resultado.Errors)
+            {
+                // la contraseña actual incorrecta se marca en su campo; las reglas de la nueva, en el de la nueva
+                var campo = error.Code == "PasswordMismatch"
+                    ? nameof(modelo.ContrasenaActual)
+                    : error.Code.StartsWith("Password") ? nameof(modelo.Password) : string.Empty;
+
+                ModelState.AddModelError(campo, error.Description);
+            }
+
+            return View(modelo);
+        }
+
+        TempData["Mensaje"] = "La contraseña se cambió correctamente. Las demás sesiones abiertas se cerraron.";
+        return RedirigirACuenta();
+    }
+
+    [HttpGet]
     public IActionResult AccesoDenegado()
     {
         return View();
+    }
+
+    /// <summary>
+    /// Vuelve a la pantalla de cuenta de cada uno: el usuario externo a su perfil y el personal al inicio.
+    /// </summary>
+    private IActionResult RedirigirACuenta()
+    {
+        return User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario)
+            ? RedirectToAction("Perfil", "Usuarios")
+            : RedirectToAction("Index", "Home");
     }
 }

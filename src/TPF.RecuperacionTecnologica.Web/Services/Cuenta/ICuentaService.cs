@@ -42,4 +42,10 @@ public interface ICuentaService
     /// Indica si el enlace de invitación todavía sirve, para avisar antes de que la persona complete el formulario.
     /// </summary>
     Task<bool> EsEnlaceActivacionValidoAsync(string idUsuario, string token);
+
+    /// <summary>
+    /// Cambia la contraseña de la cuenta con la sesión iniciada. Cierra las demás sesiones abiertas
+    /// y mantiene la actual.
+    /// </summary>
+    Task<IdentityResult> CambiarContrasenaAsync(string identityUserId, string contrasenaActual, string contrasenaNueva);
 }

@@ -288,6 +288,28 @@ public class CuentaService : ICuentaService
         return resultado;
     }
 
+    public async Task<IdentityResult> CambiarContrasenaAsync(string identityUserId, string contrasenaActual, string contrasenaNueva)
+    {
+        var identityUser = await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return IdentityResult.Failed(_userManager.ErrorDescriber.DefaultError());
+        }
+
+        // ChangePasswordAsync ya genera un sello de seguridad nuevo: como las sesiones se validan en cada
+        // pedido (SecurityStampValidatorOptions en Program.cs), las demás sesiones abiertas se cierran solas
+        var resultado = await _userManager.ChangePasswordAsync(identityUser, contrasenaActual, contrasenaNueva);
+
+        if (resultado.Succeeded)
+        {
+            // la sesión actual se regenera con el sello nuevo para que no se cierre también
+            await _signInManager.RefreshSignInAsync(identityUser);
+        }
+
+        return resultado;
+    }
+
     public async Task<bool> EsEnlaceActivacionValidoAsync(string idUsuario, string token)
     {
         return await ObtenerCuentaParaActivarAsync(idUsuario, token) is not null;
