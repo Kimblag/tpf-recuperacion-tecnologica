@@ -12,6 +12,10 @@
     {
         <li><a asp-controller="Usuarios" asp-action="Perfil">Mi perfil</a></li>
     }
+    else
+    {
+        <li><a asp-action="MiCuenta">Mi cuenta</a></li>
+    }
     <li aria-current="page">Cambiar contraseña</li>
 }
 
@@ -62,7 +66,7 @@
                 }
                 else
                 {
-                    <a class="btn btn-secondary btn-lg" asp-controller="Home" asp-action="Index">Cancelar</a>
+                    <a class="btn btn-secondary btn-lg" asp-action="MiCuenta">Cancelar</a>
                 }
                 <button type="submit" class="btn btn-primary btn-lg">Cambiar contraseña</button>
             </div>

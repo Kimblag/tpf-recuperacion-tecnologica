@@ -1,0 +1,44 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.MiCuentaViewModel
+@{
+    ViewData["Title"] = "Mi cuenta";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Mi cuenta</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Mi cuenta</h1></div>
+            <p class="page-sub">Datos de la cuenta de acceso. Para corregirlos, hay que pedírselo al Administrador.</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="CambiarContrasena"><partial name="_Icon" model="@("lock")" /><span>Cambiar contraseña</span></a>
+        </div>
+    </div>
+
+    <section class="card" aria-labelledby="titulo-cuenta">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="titulo-cuenta">Datos de la cuenta</h2>
+                <p class="card-sub">Identifican a la persona dentro del sistema</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="dl">
+                <dt>Nombre</dt>
+                <dd>@Model.NombreCompleto</dd>
+                <dt>Código de personal</dt>
+                <dd><span class="mono">@Model.Codigo</span></dd>
+                <dt>Rol</dt>
+                <dd>@Html.DisplayFor(m => m.RolAsignado)</dd>
+                <dt>Correo de acceso</dt>
+                <dd>@Model.CorreoElectronico</dd>
+                <dt>Estado</dt>
+                <dd><partial name="~/Views/Personal/_EstadoPersonalBadge.cshtml" model="Model.EstadoPersonal" /></dd>
+            </dl>
+        </div>
+    </section>
+</div>

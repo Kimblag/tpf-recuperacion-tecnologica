@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
@@ -12,11 +13,13 @@ public class CuentaController : Controller
 {
     private readonly IUsuarioService _usuarioService;
     private readonly ICuentaService _cuentaService;
+    private readonly IPersonalService _personalService;
 
-    public CuentaController(IUsuarioService usuarioService, ICuentaService cuentaService)
+    public CuentaController(IUsuarioService usuarioService, ICuentaService cuentaService, IPersonalService personalService)
     {
         _usuarioService = usuarioService;
         _cuentaService = cuentaService;
+        _personalService = personalService;
     }
 
     [HttpGet]
@@ -243,6 +246,22 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = "PersonalInterno")]
+    public async Task<IActionResult> MiCuenta()
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        var cuenta = await _personalService.ObtenerMiCuentaAsync(identityUserId);
+
+        return cuenta is null ? NotFound() : View(cuenta);
+    }
+
+    [HttpGet]
     [Authorize]
     public IActionResult CambiarContrasena()
     {
@@ -294,12 +313,12 @@ public class CuentaController : Controller
     }
 
     /// <summary>
-    /// Vuelve a la pantalla de cuenta de cada uno: el usuario externo a su perfil y el personal al inicio.
+    /// Vuelve a la pantalla de cuenta de cada uno: el usuario externo a su perfil y el personal a Mi cuenta.
     /// </summary>
     private IActionResult RedirigirACuenta()
     {
         return User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario)
             ? RedirectToAction("Perfil", "Usuarios")
-            : RedirectToAction("Index", "Home");
+            : RedirectToAction(nameof(MiCuenta));
     }
 }
