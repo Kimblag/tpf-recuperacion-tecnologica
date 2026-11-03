@@ -90,21 +90,24 @@ public class SolicitudService : ISolicitudService
                 "Este equipo fue donado por esta misma cuenta, por eso no puede solicitarse.");
         }
 
-        var equiposPendientes = await _context.Solicitudes
+        var pendientes = await _context.Solicitudes
             .AsNoTracking()
             .Where(s => s.NroUsuario == usuario.NroUsuario && s.EstadoSolicitud == EstadoSolicitud.Pendiente)
-            .Select(s => s.NroEquipoRequerido)
+            .Select(s => new { s.NroSolicitud, s.NroEquipoRequerido })
             .ToListAsync();
 
-        if (equiposPendientes.Contains(nroEquipo))
+        var existente = pendientes.FirstOrDefault(s => s.NroEquipoRequerido == nroEquipo);
+
+        if (existente is not null)
         {
-            return new ImpedimentoSolicitud(ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicada);
+            return new ImpedimentoSolicitud(
+                ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicada, existente.NroSolicitud);
         }
 
         var maximoPendientes = (await _configuracionService.ObtenerAsync())?.MaximoSolicitudesPendientes
             ?? MaximoPendientesPorDefecto;
 
-        if (equiposPendientes.Count >= maximoPendientes)
+        if (pendientes.Count >= maximoPendientes)
         {
             return new ImpedimentoSolicitud(ErrorRegistroSolicitud.LimiteAlcanzado,
                 $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Hay que esperar a que alguna se resuelva o cancelarla para pedir otro equipo.");

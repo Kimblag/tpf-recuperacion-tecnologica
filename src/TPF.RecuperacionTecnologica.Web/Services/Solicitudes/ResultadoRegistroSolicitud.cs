@@ -23,4 +23,4 @@ public record ResultadoRegistroSolicitud(int? NroSolicitud, ErrorRegistroSolicit
 }
 
 
-public record ImpedimentoSolicitud(ErrorRegistroSolicitud Error, string Mensaje);
+public record ImpedimentoSolicitud(ErrorRegistroSolicitud Error, string Mensaje, int? NroSolicitudExistente = null);

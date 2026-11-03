@@ -167,6 +167,7 @@ public class EquipoConsultaService : IEquipoConsultaService
             .FirstOrDefaultAsync();
 
         var fotos = await _context.ObtenerFotosAsync(nroEquipo);
+        var solicitudes = await ObtenerSolicitudesDelEquipoAsync(nroEquipo);
 
         var donante = datos.TipoUsuario == TipoUsuario.Persona
             ? $"{datos.Nombre} {datos.Apellido}".Trim()
@@ -193,8 +194,46 @@ public class EquipoConsultaService : IEquipoConsultaService
             EstadoBateria = datos.EstadoBateria,
             Otros = datos.Otros,
             DiagnosticoVigente = vigente,
-            Fotos = fotos
+            Fotos = fotos,
+            Solicitudes = solicitudes
         };
+    }
+
+    // solicitudes de un equipo, para su detalle y su legajo: primero las Pendientes en orden de prioridad
+    // (Escuela y Organización social antes que Particular, la más antigua primero) y después las demás por fecha
+    private async Task<List<SolicitudLegajoViewModel>> ObtenerSolicitudesDelEquipoAsync(int nroEquipo)
+    {
+        var solicitudes = await _context.Solicitudes
+            .AsNoTracking()
+            .Where(s => s.NroEquipoRequerido == nroEquipo)
+            .OrderBy(s => s.EstadoSolicitud == EstadoSolicitud.Pendiente ? 0 : 1)
+            .ThenBy(s => s.EstadoSolicitud == EstadoSolicitud.Pendiente && s.TipoSolicitante == TipoSolicitante.Particular ? 1 : 0)
+            .ThenBy(s => s.FechaSolicitud)
+            .ThenBy(s => s.NroSolicitud)
+            .Select(s => new
+            {
+                s.NroSolicitud,
+                s.Usuario.RazonSocial,
+                s.Usuario.Nombre,
+                s.Usuario.Apellido,
+                s.TipoSolicitante,
+                s.OrigenSolicitud,
+                s.FechaSolicitud,
+                s.EstadoSolicitud,
+                s.FechaCancelacion
+            })
+            .ToListAsync();
+
+        return solicitudes.Select(s => new SolicitudLegajoViewModel
+        {
+            NroSolicitud = s.NroSolicitud,
+            Solicitante = !string.IsNullOrWhiteSpace(s.RazonSocial) ? s.RazonSocial : $"{s.Nombre} {s.Apellido}".Trim(),
+            TipoSolicitante = s.TipoSolicitante,
+            OrigenSolicitud = s.OrigenSolicitud,
+            FechaSolicitud = s.FechaSolicitud,
+            EstadoSolicitud = s.EstadoSolicitud,
+            FechaCancelacion = s.FechaCancelacion
+        }).ToList();
     }
 
     public async Task<HistorialDiagnosticosViewModel?> ObtenerHistorialAsync(int nroEquipo)
@@ -318,25 +357,7 @@ public class EquipoConsultaService : IEquipoConsultaService
             })
             .ToListAsync();
 
-        // consulta de solicitudes por equipo; la tarjeta del detalle del equipo (#228) puede reutilizarla
-        var solicitudes = await _context.Solicitudes
-            .AsNoTracking()
-            .Where(s => s.NroEquipoRequerido == nroEquipo)
-            .OrderBy(s => s.FechaSolicitud)
-            .ThenBy(s => s.NroSolicitud)
-            .Select(s => new
-            {
-                s.NroSolicitud,
-                s.Usuario.RazonSocial,
-                s.Usuario.Nombre,
-                s.Usuario.Apellido,
-                s.TipoSolicitante,
-                s.OrigenSolicitud,
-                s.FechaSolicitud,
-                s.EstadoSolicitud,
-                s.FechaCancelacion
-            })
-            .ToListAsync();
+        var filasSolicitudes = await ObtenerSolicitudesDelEquipoAsync(nroEquipo);
 
         var asignaciones = await _context.Asignaciones
             .AsNoTracking()
@@ -370,17 +391,6 @@ public class EquipoConsultaService : IEquipoConsultaService
                 FechaEntrega = e.FechaEntrega
             })
             .FirstOrDefaultAsync();
-
-        var filasSolicitudes = solicitudes.Select(s => new SolicitudLegajoViewModel
-        {
-            NroSolicitud = s.NroSolicitud,
-            Solicitante = !string.IsNullOrWhiteSpace(s.RazonSocial) ? s.RazonSocial : $"{s.Nombre} {s.Apellido}".Trim(),
-            TipoSolicitante = s.TipoSolicitante,
-            OrigenSolicitud = s.OrigenSolicitud,
-            FechaSolicitud = s.FechaSolicitud,
-            EstadoSolicitud = s.EstadoSolicitud,
-            FechaCancelacion = s.FechaCancelacion
-        }).ToList();
 
         var fotos = await _context.ObtenerFotosAsync(nroEquipo);
 

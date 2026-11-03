@@ -29,6 +29,8 @@ public class FormularioSolicitudViewModel
     public IReadOnlyList<TipoSolicitante> TiposPermitidos { get; set; } = [];
     public string? ImpedimentoTitulo { get; set; }
 
+    public int? NroSolicitudExistente { get; set; }
+
     public string? ImpedimentoMensaje { get; set; }
 
     public OrigenSolicitud OrigenSolicitud { get; set; }

@@ -75,6 +75,13 @@
                 <div>Elegir otro equipo u otro usuario para continuar.</div>
             </div>
         </div>
+
+        @if (Model.NroSolicitudExistente is not null)
+        {
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-secondary" asp-action="DetalleInterno" asp-route-id="@Model.NroSolicitudExistente"><partial name="_Icon" model="@("eye")" /><span>Ver solicitud</span></a>
+            </div>
+        }
     }
     else
     {

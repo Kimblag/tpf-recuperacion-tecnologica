@@ -44,6 +44,8 @@ public class EquipoDetalleTecnicoViewModel
     public DiagnosticoVigenteViewModel? DiagnosticoVigente { get; set; }
     public IReadOnlyList<FotoEquipoViewModel> Fotos { get; set; } = [];
 
+    public IReadOnlyList<SolicitudLegajoViewModel> Solicitudes { get; set; } = [];
+
     public string CodigoEquipo => NroEquipo.ToString("D6");
 
     public string MarcaYModelo => $"{Marca} {Modelo}".Trim();
