@@ -171,6 +171,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// los errores sin contenido (404, 403, etc.) muestran la página de error propia en lugar de una pantalla en blanco
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?codigo={0}");
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
