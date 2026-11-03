@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Entregas;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -13,16 +14,22 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 public class EntregasController : Controller
 {
     private const int MaximoCandidatas = 10;
+    private const string NombreOrganizacionPredeterminado = "Recuperación Tecnológica";
 
     private readonly IPersonalService _personalService;
     private readonly IEntregaService _entregaService;
+    private readonly IConfiguracionService _configuracionService;
     private readonly ILogger<EntregasController> _logger;
 
     public EntregasController(
-        IPersonalService personalService, IEntregaService entregaService, ILogger<EntregasController> logger)
+        IPersonalService personalService,
+        IEntregaService entregaService,
+        IConfiguracionService configuracionService,
+        ILogger<EntregasController> logger)
     {
         _personalService = personalService;
         _entregaService = entregaService;
+        _configuracionService = configuracionService;
         _logger = logger;
     }
 
@@ -62,6 +69,28 @@ public class EntregasController : Controller
         var detalle = await _entregaService.ObtenerDetalleAsync(id);
 
         return detalle is null ? NotFound() : View(detalle);
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> Constancia(int id)
+    {
+        var detalle = await _entregaService.ObtenerDetalleAsync(id);
+
+        if (detalle is null)
+        {
+            return NotFound();
+        }
+
+        var configuracion = await _configuracionService.ObtenerAsync();
+
+        return View(new ConstanciaEntregaViewModel
+        {
+            Entrega = detalle,
+            NombreOrganizacion = string.IsNullOrWhiteSpace(configuracion?.NombreOrganizacion)
+                ? NombreOrganizacionPredeterminado
+                : configuracion.NombreOrganizacion
+        });
     }
 
     [HttpGet]
@@ -108,6 +137,8 @@ public class EntregasController : Controller
             if (resultado.Exitoso)
             {
                 TempData["Mensaje"] = "La entrega se registró correctamente.";
+                TempData["MensajeEnlace"] = Url.Action(nameof(Constancia), new { id = resultado.NroEntrega });
+                TempData["MensajeEnlaceTexto"] = "Imprimir constancia";
                 return RedirectToAction("Detalle", "Asignaciones", new { id = formulario.NroAsignacion });
             }
 
