@@ -191,6 +191,58 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> ActivarCuenta(string? idUsuario = null, string? token = null)
+    {
+        // se revisa el enlace al abrir la pantalla, para no pedir una contraseña que después no se va a poder guardar
+        if (string.IsNullOrEmpty(idUsuario) || string.IsNullOrEmpty(token)
+            || !await _cuentaService.EsEnlaceActivacionValidoAsync(idUsuario, token))
+        {
+            ViewData["EnlaceInvalido"] = true;
+            return View(new ActivarCuentaViewModel());
+        }
+
+        return View(new ActivarCuentaViewModel { IdUsuario = idUsuario, Token = token });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ActivarCuenta(ActivarCuentaViewModel modelo)
+    {
+        if (!ModelState.IsValid)
+        {
+            // si faltan el identificador o el token, el enlace no sirve y hay que pedir otro
+            ViewData["EnlaceInvalido"] =
+                (ModelState[nameof(modelo.IdUsuario)]?.Errors.Count ?? 0) > 0 ||
+                (ModelState[nameof(modelo.Token)]?.Errors.Count ?? 0) > 0;
+
+            return View(modelo);
+        }
+
+        var resultado = await _cuentaService.ActivarCuentaAsync(modelo.IdUsuario, modelo.Token, modelo.Password);
+
+        if (!resultado.Succeeded)
+        {
+            var enlaceInvalido = resultado.Errors.Any(e => e.Code == "InvalidToken");
+
+            // el aviso de enlace vencido ya explica qué hacer, así que no se repite como error
+            if (!enlaceInvalido)
+            {
+                foreach (var error in resultado.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            ViewData["EnlaceInvalido"] = enlaceInvalido;
+
+            return View(modelo);
+        }
+
+        TempData["Mensaje"] = "La cuenta quedó activada. Ya se puede iniciar sesión con el correo y la contraseña elegida.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    [HttpGet]
     public IActionResult AccesoDenegado()
     {
         return View();

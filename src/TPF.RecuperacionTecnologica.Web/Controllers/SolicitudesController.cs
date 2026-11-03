@@ -411,7 +411,7 @@ public class SolicitudesController : Controller
             var resultado = await _solicitudService.RegistrarAsistidaAsync(
                 identityUserId,
                 formulario,
-                (idUsuario, token) => Url.Action("RestablecerContrasena", "Cuenta", new { idUsuario, token })!,
+                (idUsuario, token) => Url.Action("ActivarCuenta", "Cuenta", new { idUsuario, token })!,
                 $"{Request.Scheme}://{Request.Host}");
 
             if (resultado.Exitoso)

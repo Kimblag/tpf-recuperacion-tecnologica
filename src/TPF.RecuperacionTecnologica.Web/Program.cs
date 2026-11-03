@@ -92,11 +92,16 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddClaimsPrincipalFactory<FabricaClaimsUsuario>()
     .AddDefaultTokenProviders()
+    .AddTokenProvider<ProveedorTokenInvitacion>(ProveedorTokenInvitacion.Nombre)
     .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 // el enlace de recuperación de pass vence en 1 hora
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
+
+// el enlace de invitación a una cuenta nueva vence en 3 días
+builder.Services.Configure<ProveedorTokenInvitacionOptions>(options =>
+    options.TokenLifespan = TimeSpan.FromDays(3));
 
 // las políticas se basan en los roles de Identity, que coinciden con RolPersonal
 builder.Services.AddAuthorizationBuilder()

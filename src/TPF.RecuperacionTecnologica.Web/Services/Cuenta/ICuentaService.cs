@@ -30,4 +30,16 @@ public interface ICuentaService
     /// devuelve siempre el mismo error. Al restablecer también se levanta el bloqueo por intentos fallidos.
     /// </summary>
     Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena);
+
+    /// <summary>
+    /// Activa una cuenta invitada: verifica el token de la invitación, guarda la primera contraseña,
+    /// confirma el correo y audita la activación. Si el enlace venció, no es válido o la cuenta ya tiene
+    /// contraseña, devuelve siempre el mismo error.
+    /// </summary>
+    Task<IdentityResult> ActivarCuentaAsync(string idUsuario, string token, string contrasena);
+
+    /// <summary>
+    /// Indica si el enlace de invitación todavía sirve, para avisar antes de que la persona complete el formulario.
+    /// </summary>
+    Task<bool> EsEnlaceActivacionValidoAsync(string idUsuario, string token);
 }
