@@ -26,6 +26,12 @@ public interface ICuentaService
     Task EnviarInvitacionAsync(string identityUserId, Func<string, string, string> construirRuta, string urlBaseSolicitud);
 
     /// <summary>
+    /// Vuelve a enviar la invitación a una cuenta que todavía no eligió su contraseña, con un token nuevo.
+    /// Se permite una vez cada 2 minutos por cuenta.
+    /// </summary>
+    Task<ResultadoReenvioInvitacion> ReenviarInvitacionAsync(int nroUsuario, Func<string, string, string> construirRuta, string urlBaseSolicitud);
+
+    /// <summary>
     /// Restablece la contraseña con el token recibido por correo. Si el enlace no es válido,
     /// devuelve siempre el mismo error. Al restablecer también se levanta el bloqueo por intentos fallidos.
     /// </summary>

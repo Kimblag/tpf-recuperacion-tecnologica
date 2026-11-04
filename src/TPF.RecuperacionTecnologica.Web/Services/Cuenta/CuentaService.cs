@@ -247,6 +247,47 @@ public class CuentaService : ICuentaService
         }
     }
 
+    public async Task<ResultadoReenvioInvitacion> ReenviarInvitacionAsync(
+        int nroUsuario, Func<string, string, string> construirRuta, string urlBaseSolicitud)
+    {
+        var identityUserId = await _context.Usuarios
+            .Where(u => u.NroUsuario == nroUsuario)
+            .Select(u => u.IdentityUserId)
+            .SingleOrDefaultAsync();
+
+        var identityUser = identityUserId is null ? null : await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return ResultadoReenvioInvitacion.NoExiste;
+        }
+
+        if (await _userManager.HasPasswordAsync(identityUser))
+        {
+            return ResultadoReenvioInvitacion.YaActiva;
+        }
+
+        if (!await EstaHabilitadaAsync(identityUser.Id))
+        {
+            return ResultadoReenvioInvitacion.CuentaInactiva;
+        }
+
+        // una invitación cada 2 minutos por cuenta, igual que en la recuperación de contraseña
+        var claveLimite = $"invitacion:{identityUser.Id}";
+
+        if (_cache.TryGetValue(claveLimite, out _))
+        {
+            return ResultadoReenvioInvitacion.Espera;
+        }
+
+        _cache.Set(claveLimite, true, TimeSpan.FromMinutes(2));
+
+        // genera un token nuevo; el anterior sigue valiendo hasta que venza o se use uno de los dos
+        await EnviarInvitacionAsync(identityUser.Id, construirRuta, urlBaseSolicitud);
+
+        return ResultadoReenvioInvitacion.Enviada;
+    }
+
     public async Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena)
     {
         var enlaceInvalido = IdentityResult.Failed(new IdentityError

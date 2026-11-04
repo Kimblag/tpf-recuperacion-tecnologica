@@ -22,6 +22,14 @@
         </div>
     </div>
 
+    @if (TempData["AvisoInvitacion"] is string avisoInvitacion)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">@avisoInvitacion</div>
+        </div>
+    }
+
     @if (!Model.TieneContrasena)
     {
         <div class="alert alert-warning" role="status">
@@ -29,6 +37,12 @@
             <div class="alert-body">
                 <div class="alert-title">La cuenta todavía no activó su contraseña</div>
                 <div>La persona recibió una invitación por correo y aún no la usó para ingresar.</div>
+                @if (Model.EstadoUsuario == EstadoUsuario.Activo)
+                {
+                    <form asp-action="ReenviarInvitacion" asp-route-id="@Model.NroUsuario" method="post" class="mt-2">
+                        <button type="submit" class="btn btn-secondary btn-sm"><partial name="_Icon" model="@("refresh")" /><span>Reenviar invitación</span></button>
+                    </form>
+                }
             </div>
         </div>
     }
