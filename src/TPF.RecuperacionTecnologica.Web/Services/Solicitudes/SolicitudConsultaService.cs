@@ -11,7 +11,8 @@ public class SolicitudConsultaService : ISolicitudConsultaService
 {
     private sealed record DatosSolicitud(
         int NroSolicitud, OrigenSolicitud Origen, DateTime FechaSolicitud, EstadoSolicitud Estado,
-        DateTime? FechaCancelacion, string? MotivoCancelacion, DateTime? FechaCierre);
+        DateTime? FechaCancelacion, string? MotivoCancelacion, DateTime? FechaCierre,
+        bool CanceladaPorCoordinador);
 
     private sealed record DatosAsignacion(
         int NroSolicitud, DateTime FechaAsignacion, DateTime FechaLimiteRetiro,
@@ -176,6 +177,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 s.FechaCancelacion,
                 s.MotivoCancelacion,
                 s.FechaCierre,
+                s.CodigoCoordinadorCancelacion,
                 s.NroUsuario,
                 s.Usuario.RazonSocial,
                 s.Usuario.Nombre,
@@ -205,7 +207,8 @@ public class SolicitudConsultaService : ISolicitudConsultaService
 
         var solicitud = new DatosSolicitud(
             nroSolicitud, datos.OrigenSolicitud, datos.FechaSolicitud, datos.EstadoSolicitud,
-            datos.FechaCancelacion, datos.MotivoCancelacion, datos.FechaCierre);
+            datos.FechaCancelacion, datos.MotivoCancelacion, datos.FechaCierre,
+            datos.CodigoCoordinadorCancelacion is not null);
 
         return new SolicitudDetalleViewModel
         {
@@ -250,7 +253,9 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 Fecha = solicitud.FechaCancelacion,
                 Icono = "x",
                 Estado = EstadoHito.Cancelado,
-                Texto = "Cancelada por la persona solicitante."
+                Texto = solicitud.CanceladaPorCoordinador
+                    ? $"Cancelada por una persona coordinadora. Motivo: {solicitud.MotivoCancelacion}"
+                    : "Cancelada por la persona solicitante."
             });
 
             return hitos;
@@ -329,11 +334,24 @@ public class SolicitudConsultaService : ISolicitudConsultaService
         return hitos;
     }
 
-    public async Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionPropiaAsync(string identityUserId, int nroSolicitud)
+    public Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionPropiaAsync(string identityUserId, int nroSolicitud) =>
+        ObtenerParaEdicionAsync(
+            _context.Solicitudes
+                .AsNoTracking()
+                .Where(s => s.NroSolicitud == nroSolicitud && s.Usuario.IdentityUserId == identityUserId),
+            nroSolicitud);
+
+    // sin filtrar por cuenta: el Coordinador edita en nombre de la persona, pero solo solicitudes asistidas
+    public Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionInternaAsync(int nroSolicitud) =>
+        ObtenerParaEdicionAsync(
+            _context.Solicitudes
+                .AsNoTracking()
+                .Where(s => s.NroSolicitud == nroSolicitud && s.OrigenSolicitud == OrigenSolicitud.Asistida),
+            nroSolicitud);
+
+    private static async Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionAsync(IQueryable<Solicitud> consulta, int nroSolicitud)
     {
-        var datos = await _context.Solicitudes
-            .AsNoTracking()
-            .Where(s => s.NroSolicitud == nroSolicitud && s.Usuario.IdentityUserId == identityUserId)
+        var datos = await consulta
             .Select(s => new
             {
                 s.NroEquipoRequerido,

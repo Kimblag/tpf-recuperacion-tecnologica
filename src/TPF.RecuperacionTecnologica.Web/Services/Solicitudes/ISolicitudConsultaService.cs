@@ -18,4 +18,6 @@ public interface ISolicitudConsultaService
     Task<SolicitudDetalleViewModel?> ObtenerDetalleInternoAsync(int nroSolicitud);
 
     Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionPropiaAsync(string identityUserId, int nroSolicitud);
+
+    Task<EditarMotivoSolicitudViewModel?> ObtenerParaEdicionInternaAsync(int nroSolicitud);
 }

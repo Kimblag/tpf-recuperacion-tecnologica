@@ -320,6 +320,148 @@ public class SolicitudService : ISolicitudService
         return IdentityResult.Success;
     }
 
+    private async Task<int?> ObtenerCodigoCoordinadorActivoAsync(string identityUserIdCoordinador) =>
+        await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.IdentityUserId == identityUserIdCoordinador
+                && p.RolAsignado == RolPersonal.Coordinador
+                && p.EstadoPersonal == EstadoPersonal.Activo)
+            .Select(p => (int?)p.CodigoPersonal)
+            .FirstOrDefaultAsync();
+
+    // el Coordinador solo puede tocar solicitudes asistidas; las de autoservicio quedan en manos de la persona
+    private async Task<(Solicitud? Solicitud, int CodigoCoordinador, IdentityResult? Error)> ObtenerAsistidaParaModificarAsync(
+        string identityUserIdCoordinador, int nroSolicitud)
+    {
+        var codigoCoordinador = await ObtenerCodigoCoordinadorActivoAsync(identityUserIdCoordinador);
+
+        if (codigoCoordinador is null)
+        {
+            return (null, 0, Fallo("CoordinadorNoHabilitado",
+                "La cuenta no está habilitada para modificar solicitudes asistidas."));
+        }
+
+        var solicitud = await _context.Solicitudes
+            .FirstOrDefaultAsync(s => s.NroSolicitud == nroSolicitud);
+
+        if (solicitud is null)
+        {
+            return (null, 0, Fallo("SolicitudNoEncontrada", "No se encontró la solicitud."));
+        }
+
+        if (solicitud.OrigenSolicitud != OrigenSolicitud.Asistida)
+        {
+            return (null, 0, Fallo("SolicitudNoAsistida",
+                "Solo se pueden modificar las solicitudes registradas de forma asistida."));
+        }
+
+        return (solicitud, codigoCoordinador.Value, null);
+    }
+
+    public async Task<IdentityResult> EditarMotivoEnNombreDeAsync(string identityUserIdCoordinador, int nroSolicitud, string motivo)
+    {
+        var (solicitud, codigoCoordinador, error) = await ObtenerAsistidaParaModificarAsync(identityUserIdCoordinador, nroSolicitud);
+
+        if (solicitud is null)
+        {
+            return error!;
+        }
+
+        if (solicitud.EstadoSolicitud != EstadoSolicitud.Pendiente)
+        {
+            return Fallo("SolicitudNoEditable",
+                "La solicitud ya no puede editarse porque dejó de estar Pendiente.");
+        }
+
+        var motivoNuevo = motivo.Trim();
+
+        if (motivoNuevo == solicitud.MotivoSolicitud)
+        {
+            return IdentityResult.Success;
+        }
+
+        // FechaSolicitud no se toca: la solicitud conserva su lugar en la cola
+        solicitud.MotivoSolicitud = motivoNuevo;
+        solicitud.FechaUltimaModificacion = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Fallo("SolicitudModificada",
+                "La solicitud cambió mientras se editaba. Volver a abrirla e intentar nuevamente.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la edición asistida del motivo de la Solicitud {NroSolicitud}", nroSolicitud);
+            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentar nuevamente.");
+        }
+
+        await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
+            solicitud.NroSolicitud, "Edición del motivo de la solicitud asistida");
+
+        return IdentityResult.Success;
+    }
+
+    public async Task<IdentityResult> CancelarEnNombreDeAsync(string identityUserIdCoordinador, int nroSolicitud, string motivo)
+    {
+        var motivoCancelacion = motivo?.Trim() ?? string.Empty;
+
+        if (motivoCancelacion.Length == 0)
+        {
+            return Fallo("MotivoCancelacionRequerido", "El motivo de la cancelación es obligatorio.");
+        }
+
+        if (motivoCancelacion.Length > 300)
+        {
+            return Fallo("MotivoCancelacionLargo", "El motivo de la cancelación no puede superar los 300 caracteres.");
+        }
+
+        var (solicitud, codigoCoordinador, error) = await ObtenerAsistidaParaModificarAsync(identityUserIdCoordinador, nroSolicitud);
+
+        if (solicitud is null)
+        {
+            return error!;
+        }
+
+        if (solicitud.EstadoSolicitud != EstadoSolicitud.Pendiente)
+        {
+            return Fallo("SolicitudNoCancelable",
+                "La solicitud ya no puede cancelarse porque fue asignada o cambió de estado.");
+        }
+
+        var ahora = DateTime.UtcNow;
+
+        solicitud.EstadoSolicitud = EstadoSolicitud.Cancelada;
+        solicitud.FechaCancelacion = ahora;
+        solicitud.FechaCierre = ahora;
+        solicitud.MotivoCancelacion = motivoCancelacion;
+        solicitud.CodigoCoordinadorCancelacion = codigoCoordinador;
+        solicitud.FechaUltimaModificacion = ahora;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Fallo("SolicitudModificada",
+                "La solicitud cambió mientras se cancelaba. Volver a abrirla e intentar nuevamente.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la cancelación asistida de la Solicitud {NroSolicitud}", nroSolicitud);
+            return Fallo("CancelacionFallida", "No se pudo cancelar la solicitud. Intentar nuevamente.");
+        }
+
+        await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
+            solicitud.NroSolicitud, "Cancelación de solicitud asistida");
+
+        return IdentityResult.Success;
+    }
+
     public async Task<ResultadoRegistroSolicitud> RegistrarAsistidaAsync(
         string identityUserIdCoordinador, RegistroSolicitudAsistidaViewModel modelo,
         Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud)
