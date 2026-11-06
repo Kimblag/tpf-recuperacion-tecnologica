@@ -739,6 +739,9 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.Property<int?>("CodigoCoordinador")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CodigoCoordinadorCancelacion")
+                        .HasColumnType("int");
+
                     b.Property<int>("EstadoSolicitud")
                         .HasColumnType("int");
 
@@ -786,6 +789,8 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.HasKey("NroSolicitud");
 
                     b.HasIndex("CodigoCoordinador");
+
+                    b.HasIndex("CodigoCoordinadorCancelacion");
 
                     b.HasIndex("NroEquipoRequerido");
 
@@ -1078,6 +1083,11 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                         .HasForeignKey("CodigoCoordinador")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("TPF.RecuperacionTecnologica.Web.Models.Personal", "CoordinadorCancelacion")
+                        .WithMany()
+                        .HasForeignKey("CodigoCoordinadorCancelacion")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("TPF.RecuperacionTecnologica.Web.Models.Equipo", "EquipoRequerido")
                         .WithMany()
                         .HasForeignKey("NroEquipoRequerido")
@@ -1091,6 +1101,8 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                         .IsRequired();
 
                     b.Navigation("Coordinador");
+
+                    b.Navigation("CoordinadorCancelacion");
 
                     b.Navigation("EquipoRequerido");
 

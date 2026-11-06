@@ -1,0 +1,27 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.SolicitudDetalleViewModel
+
+<div class="modal fade" id="modal-cancelar-solicitud" tabindex="-1" aria-labelledby="modal-cancelar-solicitud-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-cancelar-solicitud-titulo"><partial name="_Icon" model="@("alert")" />Cancelar solicitud</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <form method="post" asp-action="CancelarInterno" asp-route-id="@Model.NroSolicitud">
+                <div class="modal-body">
+                    <p>Se va a cancelar la solicitud <span class="mono">@Model.Codigo</span> del equipo @Model.MarcaYModelo, a nombre de @Model.Solicitante.</p>
+                    <p>Esta acción no se puede deshacer.</p>
+                    <div class="field">
+                        <label class="form-label" for="MotivoCancelacion">Motivo de la cancelación<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <textarea id="MotivoCancelacion" name="MotivoCancelacion" class="form-control" rows="3" maxlength="300" required aria-describedby="MotivoCancelacion-hint"></textarea>
+                        <div class="form-text" id="MotivoCancelacion-hint">Hasta 300 caracteres. Se muestra en el historial de la solicitud.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                    <button type="submit" class="btn btn-danger">Cancelar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

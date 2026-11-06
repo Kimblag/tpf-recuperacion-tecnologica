@@ -5,6 +5,11 @@
 
     var esCoordinador = User.IsInRole(nameof(RolPersonal.Coordinador));
 
+    // solo las asistidas: las de autoservicio las edita o cancela la propia persona
+    var puedeModificarEnNombreDe = esCoordinador
+        && Model.PuedeModificarse
+        && Model.OrigenSolicitud == OrigenSolicitud.Asistida;
+
     // el Administrador va a su detalle de usuario; el Coordinador, a la ficha sin el documento
     var esAdministrador = User.IsInRole(nameof(RolPersonal.Administrador));
 
@@ -35,6 +40,11 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Gestion"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+            @if (puedeModificarEnNombreDe)
+            {
+                <a class="btn btn-secondary" asp-action="EditarInterno" asp-route-id="@Model.NroSolicitud"><partial name="_Icon" model="@("edit")" /><span>Editar solicitud</span></a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-cancelar-solicitud"><partial name="_Icon" model="@("x")" /><span>Cancelar solicitud</span></button>
+            }
             @if (esCoordinador)
             {
                 if (Model.PuedeModificarse)
@@ -48,6 +58,8 @@
             }
         </div>
     </div>
+
+    <partial name="_ResumenErrores" />
 
     <div class="grid-3-1">
         <section class="card" aria-labelledby="titulo-datos">
@@ -106,3 +118,8 @@
         </div>
     </div>
 </div>
+
+@if (puedeModificarEnNombreDe)
+{
+    <partial name="_ModalCancelarSolicitudInterno" model="Model" />
+}

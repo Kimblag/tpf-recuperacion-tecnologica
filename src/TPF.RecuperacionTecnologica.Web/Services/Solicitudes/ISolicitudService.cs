@@ -15,6 +15,10 @@ public interface ISolicitudService
 
     Task<IdentityResult> CancelarAsync(string identityUserId, int nroSolicitud);
 
+    Task<IdentityResult> EditarMotivoEnNombreDeAsync(string identityUserIdCoordinador, int nroSolicitud, string motivo);
+
+    Task<IdentityResult> CancelarEnNombreDeAsync(string identityUserIdCoordinador, int nroSolicitud, string motivo);
+
     Task<ResultadoRegistroSolicitud> RegistrarAsistidaAsync(
         string identityUserIdCoordinador, RegistroSolicitudAsistidaViewModel modelo,
         Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud);

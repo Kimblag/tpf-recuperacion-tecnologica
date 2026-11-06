@@ -363,6 +363,116 @@ public class SolicitudesController : Controller
 
     [HttpGet]
     [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> EditarInterno(int id)
+    {
+        var formulario = await _consultaService.ObtenerParaEdicionInternaAsync(id);
+
+        return formulario is null ? NotFound() : View(formulario);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> EditarInterno(int id, [Bind("MotivoSolicitud")] EditarMotivoSolicitudViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        if (ModelState.IsValid)
+        {
+            var resultado = await _solicitudService.EditarMotivoEnNombreDeAsync(identityUserId, id, formulario.MotivoSolicitud);
+
+            if (resultado.Succeeded)
+            {
+                TempData["Mensaje"] = "El motivo de la solicitud se actualizó correctamente.";
+                return RedirectToAction(nameof(DetalleInterno), new { id });
+            }
+
+            if (resultado.Errors.Any(e => e.Code is "SolicitudNoEncontrada" or "SolicitudNoAsistida"))
+            {
+                return NotFound();
+            }
+
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        var actual = await _consultaService.ObtenerParaEdicionInternaAsync(id);
+
+        if (actual is null)
+        {
+            return NotFound();
+        }
+
+        actual.MotivoSolicitud = formulario.MotivoSolicitud;
+
+        return View(actual);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloCoordinador")]
+    public async Task<IActionResult> CancelarInterno(int id, [Bind("MotivoCancelacion")] CancelarSolicitudInternaViewModel formulario)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (identityUserId is null)
+        {
+            return Challenge();
+        }
+
+        var original = await _consultaService.ObtenerDetalleInternoAsync(id);
+
+        if (original is null)
+        {
+            return NotFound();
+        }
+
+        if (ModelState.IsValid)
+        {
+            var resultado = await _solicitudService.CancelarEnNombreDeAsync(identityUserId, id, formulario.MotivoCancelacion);
+
+            if (resultado.Succeeded)
+            {
+                TempData["Mensaje"] = "La solicitud se canceló correctamente.";
+                return RedirectToAction(nameof(DetalleInterno), new { id });
+            }
+
+            if (resultado.Errors.Any(e => e.Code is "SolicitudNoEncontrada" or "SolicitudNoAsistida"))
+            {
+                return NotFound();
+            }
+
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+        else
+        {
+            // el campo está dentro del modal cerrado: se muestran como errores generales en el resumen
+            var mensajes = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            ModelState.Clear();
+
+            foreach (var mensaje in mensajes)
+            {
+                ModelState.AddModelError(string.Empty, mensaje);
+            }
+        }
+
+        var actual = await _consultaService.ObtenerDetalleInternoAsync(id);
+
+        return View(nameof(DetalleInterno), actual ?? original);
+    }
+
+    [HttpGet]
+    [Authorize(Policy = "SoloCoordinador")]
     public async Task<IActionResult> RegistrarAsistida(
         ModoUsuarioAsistido modo, TipoUsuario tipoUsuario, string? busqueda, string? busquedaEquipo, int? nroEquipo)
     {

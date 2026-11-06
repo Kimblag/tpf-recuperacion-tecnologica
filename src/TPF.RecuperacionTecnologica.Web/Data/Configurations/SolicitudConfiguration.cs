@@ -26,6 +26,12 @@ public class SolicitudConfiguration : IEntityTypeConfiguration<Solicitud>
             .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(s => s.CoordinadorCancelacion)
+            .WithMany()
+            .HasForeignKey(s => s.CodigoCoordinadorCancelacion)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Property(s => s.MotivoSolicitud)
             .IsRequired()
             .HasMaxLength(500);
