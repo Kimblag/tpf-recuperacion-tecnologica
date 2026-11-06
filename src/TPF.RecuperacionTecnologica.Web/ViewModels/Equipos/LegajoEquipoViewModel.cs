@@ -13,6 +13,8 @@ public class LegajoEquipoViewModel
 
     public string Modelo { get; set; } = string.Empty;
 
+    public string? NumeroSerie { get; set; }
+
     public EstadoInicialDeclarado EstadoInicialDeclarado { get; set; }
 
     public string? Observaciones { get; set; }

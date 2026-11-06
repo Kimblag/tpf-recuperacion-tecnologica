@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 using PersonalEntidad = TPF.RecuperacionTecnologica.Web.Models.Personal;
 
@@ -91,6 +92,23 @@ public class PersonalService : IPersonalService
         return await _context.PersonalInterno
             .Where(p => p.IdentityUserId == identityUserId)
             .Select(p => (int?)p.CodigoPersonal)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<MiCuentaViewModel?> ObtenerMiCuentaAsync(string identityUserId)
+    {
+        return await _context.PersonalInterno
+            .AsNoTracking()
+            .Where(p => p.IdentityUserId == identityUserId)
+            .Select(p => new MiCuentaViewModel
+            {
+                CodigoPersonal = p.CodigoPersonal,
+                Nombre = p.Nombre,
+                Apellido = p.Apellido,
+                CorreoElectronico = p.CorreoElectronico,
+                RolAsignado = p.RolAsignado,
+                EstadoPersonal = p.EstadoPersonal
+            })
             .FirstOrDefaultAsync();
     }
 

@@ -100,11 +100,16 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddClaimsPrincipalFactory<FabricaClaimsUsuario>()
     .AddDefaultTokenProviders()
+    .AddTokenProvider<ProveedorTokenInvitacion>(ProveedorTokenInvitacion.Nombre)
     .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 // el enlace de recuperación de pass vence en 1 hora
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
+
+// el enlace de invitación a una cuenta nueva vence en 3 días
+builder.Services.Configure<ProveedorTokenInvitacionOptions>(options =>
+    options.TokenLifespan = TimeSpan.FromDays(3));
 
 // las políticas se basan en los roles de Identity, que coinciden con RolPersonal
 builder.Services.AddAuthorizationBuilder()
@@ -173,6 +178,9 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+// los errores sin contenido (404, 403, etc.) muestran la página de error propia en lugar de una pantalla en blanco
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?codigo={0}");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

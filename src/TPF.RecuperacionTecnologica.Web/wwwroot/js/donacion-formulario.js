@@ -7,8 +7,16 @@
 
     var tipo = formulario.querySelector('#TipoEquipo');
     var camposPorTipo = formulario.querySelectorAll('[data-tipos]');
+    var etiquetaSerie = formulario.querySelector('[data-etiqueta-serie]');
+
+    // valor de TipoEquipo.Celular: en los celulares el número que se pide es el IMEI
+    var TIPO_CELULAR = '3';
 
     function mostrarCamposDelTipo() {
+        if (etiquetaSerie) {
+            etiquetaSerie.textContent = tipo.value === TIPO_CELULAR ? 'IMEI' : 'Número de serie';
+        }
+
         camposPorTipo.forEach(function (campo) {
             var visible = campo.dataset.tipos.split(',').indexOf(tipo.value) !== -1;
             campo.hidden = !visible;

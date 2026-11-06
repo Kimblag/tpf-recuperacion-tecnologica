@@ -1,0 +1,83 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.CambiarContrasenaViewModel
+@using TPF.RecuperacionTecnologica.Web.Services.Cuenta
+@{
+    ViewData["Title"] = "Cambiar contraseña";
+
+    var esUsuarioExterno = User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario);
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    @if (esUsuarioExterno)
+    {
+        <li><a asp-controller="Usuarios" asp-action="Perfil">Mi perfil</a></li>
+    }
+    else
+    {
+        <li><a asp-action="MiCuenta">Mi cuenta</a></li>
+    }
+    <li aria-current="page">Cambiar contraseña</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Cambiar contraseña</h1></div>
+            <p class="page-sub">Al cambiarla, se cierran las sesiones abiertas en otros dispositivos</p>
+        </div>
+    </div>
+
+    <form asp-action="CambiarContrasena" method="post" id="f-cambiar-contrasena" class="stack" novalidate>
+        <partial name="_ResumenErrores" />
+
+        <section class="card" aria-labelledby="titulo-contrasena">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title" id="titulo-contrasena">Contraseña</h2>
+                    <p class="card-sub">Para confirmar que la cuenta es propia, se pide primero la contraseña actual</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="stack">
+                    <div class="field">
+                        <label class="form-label" for="ContrasenaActual">Contraseña actual<span class="req-word"> (obligatorio)</span></label>
+                        <input asp-for="ContrasenaActual" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="ContrasenaActual"></span>
+                    </div>
+
+                    <div class="field">
+                        <label class="form-label" for="Password">Contraseña nueva<span class="req-word"> (obligatorio)</span></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
+                        <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                        <span asp-validation-for="Password"></span>
+                    </div>
+
+                    <div class="field">
+                        <label class="form-label" for="ConfirmPassword">Confirmar contraseña nueva<span class="req-word"> (obligatorio)</span></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                @if (esUsuarioExterno)
+                {
+                    <a class="btn btn-secondary btn-lg" asp-controller="Usuarios" asp-action="Perfil">Cancelar</a>
+                }
+                else
+                {
+                    <a class="btn btn-secondary btn-lg" asp-action="MiCuenta">Cancelar</a>
+                }
+                <button type="submit" class="btn btn-primary btn-lg">Cambiar contraseña</button>
+            </div>
+        </section>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var resumen = document.getElementById('resumen-errores');
+        if (resumen) resumen.focus();
+    </script>
+}

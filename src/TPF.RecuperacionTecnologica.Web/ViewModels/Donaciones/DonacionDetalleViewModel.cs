@@ -11,6 +11,8 @@ public class DonacionDetalleViewModel : DonacionFilaViewModel
 
     public string? Observaciones { get; set; }
 
+    public string? NumeroSerie { get; set; }
+
     public string? Procesador { get; set; }
 
     public string? MemoriaRam { get; set; }

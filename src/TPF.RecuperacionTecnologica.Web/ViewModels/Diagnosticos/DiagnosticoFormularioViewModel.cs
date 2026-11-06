@@ -25,6 +25,12 @@ public class DiagnosticoFormularioViewModel
     [StringLength(500, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
     public string? Observaciones { get; set; }
 
+    // el Técnico puede completarlo o corregirlo; el formato según el tipo se valida en el controller,
+    // porque el tipo de equipo no viaja en el formulario enviado
+    [Display(Name = "Número de serie")]
+    [StringLength(ValidacionesNumeroSerie.LargoMaximo, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    public string? NumeroSerie { get; set; }
+
     [StringLength(100, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
     public string? Procesador { get; set; }
 
@@ -60,6 +66,11 @@ public class DiagnosticoFormularioViewModel
     public EstadoEquipo EstadoEquipo { get; set; }
 
     public string? ObservacionesDonante { get; set; }
+
+    // el número guardado antes de este diagnóstico, para mostrarlo como referencia
+    public string? NumeroSerieDeclarado { get; set; }
+
+    public string EtiquetaNumeroSerie => ValidacionesNumeroSerie.EtiquetaPara(TipoEquipo);
 
     public string? ProcesadorDeclarado { get; set; }
 

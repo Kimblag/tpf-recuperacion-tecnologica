@@ -216,7 +216,9 @@ public class CuentaService : ICuentaService
 
         try
         {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(identityUser);
+            // la invitación usa su propio proveedor de tokens, que vence en 3 días y no en 1 hora como el restablecimiento
+            var token = await _userManager.GenerateUserTokenAsync(
+                identityUser, ProveedorTokenInvitacion.Nombre, ProveedorTokenInvitacion.Proposito);
             var tokenCodificado = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             var enlace = urlBase.TrimEnd('/') + construirRuta(identityUser.Id, tokenCodificado);
 
@@ -243,6 +245,47 @@ public class CuentaService : ICuentaService
         {
             _logger.LogError(ex, "No se pudo preparar la invitación de la cuenta {IdentityUserId}", identityUser.Id);
         }
+    }
+
+    public async Task<ResultadoReenvioInvitacion> ReenviarInvitacionAsync(
+        int nroUsuario, Func<string, string, string> construirRuta, string urlBaseSolicitud)
+    {
+        var identityUserId = await _context.Usuarios
+            .Where(u => u.NroUsuario == nroUsuario)
+            .Select(u => u.IdentityUserId)
+            .SingleOrDefaultAsync();
+
+        var identityUser = identityUserId is null ? null : await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return ResultadoReenvioInvitacion.NoExiste;
+        }
+
+        if (await _userManager.HasPasswordAsync(identityUser))
+        {
+            return ResultadoReenvioInvitacion.YaActiva;
+        }
+
+        if (!await EstaHabilitadaAsync(identityUser.Id))
+        {
+            return ResultadoReenvioInvitacion.CuentaInactiva;
+        }
+
+        // una invitación cada 2 minutos por cuenta, igual que en la recuperación de contraseña
+        var claveLimite = $"invitacion:{identityUser.Id}";
+
+        if (_cache.TryGetValue(claveLimite, out _))
+        {
+            return ResultadoReenvioInvitacion.Espera;
+        }
+
+        _cache.Set(claveLimite, true, TimeSpan.FromMinutes(2));
+
+        // genera un token nuevo; el anterior sigue valiendo hasta que venza o se use uno de los dos
+        await EnviarInvitacionAsync(identityUser.Id, construirRuta, urlBaseSolicitud);
+
+        return ResultadoReenvioInvitacion.Enviada;
     }
 
     public async Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena)
@@ -284,6 +327,96 @@ public class CuentaService : ICuentaService
         await _userManager.ResetAccessFailedCountAsync(identityUser);
 
         return resultado;
+    }
+
+    public async Task<IdentityResult> CambiarContrasenaAsync(string identityUserId, string contrasenaActual, string contrasenaNueva)
+    {
+        var identityUser = await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return IdentityResult.Failed(_userManager.ErrorDescriber.DefaultError());
+        }
+
+        // ChangePasswordAsync ya genera un sello de seguridad nuevo: como las sesiones se validan en cada
+        // pedido (SecurityStampValidatorOptions en Program.cs), las demás sesiones abiertas se cierran solas
+        var resultado = await _userManager.ChangePasswordAsync(identityUser, contrasenaActual, contrasenaNueva);
+
+        if (resultado.Succeeded)
+        {
+            // la sesión actual se regenera con el sello nuevo para que no se cierre también
+            await _signInManager.RefreshSignInAsync(identityUser);
+        }
+
+        return resultado;
+    }
+
+    public async Task<bool> EsEnlaceActivacionValidoAsync(string idUsuario, string token)
+    {
+        return await ObtenerCuentaParaActivarAsync(idUsuario, token) is not null;
+    }
+
+    public async Task<IdentityResult> ActivarCuentaAsync(string idUsuario, string token, string contrasena)
+    {
+        var identityUser = await ObtenerCuentaParaActivarAsync(idUsuario, token);
+
+        if (identityUser is null)
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "InvalidToken",
+                Description = "El enlace venció o no es válido."
+            });
+        }
+
+        var resultado = await _userManager.AddPasswordAsync(identityUser, contrasena);
+
+        if (!resultado.Succeeded)
+        {
+            return resultado;
+        }
+
+        // el enlace llegó a ese correo, así que queda probado que la persona lo controla
+        identityUser.EmailConfirmed = true;
+        await _userManager.UpdateAsync(identityUser);
+
+        await AuditarSesionAsync(TipoOperacionAuditoria.ActivacionCuenta, identityUser.Id,
+            "Activación de cuenta invitada", actorAutenticado: false);
+
+        return resultado;
+    }
+
+    /// <summary>
+    /// Devuelve la cuenta si el enlace de invitación todavía sirve, o null si no.
+    /// </summary>
+    private async Task<IdentityUser?> ObtenerCuentaParaActivarAsync(string idUsuario, string token)
+    {
+        var identityUser = await _userManager.FindByIdAsync(idUsuario);
+
+        // si la cuenta ya tiene contraseña, la invitación ya se usó. Las cuentas dadas de baja
+        // tampoco se activan, igual que en el restablecimiento
+        if (identityUser is null
+            || await _userManager.HasPasswordAsync(identityUser)
+            || !await EstaHabilitadaAsync(identityUser.Id))
+        {
+            return null;
+        }
+
+        string tokenOriginal;
+
+        try
+        {
+            tokenOriginal = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+
+        var tokenValido = await _userManager.VerifyUserTokenAsync(
+            identityUser, ProveedorTokenInvitacion.Nombre, ProveedorTokenInvitacion.Proposito, tokenOriginal);
+
+        return tokenValido ? identityUser : null;
     }
 
     private async Task<string> ObtenerNombreOrganizacionAsync()

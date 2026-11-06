@@ -1,5 +1,6 @@
 ﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.RegistroDonacionViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
     var condiciones = new[]
@@ -48,6 +49,12 @@
     <input asp-for="Modelo" class="form-control" placeholder="Ej.: ThinkPad T480" aria-describedby="Modelo-hint" />
     <div class="form-text" id="Modelo-hint">Suele estar en una etiqueta, atrás o debajo del equipo.</div>
     <span asp-validation-for="Modelo"></span>
+</div>
+<div class="field">
+    <label class="form-label" for="NumeroSerie" data-etiqueta-serie>@ValidacionesNumeroSerie.EtiquetaPara(Model.TipoEquipo)</label>
+    <input asp-for="NumeroSerie" class="form-control" maxlength="@ValidacionesNumeroSerie.LargoMaximo" autocomplete="off" aria-describedby="NumeroSerie-hint" />
+    <div class="form-text" id="NumeroSerie-hint">Suele estar en una etiqueta debajo del equipo o en Ajustes del celular (marcar *#06#). Se puede dejar vacío.</div>
+    <span asp-validation-for="NumeroSerie"></span>
 </div>
 <div class="field">
     <label class="form-label" for="EstadoInicialDeclarado">Estado del equipo<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>

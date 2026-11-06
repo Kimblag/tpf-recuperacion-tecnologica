@@ -51,5 +51,8 @@ public enum TipoOperacionAuditoria
     EdicionPersonal,
 
     [Display(Name = "Imagen de equipo")]
-    ImagenEquipo
+    ImagenEquipo,
+
+    [Display(Name = "Activación de cuenta")]
+    ActivacionCuenta
 }

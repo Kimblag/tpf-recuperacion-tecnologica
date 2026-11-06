@@ -523,6 +523,10 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.Property<int>("NroUsuarioDonante")
                         .HasColumnType("int");
 
+                    b.Property<string>("NumeroSerie")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Observaciones")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -568,6 +572,10 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.HasKey("NroEquipo");
 
                     b.HasIndex("NroUsuarioDonante");
+
+                    b.HasIndex("NumeroSerie")
+                        .IsUnique()
+                        .HasFilter("[NumeroSerie] IS NOT NULL");
 
                     b.ToTable("Equipos");
                 });

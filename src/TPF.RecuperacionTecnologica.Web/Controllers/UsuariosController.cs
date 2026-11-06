@@ -70,6 +70,35 @@ public class UsuariosController : Controller
         return View(ficha);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> ReenviarInvitacion(int id)
+    {
+        var resultado = await _cuentaService.ReenviarInvitacionAsync(
+            id,
+            (idUsuario, token) => Url.Action("ActivarCuenta", "Cuenta", new { idUsuario, token })!,
+            $"{Request.Scheme}://{Request.Host}");
+
+        if (resultado == ResultadoReenvioInvitacion.NoExiste)
+        {
+            return NotFound();
+        }
+
+        var mensaje = resultado switch
+        {
+            ResultadoReenvioInvitacion.Enviada => "Se envió una nueva invitación por correo. El enlace vence en 3 días.",
+            ResultadoReenvioInvitacion.Espera => "Ya se envió una invitación hace menos de 2 minutos. Esperar un momento antes de volver a enviarla.",
+            ResultadoReenvioInvitacion.YaActiva => "La cuenta ya eligió su contraseña, así que no hace falta otra invitación.",
+            _ => "La cuenta está dada de baja y no se le puede enviar una invitación."
+        };
+
+        // solo el envío correcto usa el mensaje verde; los demás se muestran como aviso en la ficha
+        TempData[resultado == ResultadoReenvioInvitacion.Enviada ? "Mensaje" : "AvisoInvitacion"] = mensaje;
+
+        return RedirectToAction(nameof(Ficha), new { id });
+    }
+
 
     [HttpGet]
     [Authorize(Policy = "UsuarioExterno")]

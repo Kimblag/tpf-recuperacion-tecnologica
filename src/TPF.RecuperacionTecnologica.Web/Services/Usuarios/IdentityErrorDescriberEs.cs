@@ -39,4 +39,7 @@ public class IdentityErrorDescriberEs : IdentityErrorDescriber
 
     public override IdentityError InvalidUserName(string? userName) =>
         new() { Code = nameof(InvalidUserName), Description = "El correo electrónico contiene caracteres no permitidos." };
+
+    public override IdentityError PasswordMismatch() =>
+        new() { Code = nameof(PasswordMismatch), Description = "La contraseña actual no es correcta." };
 }

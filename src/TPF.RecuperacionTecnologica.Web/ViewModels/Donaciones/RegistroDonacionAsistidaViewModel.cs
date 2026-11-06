@@ -3,14 +3,20 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
-public class RegistroDonacionAsistidaViewModel : RegistroDonacionViewModel, IValidatableObject
+public class RegistroDonacionAsistidaViewModel : RegistroDonacionViewModel
 {
     public SelectorUsuarioViewModel Usuario { get; set; } = new();
 
     public string Coordinador { get; set; } = string.Empty;
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        // primero las validaciones del equipo (número de serie o IMEI)
+        foreach (var resultado in base.Validate(validationContext))
+        {
+            yield return resultado;
+        }
+
         if (Usuario.Modo == ModoUsuarioAsistido.Existente)
         {
             if (Usuario.NroUsuario is null)

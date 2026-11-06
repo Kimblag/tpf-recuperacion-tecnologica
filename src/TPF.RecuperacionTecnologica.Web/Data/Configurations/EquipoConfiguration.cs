@@ -23,6 +23,14 @@ public class EquipoConfiguration : IEntityTypeConfiguration<Equipo>
             .IsRequired()
             .HasMaxLength(60);
 
+        builder.Property(e => e.NumeroSerie)
+            .HasMaxLength(50);
+
+        // único solo entre los equipos que tienen el dato: los que no lo cargaron no chocan entre sí
+        builder.HasIndex(e => e.NumeroSerie)
+            .IsUnique()
+            .HasFilter("[NumeroSerie] IS NOT NULL");
+
         builder.Property(e => e.Observaciones)
             .HasMaxLength(500);
 

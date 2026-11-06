@@ -63,7 +63,7 @@ public class DonacionesController : Controller
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "SoloCoordinador")]
     public async Task<IActionResult> RegistrarAsistida(
-        [Bind("Usuario,TipoEquipo,Marca,Modelo,EstadoInicialDeclarado,Observaciones,Procesador,MemoriaRam,Almacenamiento,TamanoPantalla,EstadoBateria,Otros")]
+        [Bind("Usuario,TipoEquipo,Marca,Modelo,NumeroSerie,EstadoInicialDeclarado,Observaciones,Procesador,MemoriaRam,Almacenamiento,TamanoPantalla,EstadoBateria,Otros")]
         RegistroDonacionAsistidaViewModel formulario)
     {
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -78,7 +78,7 @@ public class DonacionesController : Controller
             var resultado = await _donacionService.RegistrarAsistidaAsync(
                 identityUserId,
                 formulario,
-                (idUsuario, token) => Url.Action("RestablecerContrasena", "Cuenta", new { idUsuario, token })!,
+                (idUsuario, token) => Url.Action("ActivarCuenta", "Cuenta", new { idUsuario, token })!,
                 $"{Request.Scheme}://{Request.Host}");
 
             if (resultado.Exitoso)
@@ -90,7 +90,12 @@ public class DonacionesController : Controller
                 return RedirectToAction(nameof(Gestion));
             }
 
-            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+            // el número repetido se muestra junto a su campo; el resto de los errores, arriba del formulario
+            var campo = resultado.Error == ErrorRegistroDonacion.NumeroSerieDuplicado
+                ? nameof(RegistroDonacionViewModel.NumeroSerie)
+                : string.Empty;
+
+            ModelState.AddModelError(campo, resultado.Mensaje!);
         }
 
         await CompletarFormularioAsistidoAsync(formulario, identityUserId);
@@ -235,11 +240,26 @@ public class DonacionesController : Controller
         }
 
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var nroEquipo = identityUserId is null ? null : await _donacionService.RegistrarAsync(identityUserId, donacion);
 
-        return nroEquipo is null
-            ? NotFound()
-            : RedirectToAction(nameof(Confirmacion), new { id = nroEquipo });
+        if (identityUserId is null)
+        {
+            return NotFound();
+        }
+
+        var resultado = await _donacionService.RegistrarAsync(identityUserId, donacion);
+
+        if (resultado.Exitoso)
+        {
+            return RedirectToAction(nameof(Confirmacion), new { id = resultado.NroEquipo });
+        }
+
+        if (resultado.Error == ErrorRegistroDonacion.NumeroSerieDuplicado)
+        {
+            ModelState.AddModelError(nameof(RegistroDonacionViewModel.NumeroSerie), resultado.Mensaje!);
+            return View(donacion);
+        }
+
+        return NotFound();
     }
 
     [HttpGet]
@@ -296,6 +316,15 @@ public class DonacionesController : Controller
         donacion.FechaRegistro = original.FechaRegistro;
         donacion.EstadoEquipo = original.EstadoEquipo;
 
+        // el número se vuelve a validar con el tipo guardado, no con el que llegó en el formulario
+        ModelState.Remove(nameof(EdicionDonacionViewModel.NumeroSerie));
+
+        foreach (var error in ValidacionesNumeroSerie.Validar(
+            donacion.TipoEquipo, donacion.NumeroSerie, nameof(EdicionDonacionViewModel.NumeroSerie)))
+        {
+            ModelState.AddModelError(nameof(EdicionDonacionViewModel.NumeroSerie), error.ErrorMessage!);
+        }
+
         if (!ModelState.IsValid)
         {
             return View(donacion);
@@ -307,7 +336,11 @@ public class DonacionesController : Controller
         {
             foreach (var error in resultado.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                var campo = error.Code == DonacionService.CodigoNumeroSerieDuplicado
+                    ? nameof(EdicionDonacionViewModel.NumeroSerie)
+                    : string.Empty;
+
+                ModelState.AddModelError(campo, error.Description);
             }
 
             return View(donacion);

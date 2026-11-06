@@ -26,8 +26,32 @@ public interface ICuentaService
     Task EnviarInvitacionAsync(string identityUserId, Func<string, string, string> construirRuta, string urlBaseSolicitud);
 
     /// <summary>
+    /// Vuelve a enviar la invitación a una cuenta que todavía no eligió su contraseña, con un token nuevo.
+    /// Se permite una vez cada 2 minutos por cuenta.
+    /// </summary>
+    Task<ResultadoReenvioInvitacion> ReenviarInvitacionAsync(int nroUsuario, Func<string, string, string> construirRuta, string urlBaseSolicitud);
+
+    /// <summary>
     /// Restablece la contraseña con el token recibido por correo. Si el enlace no es válido,
     /// devuelve siempre el mismo error. Al restablecer también se levanta el bloqueo por intentos fallidos.
     /// </summary>
     Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena);
+
+    /// <summary>
+    /// Activa una cuenta invitada: verifica el token de la invitación, guarda la primera contraseña,
+    /// confirma el correo y audita la activación. Si el enlace venció, no es válido o la cuenta ya tiene
+    /// contraseña, devuelve siempre el mismo error.
+    /// </summary>
+    Task<IdentityResult> ActivarCuentaAsync(string idUsuario, string token, string contrasena);
+
+    /// <summary>
+    /// Indica si el enlace de invitación todavía sirve, para avisar antes de que la persona complete el formulario.
+    /// </summary>
+    Task<bool> EsEnlaceActivacionValidoAsync(string idUsuario, string token);
+
+    /// <summary>
+    /// Cambia la contraseña de la cuenta con la sesión iniciada. Cierra las demás sesiones abiertas
+    /// y mantiene la actual.
+    /// </summary>
+    Task<IdentityResult> CambiarContrasenaAsync(string identityUserId, string contrasenaActual, string contrasenaNueva);
 }
