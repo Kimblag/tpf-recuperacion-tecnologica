@@ -5,6 +5,8 @@ using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
+using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
@@ -19,15 +21,21 @@ public class EntregaService : IEntregaService
 
     private readonly ApplicationDbContext _context;
     private readonly IAuditoriaService _auditoriaService;
+    private readonly IRelojInstitucional _reloj;
+    private readonly INotificacionService _notificaciones;
     private readonly ILogger<EntregaService> _logger;
 
     public EntregaService(
         ApplicationDbContext context,
         IAuditoriaService auditoriaService,
+        IRelojInstitucional reloj,
+        INotificacionService notificaciones,
         ILogger<EntregaService> logger)
     {
         _context = context;
         _auditoriaService = auditoriaService;
+        _reloj = reloj;
+        _notificaciones = notificaciones;
         _logger = logger;
     }
 
@@ -43,7 +51,7 @@ public class EntregaService : IEntregaService
     public async Task<IReadOnlyList<AsignacionVigenteFilaViewModel>> BuscarAsignacionesVigentesAsync(
         string? busqueda, int cantidad)
     {
-        var hoy = DateTime.UtcNow.Date;
+        var inicioHoy = _reloj.InicioDeDiaUtc();
 
         var filas = await _context.Asignaciones
             .AsNoTracking()
@@ -78,7 +86,7 @@ public class EntregaService : IEntregaService
                 MarcaYModelo = $"{a.Marca} {a.Modelo}",
                 Solicitante = NombreSolicitante(a.RazonSocial, a.Nombre, a.Apellido),
                 FechaLimiteRetiro = a.FechaLimiteRetiro,
-                PlazoVencido = a.FechaLimiteRetiro.Date < hoy
+                PlazoVencido = a.FechaLimiteRetiro < inicioHoy
             })
             .Where(a => string.IsNullOrEmpty(texto)
                 || a.Codigo.Contains(texto, StringComparison.OrdinalIgnoreCase)
@@ -132,7 +140,7 @@ public class EntregaService : IEntregaService
             FechaLimiteRetiro = datos.FechaLimiteRetiro,
             Situacion = datos.EstadoAsignacion != EstadoAsignacion.Vigente
                 ? SituacionEntrega.NoVigente
-                : datos.FechaLimiteRetiro.Date < DateTime.UtcNow.Date
+                : _reloj.PlazoVencido(datos.FechaLimiteRetiro)
                     ? SituacionEntrega.PlazoVencido
                     : SituacionEntrega.Lista
         };
@@ -165,6 +173,7 @@ public class EntregaService : IEntregaService
         }
 
         Entrega entrega;
+        var solicitudesCerradas = new List<int>();
 
         await using var transaccion = await _context.Database.BeginTransactionAsync();
 
@@ -189,7 +198,7 @@ public class EntregaService : IEntregaService
 
             var ahora = DateTime.UtcNow;
 
-            if (asignacion.FechaLimiteRetiro.Date < ahora.Date)
+            if (_reloj.PlazoVencido(asignacion.FechaLimiteRetiro))
             {
                 return ResultadoEntrega.Fallo(ErrorEntrega.PlazoVencido,
                     "El plazo de retiro venció. Hay que liberar la asignación antes de volver a asignar el equipo.");
@@ -243,6 +252,8 @@ public class EntregaService : IEntregaService
 
             await _context.SaveChangesAsync();
             await transaccion.CommitAsync();
+
+            solicitudesCerradas.AddRange(enEspera.Select(s => s.NroSolicitud));
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -269,6 +280,8 @@ public class EntregaService : IEntregaService
         {
             _logger.LogError(ex, "No se pudo auditar la Entrega {NroEntrega}", entrega.NroEntrega);
         }
+
+        await _notificaciones.AvisarCierrePorEntregaAsync(solicitudesCerradas);
 
         return ResultadoEntrega.Ok(entrega.NroEntrega);
     }

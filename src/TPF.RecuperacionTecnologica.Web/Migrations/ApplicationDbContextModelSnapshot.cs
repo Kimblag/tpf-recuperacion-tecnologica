@@ -240,6 +240,9 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
+                    b.Property<DateTime?>("FechaAvisoVencimiento")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("FechaLiberacion")
                         .HasColumnType("datetime2");
 
