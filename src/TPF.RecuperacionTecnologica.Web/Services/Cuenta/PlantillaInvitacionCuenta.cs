@@ -39,7 +39,7 @@ public static class PlantillaInvitacionCuenta
                           <p style="margin:0 0 20px;font-family:{{Fuente}};font-size:12px;line-height:1.5;color:#656D67;">Si el botón no funciona, copiar y pegar este enlace en el navegador:<br><a href="{{enlaceHtml}}" target="_blank" style="color:#476339;word-break:break-all;">{{enlaceHtml}}</a></p>
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                             <tr>
-                              <td style="background-color:#E5EEDC;border:1px solid #D9DED7;border-radius:8px;padding:12px 14px;font-family:{{Fuente}};font-size:13px;line-height:1.5;color:#202426;">El enlace vence en 1 hora y solo puede usarse una vez. Si venció, se puede pedir otro desde el inicio de sesión, con la opción "Olvidé mi contraseña". Si este correo no era esperado, se puede ignorar.</td>
+                              <td style="background-color:#E5EEDC;border:1px solid #D9DED7;border-radius:8px;padding:12px 14px;font-family:{{Fuente}};font-size:13px;line-height:1.5;color:#202426;">El enlace vence en 3 días y solo puede usarse una vez. Si venció, se puede pedir otro en la sede o desde el inicio de sesión, con la opción "Olvidé mi contraseña". Si este correo no era esperado, se puede ignorar.</td>
                             </tr>
                           </table>
                         </td>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -36,6 +37,11 @@ public interface IPersonalService
     /// Devuelve el detalle de un integrante del Personal, o null si no existe.
     /// </summary>
     Task<PersonalDetalleViewModel?> ObtenerDetalleAsync(int codigoPersonal);
+
+    /// <summary>
+    /// Devuelve los datos de la cuenta propia de un integrante del Personal, o null si la cuenta no es de Personal.
+    /// </summary>
+    Task<MiCuentaViewModel?> ObtenerMiCuentaAsync(string identityUserId);
 
     /// <summary>
     /// Edita nombre, apellido, teléfono, correo y rol del Personal, y sincroniza la cuenta de Identity.
