@@ -23,6 +23,12 @@ public interface IAsignacionService
 
     Task<ResultadoAsignacion> LiberarAsync(string identityUserIdCoordinador, int nroAsignacion, string? motivoLiberacion);
 
+    /// <summary>
+    /// Libera todas las asignaciones Vigentes cuyo plazo de retiro ya venció, como si el Coordinador las liberara.
+    /// Es idempotente: una asignación que ya se entregó o se liberó se omite. Un fallo en una no frena a las demás.
+    /// </summary>
+    Task<ResultadoLiberacionAutomatica> LiberarVencidasAsync(CancellationToken cancellationToken = default);
+
     Task<ResultadoAsignacion> AsignarAsync(
         string identityUserIdCoordinador, int nroEquipo, int nroSolicitud, string? justificacionCambio);
 }

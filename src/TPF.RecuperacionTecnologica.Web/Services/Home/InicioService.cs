@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
@@ -19,11 +20,13 @@ public class InicioService : IInicioService
 
     private readonly ApplicationDbContext _context;
     private readonly IConfiguracionService _configuracionService;
+    private readonly IRelojInstitucional _reloj;
 
-    public InicioService(ApplicationDbContext context, IConfiguracionService configuracionService)
+    public InicioService(ApplicationDbContext context, IConfiguracionService configuracionService, IRelojInstitucional reloj)
     {
         _context = context;
         _configuracionService = configuracionService;
+        _reloj = reloj;
     }
 
     public async Task<InicioUsuarioViewModel?> ObtenerInicioUsuarioAsync(string identityUserId)
@@ -280,10 +283,11 @@ public class InicioService : IInicioService
         }
 
         var ahora = DateTime.UtcNow;
-        var hoy = ahora.Date;
+        var hoy = _reloj.Hoy;
+        var inicioHoy = _reloj.InicioDeDiaUtc();
         var diasAviso = (await _configuracionService.ObtenerAsync())?.DiasAvisoVencimiento
             ?? DiasAvisoVencimientoPorDefecto;
-        var limiteAviso = hoy.AddDays(diasAviso);
+        var finAviso = _reloj.InicioDeDiaUtc(diasAviso + 1);
         var haceUnaSemana = ahora.AddDays(-7);
         var inicioDeMes = new DateTime(ahora.Year, ahora.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var inicioDeMesAnterior = inicioDeMes.AddMonths(-1);
@@ -307,8 +311,8 @@ public class InicioService : IInicioService
             .Where(a => a.EstadoAsignacion == EstadoAsignacion.Vigente);
 
         var asignacionesVigentes = await vigentes.CountAsync();
-        var vencidas = await vigentes.CountAsync(a => a.FechaLimiteRetiro.Date < hoy);
-        var porVencer = await vigentes.CountAsync(a => a.FechaLimiteRetiro.Date >= hoy && a.FechaLimiteRetiro.Date <= limiteAviso);
+        var vencidas = await vigentes.CountAsync(a => a.FechaLimiteRetiro < inicioHoy);
+        var porVencer = await vigentes.CountAsync(a => a.FechaLimiteRetiro >= inicioHoy && a.FechaLimiteRetiro < finAviso);
 
         var entregas = _context.Entregas.AsNoTracking();
         var entregasDelMes = await entregas.CountAsync(e => e.FechaEntrega >= inicioDeMes);
@@ -396,7 +400,7 @@ public class InicioService : IInicioService
                 Solicitante = NombreDe(a.RazonSocial, a.Nombre, a.Apellido),
                 MarcaYModelo = $"{a.Marca} {a.Modelo}",
                 FechaLimiteRetiro = a.FechaLimiteRetiro,
-                DiasRestantes = (a.FechaLimiteRetiro.Date - hoy).Days
+                DiasRestantes = (_reloj.FechaLocal(a.FechaLimiteRetiro) - hoy).Days
             }).ToList(),
             ActividadReciente = registros.Select(r => EventoDeAuditoria(
                 r.TipoOperacion, r.EntidadAfectada, r.IdEntidadAfectada, r.Detalle, r.FechaHora)).ToList()

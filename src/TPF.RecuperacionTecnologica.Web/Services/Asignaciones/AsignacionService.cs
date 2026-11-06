@@ -5,6 +5,8 @@ using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
+using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
@@ -14,6 +16,8 @@ public class AsignacionService : IAsignacionService
 {
     private const int MaximoJustificacion = 300;
     private const int MaximoMotivoLiberacion = 300;
+    private const int TamanoLoteLiberacionAutomatica = 50;
+    private const string MotivoLiberacionAutomatica = "Venció el plazo de retiro.";
 
     private const string MensajeConcurrenciaLiberacion =
         "La asignación cambió mientras se liberaba: otra persona pudo entregarla o liberarla. No se guardó nada. Volver a abrir el detalle e intentar nuevamente.";
@@ -24,17 +28,23 @@ public class AsignacionService : IAsignacionService
     private readonly ApplicationDbContext _context;
     private readonly IConfiguracionService _configuracionService;
     private readonly IAuditoriaService _auditoriaService;
+    private readonly IRelojInstitucional _reloj;
+    private readonly INotificacionService _notificaciones;
     private readonly ILogger<AsignacionService> _logger;
 
     public AsignacionService(
         ApplicationDbContext context,
         IConfiguracionService configuracionService,
         IAuditoriaService auditoriaService,
+        IRelojInstitucional reloj,
+        INotificacionService notificaciones,
         ILogger<AsignacionService> logger)
     {
         _context = context;
         _configuracionService = configuracionService;
         _auditoriaService = auditoriaService;
+        _reloj = reloj;
+        _notificaciones = notificaciones;
         _logger = logger;
     }
 
@@ -155,9 +165,9 @@ public class AsignacionService : IAsignacionService
     public async Task<ResultadoPaginado<AsignacionFilaViewModel>> ListarAsync(
         string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina)
     {
-        // "hoy" es el día UTC, igual que en el inicio del Coordinador
-        var hoy = DateTime.UtcNow.Date;
-        var limiteAviso = hoy.AddDays(await ObtenerDiasAvisoAsync());
+        // "hoy" es el día de la institución; los plazos se comparan contra el inicio de ese día
+        var inicioHoy = _reloj.InicioDeDiaUtc();
+        var finAviso = _reloj.InicioDeDiaUtc(await ObtenerDiasAvisoAsync() + 1);
 
         var consulta = _context.Asignaciones.AsNoTracking().AsQueryable();
 
@@ -167,8 +177,8 @@ public class AsignacionService : IAsignacionService
             consulta = consulta.Where(a => a.EstadoAsignacion == EstadoAsignacion.Vigente);
 
             consulta = plazo == FiltroPlazoAsignacion.Vencidas
-                ? consulta.Where(a => a.FechaLimiteRetiro.Date < hoy)
-                : consulta.Where(a => a.FechaLimiteRetiro.Date >= hoy && a.FechaLimiteRetiro.Date <= limiteAviso);
+                ? consulta.Where(a => a.FechaLimiteRetiro < inicioHoy)
+                : consulta.Where(a => a.FechaLimiteRetiro >= inicioHoy && a.FechaLimiteRetiro < finAviso);
         }
         else if (estado is not null)
         {
@@ -223,8 +233,8 @@ public class AsignacionService : IAsignacionService
                     FechaLimiteRetiro = f.FechaLimiteRetiro,
                     EstadoAsignacion = f.EstadoAsignacion,
                     Solicitante = NombreSolicitante(f.RazonSocial, f.Nombre, f.Apellido),
-                    PlazoVencido = vigente && f.FechaLimiteRetiro.Date < hoy,
-                    PlazoPorVencer = vigente && f.FechaLimiteRetiro.Date >= hoy && f.FechaLimiteRetiro.Date <= limiteAviso
+                    PlazoVencido = vigente && f.FechaLimiteRetiro < inicioHoy,
+                    PlazoPorVencer = vigente && f.FechaLimiteRetiro >= inicioHoy && f.FechaLimiteRetiro < finAviso
                 };
             }).ToList(),
             Total = total,
@@ -274,7 +284,7 @@ public class AsignacionService : IAsignacionService
 
         var coordinador = $"{datos.CoordinadorNombre} {datos.CoordinadorApellido} · PER-{datos.CodigoCoordinador:D4}";
         var vencido = datos.EstadoAsignacion == EstadoAsignacion.Vigente
-            && datos.FechaLimiteRetiro.Date < DateTime.UtcNow.Date;
+            && _reloj.PlazoVencido(datos.FechaLimiteRetiro);
 
         return new AsignacionDetalleViewModel
         {
@@ -483,6 +493,8 @@ public class AsignacionService : IAsignacionService
             _logger.LogError(ex, "No se pudo auditar la Asignación {NroAsignacion}", asignacion.NroAsignacion);
         }
 
+        await _notificaciones.AvisarAsignacionAsync(asignacion.NroAsignacion);
+
         return ResultadoAsignacion.Ok(asignacion.NroAsignacion);
     }
 
@@ -517,6 +529,94 @@ public class AsignacionService : IAsignacionService
                 $"El motivo de la liberación no puede superar los {MaximoMotivoLiberacion} caracteres.");
         }
 
+        var resultado = await LiberarEnTransaccionAsync(nroAsignacion, motivo, soloSiVencida: false);
+
+        if (resultado.Exitoso)
+        {
+            await AuditarLiberacionAsync(codigoCoordinador, nroAsignacion, $"Liberación de la asignación {nroAsignacion}");
+            await _notificaciones.AvisarLiberacionAsync(nroAsignacion);
+        }
+
+        return resultado;
+    }
+
+    public async Task<ResultadoLiberacionAutomatica> LiberarVencidasAsync(CancellationToken cancellationToken = default)
+    {
+        // el plazo vence al terminar su día: recién desde el día siguiente la asignación es liberable
+        var inicioHoy = _reloj.InicioDeDiaUtc();
+
+        var liberadas = new List<int>();
+        var omitidas = 0;
+        var fallidas = 0;
+
+        // cada lote se vuelve a consultar: lo que se liberó o se entregó ya no aparece como Vigente, así que el
+        // proceso avanza. Las ya intentadas se saltean para no reintentar en la misma corrida las que fallaron
+        var intentadas = new HashSet<int>();
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var lote = await _context.Asignaciones
+                .AsNoTracking()
+                .Where(a => a.EstadoAsignacion == EstadoAsignacion.Vigente
+                    && a.FechaLimiteRetiro < inicioHoy
+                    && !intentadas.Contains(a.NroAsignacion))
+                .OrderBy(a => a.FechaLimiteRetiro)
+                .ThenBy(a => a.NroAsignacion)
+                .Select(a => a.NroAsignacion)
+                .Take(TamanoLoteLiberacionAutomatica)
+                .ToListAsync(cancellationToken);
+
+            if (lote.Count == 0)
+            {
+                break;
+            }
+
+            foreach (var nroAsignacion in lote)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                // una falla en una asignación no frena a las demás
+                var resultado = await LiberarEnTransaccionAsync(nroAsignacion, MotivoLiberacionAutomatica, soloSiVencida: true);
+
+                // el contexto se reutiliza entre asignaciones: se limpia para no arrastrar entidades de una que falló
+                _context.ChangeTracker.Clear();
+
+                intentadas.Add(nroAsignacion);
+
+                if (resultado.Exitoso)
+                {
+                    liberadas.Add(nroAsignacion);
+
+                    // es una acción del sistema: no hay personal asociado
+                    await AuditarLiberacionAsync(null, nroAsignacion,
+                        $"Liberación automática de la asignación {nroAsignacion}: venció el plazo de retiro");
+                    await _notificaciones.AvisarLiberacionAsync(nroAsignacion);
+                }
+                else if (resultado.Error is ErrorAsignacion.AsignacionNoVigente or ErrorAsignacion.AsignacionNoVencida
+                    or ErrorAsignacion.AsignacionConcurrente or ErrorAsignacion.AsignacionNoEncontrada)
+                {
+                    // se entregó o se liberó en ese mismo momento: no es un error
+                    omitidas++;
+                }
+                else
+                {
+                    fallidas++;
+                }
+            }
+        }
+
+        return new ResultadoLiberacionAutomatica(liberadas, omitidas, fallidas);
+    }
+
+    /// <summary>
+    /// Pasa la asignación a Liberada, el equipo a Disponible y la solicitud a Cerrada, en una sola transacción.
+    /// Lo comparten la liberación del Coordinador y la automática. No audita: lo hace quien la llama.
+    /// </summary>
+    private async Task<ResultadoAsignacion> LiberarEnTransaccionAsync(int nroAsignacion, string motivo, bool soloSiVencida)
+    {
         await using var transaccion = await _context.Database.BeginTransactionAsync();
 
         try
@@ -539,7 +639,14 @@ public class AsignacionService : IAsignacionService
                     "La asignación ya no está Vigente: se entregó o se liberó. Solo se puede liberar una asignación Vigente.");
             }
 
-            var ahora = DateTime.UtcNow;
+            // se revisa de nuevo con la fila leída: pudo cambiar desde que se armó el lote
+            if (soloSiVencida && !_reloj.PlazoVencido(asignacion.FechaLimiteRetiro))
+            {
+                return ResultadoAsignacion.Fallo(ErrorAsignacion.AsignacionNoVencida,
+                    "El plazo de retiro de la asignación todavía no venció.");
+            }
+
+            var ahora = _reloj.AhoraUtc;
 
             asignacion.EstadoAsignacion = EstadoAsignacion.Liberada;
             asignacion.FechaLiberacion = ahora;
@@ -567,17 +674,19 @@ public class AsignacionService : IAsignacionService
                 "No se pudo liberar la asignación. No se guardó nada. Intentar nuevamente.");
         }
 
+        return ResultadoAsignacion.Ok(nroAsignacion);
+    }
+
+    private async Task AuditarLiberacionAsync(int? codigoPersonal, int nroAsignacion, string detalle)
+    {
         try
         {
             await _auditoriaService.RegistrarEventoAsync(
-                TipoOperacionAuditoria.Liberacion, codigoCoordinador, nameof(Asignacion),
-                nroAsignacion, $"Liberación de la asignación {nroAsignacion}");
+                TipoOperacionAuditoria.Liberacion, codigoPersonal, nameof(Asignacion), nroAsignacion, detalle);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "No se pudo auditar la liberación de la Asignación {NroAsignacion}", nroAsignacion);
         }
-
-        return ResultadoAsignacion.Ok(nroAsignacion);
     }
 }

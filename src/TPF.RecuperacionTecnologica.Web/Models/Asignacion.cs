@@ -31,5 +31,8 @@ public class Asignacion
 
     public string? MotivoLiberacion { get; set; }
 
+    /// <summary>Cuándo se envió el recordatorio de plazo próximo a vencer; null si todavía no se envió.</summary>
+    public DateTime? FechaAvisoVencimiento { get; set; }
+
     public byte[] RowVersion { get; set; } = [];
 }
