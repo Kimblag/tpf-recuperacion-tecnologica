@@ -13,7 +13,7 @@ public interface IDonacionService
     /// El Equipo queda Pendiente de recepción y el evento queda auditado sin Personal.
     /// </summary>
     /// <returns>El Número de Equipo generado, o null si la cuenta no corresponde a un Usuario activo.</returns>
-    Task<int?> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo);
+    Task<ResultadoRegistroDonacion> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo);
 
     Task<ResultadoRegistroDonacion> RegistrarAsistidaAsync(
         string identityUserIdCoordinador, RegistroDonacionAsistidaViewModel modelo,

@@ -45,6 +45,9 @@ public class DonacionService : IDonacionService
 
     private const string MotivoCancelacionDonante = "Cancelada por el donante";
 
+    // código del error de número repetido: el controller lo usa para mostrar el mensaje junto al campo
+    public const string CodigoNumeroSerieDuplicado = "NumeroSerieDuplicado";
+
     private static EspecificacionesTecnicas EspecificacionesDelTipo(TipoEquipo tipo, RegistroDonacionViewModel modelo)
     {
         var aplicaProcesador = tipo is TipoEquipo.Notebook or TipoEquipo.PcEscritorio;
@@ -69,6 +72,7 @@ public class DonacionService : IDonacionService
         TipoEquipo = modelo.TipoEquipo!.Value,
         Marca = modelo.Marca.Trim(),
         Modelo = modelo.Modelo.Trim(),
+        NumeroSerie = ValidacionesNumeroSerie.Normalizar(modelo.NumeroSerie),
         EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value,
         Observaciones = TextoOpcional(modelo.Observaciones),
         EspecificacionesDeclaradas = EspecificacionesDelTipo(modelo.TipoEquipo!.Value, modelo),
@@ -76,7 +80,7 @@ public class DonacionService : IDonacionService
         FechaRegistro = DateTime.UtcNow
     };
 
-    public async Task<int?> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo)
+    public async Task<ResultadoRegistroDonacion> RegistrarAsync(string identityUserId, RegistroDonacionViewModel modelo)
     {
         // solo dona un Usuario activo; el Personal no tiene ficha de Usuario
         var nroUsuario = await _context.Usuarios
@@ -86,13 +90,23 @@ public class DonacionService : IDonacionService
 
         if (nroUsuario is null)
         {
-            return null;
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.UsuarioNoHabilitado,
+                "La cuenta no está habilitada para registrar donaciones.");
         }
 
         var equipo = NuevoEquipo(nroUsuario.Value, modelo);
 
         _context.Equipos.Add(equipo);
-        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
+        {
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.NumeroSerieDuplicado,
+                ValidacionesNumeroSerie.MensajeDuplicado);
+        }
 
         // la donación ya está guardada: si falla la auditoría se registra pero no la deshace
         try
@@ -106,11 +120,16 @@ public class DonacionService : IDonacionService
             _logger.LogError(ex, "No se pudo auditar la donación del Equipo {NroEquipo}", equipo.NroEquipo);
         }
 
-        return equipo.NroEquipo;
+        return ResultadoRegistroDonacion.Ok(equipo.NroEquipo);
     }
 
     private static bool EsViolacionDeUnicidad(DbUpdateException ex) =>
         ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 };
+
+    // el mensaje de SQL Server nombra el índice que chocó: así se distingue del choque de otros datos únicos
+    private static bool EsNumeroSerieDuplicado(DbUpdateException ex) =>
+        EsViolacionDeUnicidad(ex)
+        && ex.InnerException!.Message.Contains(ValidacionesNumeroSerie.NombreIndice, StringComparison.OrdinalIgnoreCase);
 
     private async Task AuditarAsistidaAsync(
         TipoOperacionAuditoria tipo, int codigoPersonal, string entidad, int id, string detalle)
@@ -170,6 +189,11 @@ public class DonacionService : IDonacionService
         {
             await _context.SaveChangesAsync();
         }
+        catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
+        {
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.NumeroSerieDuplicado,
+                ValidacionesNumeroSerie.MensajeDuplicado);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló el registro asistido de la donación del Usuario {NroUsuario}", donante.NroUsuario);
@@ -213,6 +237,12 @@ public class DonacionService : IDonacionService
 
             await transaccion.CommitAsync();
         }
+        catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
+        {
+            // la transacción se revierte: tampoco queda creada la cuenta de la persona
+            return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.NumeroSerieDuplicado,
+                ValidacionesNumeroSerie.MensajeDuplicado);
+        }
         catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
         {
             return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.UsuarioYaExiste, ResultadoAltaAsistida.MensajeYaExiste);
@@ -255,6 +285,7 @@ public class DonacionService : IDonacionService
                 e.TipoEquipo,
                 e.Marca,
                 e.Modelo,
+                e.NumeroSerie,
                 e.EstadoInicialDeclarado,
                 e.Observaciones,
                 e.EstadoEquipo,
@@ -290,6 +321,7 @@ public class DonacionService : IDonacionService
             TipoEquipo = datos.TipoEquipo,
             Marca = datos.Marca,
             Modelo = datos.Modelo,
+            NumeroSerie = datos.NumeroSerie,
             EstadoInicialDeclarado = datos.EstadoInicialDeclarado,
             Observaciones = datos.Observaciones,
             Procesador = datos.Procesador,
@@ -323,6 +355,7 @@ public class DonacionService : IDonacionService
         // el tipo de equipo no se toca: si el donante se equivocó, cancela y registra una nueva
         equipo.Marca = modelo.Marca.Trim();
         equipo.Modelo = modelo.Modelo.Trim();
+        equipo.NumeroSerie = ValidacionesNumeroSerie.Normalizar(modelo.NumeroSerie);
         equipo.EstadoInicialDeclarado = modelo.EstadoInicialDeclarado!.Value;
         equipo.Observaciones = TextoOpcional(modelo.Observaciones);
         equipo.EspecificacionesDeclaradas = EspecificacionesDelTipo(equipo.TipoEquipo, modelo);
@@ -337,6 +370,10 @@ public class DonacionService : IDonacionService
             // el RowVersion cambió entre la lectura y el guardado
             return Fallo("DonacionModificada",
                 "La donación cambió mientras se guardaba. Vuelva a abrirla e intente nuevamente.");
+        }
+        catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
+        {
+            return Fallo(CodigoNumeroSerieDuplicado, ValidacionesNumeroSerie.MensajeDuplicado);
         }
         catch (Exception ex)
         {
@@ -531,6 +568,7 @@ public class DonacionService : IDonacionService
                 e.TipoEquipo,
                 e.Marca,
                 e.Modelo,
+                e.NumeroSerie,
                 e.EstadoInicialDeclarado,
                 e.Observaciones,
                 e.EstadoEquipo,
@@ -598,6 +636,7 @@ public class DonacionService : IDonacionService
             TipoEquipo = equipo.TipoEquipo,
             Marca = equipo.Marca,
             Modelo = equipo.Modelo,
+            NumeroSerie = equipo.NumeroSerie,
             EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
             FechaRegistro = equipo.FechaRegistro,
             EstadoEquipo = equipo.EstadoEquipo,

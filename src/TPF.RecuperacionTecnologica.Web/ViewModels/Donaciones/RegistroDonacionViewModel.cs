@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 
-public class RegistroDonacionViewModel
+public class RegistroDonacionViewModel : IValidatableObject
 {
     // los enums son nullable para que el select arranque sin opción elegida y [Required] funcione
     [Display(Name = "Tipo de equipo")]
@@ -18,6 +19,11 @@ public class RegistroDonacionViewModel
     [Required(ErrorMessage = "El modelo es obligatorio.")]
     [StringLength(60, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
     public string Modelo { get; set; } = string.Empty;
+
+    // número de serie, o IMEI si es un celular; el formato depende del tipo y se valida en Validate
+    [Display(Name = "Número de serie")]
+    [StringLength(ValidacionesNumeroSerie.LargoMaximo, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    public string? NumeroSerie { get; set; }
 
     [Display(Name = "Estado del equipo")]
     [Required(ErrorMessage = "El estado del equipo es obligatorio.")]
@@ -49,4 +55,7 @@ public class RegistroDonacionViewModel
     [Display(Name = "Otros datos")]
     [StringLength(300, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
     public string? Otros { get; set; }
+
+    public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext) =>
+        ValidacionesNumeroSerie.Validar(TipoEquipo, NumeroSerie, nameof(NumeroSerie));
 }

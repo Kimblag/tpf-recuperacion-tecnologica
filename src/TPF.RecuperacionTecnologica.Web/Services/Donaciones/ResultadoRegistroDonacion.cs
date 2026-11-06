@@ -5,6 +5,7 @@ public enum ErrorRegistroDonacion
     CoordinadorNoHabilitado,
     UsuarioNoHabilitado,
     UsuarioYaExiste,
+    NumeroSerieDuplicado,
     Fallido
 }
 
