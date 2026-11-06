@@ -23,7 +23,7 @@
                 <h1 tabindex="-1">Equipo <span class="mono">@Model.CodigoEquipo</span></h1>
                 <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
             </div>
-            <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+            <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo · @TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.ValidacionesNumeroSerie.EtiquetaPara(Model.TipoEquipo): @if (string.IsNullOrWhiteSpace(Model.NumeroSerie)) { <span class="muted">sin dato</span> } else { <span class="mono">@Model.NumeroSerie</span> }</p>
         </div>
         <div class="page-actions">
             @if (verSolicitudes)

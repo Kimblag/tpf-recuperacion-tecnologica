@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 
@@ -167,6 +168,12 @@ public class DiagnosticosController : Controller
             ModelState.AddModelError(nameof(formulario.DetalleReparacionesRealizadas), "El detalle de reparación es obligatorio en el segundo diagnóstico.");
         }
 
+        // el formato del número depende del tipo de equipo, que se toma del equipo guardado
+        foreach (var error in ValidacionesNumeroSerie.Validar(equipo.TipoEquipo, formulario.NumeroSerie, nameof(formulario.NumeroSerie)))
+        {
+            ModelState.AddModelError(nameof(formulario.NumeroSerie), error.ErrorMessage!);
+        }
+
         if (!ModelState.IsValid)
         {
             CompletarContexto(formulario, ArmarFormulario(nroEquipo, equipo, tipo));
@@ -196,7 +203,11 @@ public class DiagnosticosController : Controller
         {
             foreach (var error in resultado.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                var campo = error.Code == DiagnosticoService.CodigoNumeroSerieDuplicado
+                    ? nameof(formulario.NumeroSerie)
+                    : string.Empty;
+
+                ModelState.AddModelError(campo, error.Description);
             }
 
             CompletarContexto(formulario, ArmarFormulario(nroEquipo, equipo, tipo));
@@ -252,6 +263,7 @@ public class DiagnosticosController : Controller
         formulario.EstadoInicialDeclarado = contexto.EstadoInicialDeclarado;
         formulario.EstadoEquipo = contexto.EstadoEquipo;
         formulario.ObservacionesDonante = contexto.ObservacionesDonante;
+        formulario.NumeroSerieDeclarado = contexto.NumeroSerieDeclarado;
         formulario.ProcesadorDeclarado = contexto.ProcesadorDeclarado;
         formulario.MemoriaRamDeclarada = contexto.MemoriaRamDeclarada;
         formulario.AlmacenamientoDeclarado = contexto.AlmacenamientoDeclarado;
@@ -272,6 +284,8 @@ public class DiagnosticosController : Controller
         EstadoInicialDeclarado = equipo.EstadoInicialDeclarado,
         EstadoEquipo = equipo.EstadoEquipo,
         ObservacionesDonante = equipo.Observaciones,
+        NumeroSerie = equipo.NumeroSerie,
+        NumeroSerieDeclarado = equipo.NumeroSerie,
         ProcesadorDeclarado = equipo.Procesador,
         MemoriaRamDeclarada = equipo.MemoriaRam,
         AlmacenamientoDeclarado = equipo.Almacenamiento,

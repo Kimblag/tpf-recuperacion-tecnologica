@@ -163,9 +163,14 @@ public class DiagnosticoService : IDiagnosticoService
         _context.ImagenesEquipo.AddRange(lote.Imagenes);
     }
 
-    private static string? ArmarComplemento(int solicitudesCerradas, int fotos)
+    private static string? ArmarComplemento(int solicitudesCerradas, int fotos, string? cambioNumeroSerie = null)
     {
         var partes = new List<string>();
+
+        if (cambioNumeroSerie is not null)
+        {
+            partes.Add(cambioNumeroSerie);
+        }
 
         if (solicitudesCerradas > 0)
         {
@@ -182,6 +187,30 @@ public class DiagnosticoService : IDiagnosticoService
 
     private static IdentityResult Fallo(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
+
+    // código del error de número repetido: el controller lo usa para mostrar el mensaje junto al campo
+    public const string CodigoNumeroSerieDuplicado = "NumeroSerieDuplicado";
+
+    // el mensaje de SQL Server nombra el índice que chocó: así se distingue del choque de otros datos únicos
+    private static bool EsNumeroSerieDuplicado(DbUpdateException ex) =>
+        ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 } sql
+        && sql.Message.Contains(ValidacionesNumeroSerie.NombreIndice, StringComparison.OrdinalIgnoreCase);
+
+    // el Técnico puede completar o corregir el número; devuelve el texto para la auditoría solo si cambió
+    private static string? AplicarNumeroSerie(Equipo equipo, string? numeroSerie)
+    {
+        var nuevo = ValidacionesNumeroSerie.Normalizar(numeroSerie);
+
+        if (nuevo == equipo.NumeroSerie)
+        {
+            return null;
+        }
+
+        var anterior = equipo.NumeroSerie;
+        equipo.NumeroSerie = nuevo;
+
+        return $"Número de serie: {anterior ?? "sin dato"} → {nuevo ?? "sin dato"}";
+    }
 
     private static Diagnostico ArmarDiagnostico(
         Equipo equipo, int codigoTecnico, TipoDiagnostico tipo, DictamenTecnico dictamen,
@@ -290,10 +319,11 @@ public class DiagnosticoService : IDiagnosticoService
         AdjuntarImagenes(diagnostico, lote);
 
         AplicarDictamen(equipo, dictamen, ahora);
+        var cambioNumeroSerie = AplicarNumeroSerie(equipo, modelo.NumeroSerie);
         _context.Diagnosticos.Add(diagnostico);
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Diagnóstico inicial",
-            ArmarComplemento(0, lote.Imagenes.Count), lote);
+            ArmarComplemento(0, lote.Imagenes.Count, cambioNumeroSerie), lote);
     }
 
     public async Task<IdentityResult> RegistrarSegundoAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -342,10 +372,11 @@ public class DiagnosticoService : IDiagnosticoService
 
         AplicarDictamen(equipo, dictamen, ahora);
         var cerradas = await CerrarSolicitudesPendientesAsync(equipo, ahora);
+        var cambioNumeroSerie = AplicarNumeroSerie(equipo, modelo.NumeroSerie);
         _context.Diagnosticos.Add(diagnostico);
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico",
-            ArmarComplemento(cerradas, lote.Imagenes.Count), lote);
+            ArmarComplemento(cerradas, lote.Imagenes.Count, cambioNumeroSerie), lote);
     }
 
     public async Task<IdentityResult> RegistrarRectificacionAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -391,11 +422,12 @@ public class DiagnosticoService : IDiagnosticoService
 
         AplicarDictamen(equipo, dictamen, ahora);
         var cerradas = await CerrarSolicitudesPendientesAsync(equipo, ahora);
+        var cambioNumeroSerie = AplicarNumeroSerie(equipo, modelo.NumeroSerie);
         _context.Diagnosticos.Add(diagnostico);
 
         return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico,
             $"Rectificación del diagnóstico {vigente.NroDiagnostico}",
-            ArmarComplemento(cerradas, lote.Imagenes.Count), lote);
+            ArmarComplemento(cerradas, lote.Imagenes.Count, cambioNumeroSerie), lote);
     }
 
     // el diagnóstico, el cambio de estado y las fotos se guardan juntos en una sola operación
@@ -413,6 +445,12 @@ public class DiagnosticoService : IDiagnosticoService
 
             return Fallo("EquipoModificado",
                 "El equipo cambió mientras se registraba el diagnóstico. Vuelva a abrirlo e intente nuevamente.");
+        }
+        catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
+        {
+            DescartarArchivos(lote);
+
+            return Fallo(CodigoNumeroSerieDuplicado, ValidacionesNumeroSerie.MensajeDuplicado);
         }
         catch (Exception ex)
         {

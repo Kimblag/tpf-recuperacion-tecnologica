@@ -16,6 +16,9 @@ public class Equipo
 
     public string Modelo { get; set; } = string.Empty;
 
+    // número de serie, o IMEI en los celulares; opcional y único entre los equipos que lo tienen
+    public string? NumeroSerie { get; set; }
+
     public EstadoInicialDeclarado EstadoInicialDeclarado { get; set; }
 
     public string? Observaciones { get; set; }

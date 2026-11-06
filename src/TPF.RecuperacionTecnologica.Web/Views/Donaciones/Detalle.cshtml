@@ -74,6 +74,8 @@
                         <dd>@Model.Marca</dd>
                         <dt>Modelo</dt>
                         <dd>@Model.Modelo</dd>
+                        <dt>@TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.ValidacionesNumeroSerie.EtiquetaPara(Model.TipoEquipo)</dt>
+                        <dd>@if (string.IsNullOrWhiteSpace(Model.NumeroSerie)) { <span class="muted">Sin dato</span> } else { <span class="mono">@Model.NumeroSerie</span> }</dd>
                         <dt>Estado inicial declarado</dt>
                         <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
                         <dt>Observaciones</dt>

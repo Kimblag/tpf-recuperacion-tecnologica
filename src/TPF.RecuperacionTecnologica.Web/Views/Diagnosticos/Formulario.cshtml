@@ -71,6 +71,22 @@
 
                         <h3 class="span-2 sec-title">Características verificadas</h3>
 
+                        <div class="field span-2">
+                            <label class="form-label" for="NumeroSerie">@Model.EtiquetaNumeroSerie</label>
+                            <input asp-for="NumeroSerie" class="form-control" maxlength="50" autocomplete="off" aria-describedby="NumeroSerie-hint" />
+                            <div class="form-text" id="NumeroSerie-hint">
+                                @if (string.IsNullOrWhiteSpace(Model.NumeroSerieDeclarado))
+                                {
+                                    <text>Sin dato cargado. Suele estar en una etiqueta debajo del equipo o en Ajustes del celular (marcar *#06#).</text>
+                                }
+                                else
+                                {
+                                    <text>Cargado en la donación: @Model.NumeroSerieDeclarado. Corregirlo solo si no coincide con el equipo.</text>
+                                }
+                            </div>
+                            <span asp-validation-for="NumeroSerie"></span>
+                        </div>
+
                         <div class="field">
                             <label class="form-label" for="Procesador">Procesador</label>
                             <input asp-for="Procesador" class="form-control" maxlength="100" aria-describedby="Procesador-hint" />
@@ -191,6 +207,8 @@
                         <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
                         <dt>Marca y modelo</dt>
                         <dd>@Model.MarcaYModelo</dd>
+                        <dt>@Model.EtiquetaNumeroSerie</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(Model.NumeroSerieDeclarado) ? "—" : Model.NumeroSerieDeclarado)</dd>
                         <dt>Estado declarado</dt>
                         <dd>@Html.DisplayFor(m => m.EstadoInicialDeclarado)</dd>
                         <dt>Observaciones del donante</dt>
