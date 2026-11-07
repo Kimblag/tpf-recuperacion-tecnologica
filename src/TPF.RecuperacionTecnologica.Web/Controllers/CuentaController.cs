@@ -161,6 +161,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult RestablecerContrasena(string? idUsuario = null, string? token = null)
     {
         if (string.IsNullOrEmpty(idUsuario) || string.IsNullOrEmpty(token))
@@ -172,6 +173,7 @@ public class CuentaController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> RestablecerContrasena(RestablecerContrasenaViewModel modelo)

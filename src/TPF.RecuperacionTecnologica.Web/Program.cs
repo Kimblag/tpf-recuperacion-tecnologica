@@ -148,6 +148,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
         ? CookieSecurePolicy.SameAsRequest
         : CookieSecurePolicy.Always;
+
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
@@ -182,7 +185,7 @@ app.Use(async (contexto, siguiente) =>
     cabeceras["Content-Security-Policy-Report-Only"] =
         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
         "font-src https://fonts.gstatic.com; img-src 'self' data: blob:; object-src 'none'; " +
-        "base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+        "base-uri 'self'; form-action 'self'";
 
     await siguiente();
 });
