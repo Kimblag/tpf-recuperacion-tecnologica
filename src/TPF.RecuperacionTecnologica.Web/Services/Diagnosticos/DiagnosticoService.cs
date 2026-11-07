@@ -280,6 +280,7 @@ public class DiagnosticoService : IDiagnosticoService
             solicitud.EstadoSolicitud = EstadoSolicitud.Cerrada;
             solicitud.FechaCierre = fecha;
             solicitud.FechaUltimaModificacion = fecha;
+            solicitud.MotivoCierre = "El equipo no se pudo recuperar y ya no se puede asignar.";
         }
 
         return pendientes.Count;

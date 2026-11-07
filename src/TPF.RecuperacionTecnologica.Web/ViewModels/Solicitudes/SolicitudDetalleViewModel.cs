@@ -38,4 +38,5 @@ public class SolicitudDetalleViewModel
     public string CodigoEquipo => NroEquipo.ToString("D6");
 
     public bool PuedeModificarse => EstadoSolicitud == EstadoSolicitud.Pendiente;
+    public string? MotivoCierre { get; set; }
 }

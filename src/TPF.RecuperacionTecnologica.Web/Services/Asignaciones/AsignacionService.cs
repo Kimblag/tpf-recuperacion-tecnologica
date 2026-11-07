@@ -310,7 +310,7 @@ public class AsignacionService : IAsignacionService
         };
     }
 
-    private static List<HitoViewModel> ArmarHitos(
+    private List<HitoViewModel> ArmarHitos(
         EstadoAsignacion estado, DateTime fechaAsignacion, DateTime fechaLimite, bool vencido,
         string coordinador, DateTime? fechaEntrega, DateTime? fechaLiberacion, string? motivoLiberacion)
     {
@@ -335,8 +335,8 @@ public class AsignacionService : IAsignacionService
                     Icono = "clock",
                     Estado = vencido ? EstadoHito.Cancelado : EstadoHito.Actual,
                     Texto = vencido
-                        ? $"Venció el {fechaLimite:dd/MM/yyyy}. Solo se puede liberar."
-                        : $"Hasta el {fechaLimite:dd/MM/yyyy}."
+                        ? $"Venció el {_reloj.Fecha(fechaLimite)}. Solo se puede liberar."
+                        : $"Hasta el {_reloj.Fecha(fechaLimite)}."
                 });
                 hitos.Add(new HitoViewModel { Titulo = "Entrega del equipo", Icono = "truck", Estado = EstadoHito.Pendiente });
                 break;
@@ -658,6 +658,9 @@ public class AsignacionService : IAsignacionService
 
             asignacion.Solicitud.EstadoSolicitud = EstadoSolicitud.Cerrada;
             asignacion.Solicitud.FechaCierre = ahora;
+            asignacion.Solicitud.MotivoCierre = soloSiVencida
+                ? motivo
+                : Recortar($"La asignación fue liberada. Motivo: {motivo}");
             asignacion.Solicitud.FechaUltimaModificacion = ahora;
 
             await _context.SaveChangesAsync();
@@ -689,4 +692,6 @@ public class AsignacionService : IAsignacionService
             _logger.LogError(ex, "No se pudo auditar la liberación de la Asignación {NroAsignacion}", nroAsignacion);
         }
     }
+
+    private static string Recortar(string texto) => texto.Length <= 300 ? texto : texto[..300];
 }

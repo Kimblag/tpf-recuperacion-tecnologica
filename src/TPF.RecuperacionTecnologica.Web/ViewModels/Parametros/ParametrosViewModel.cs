@@ -35,8 +35,4 @@ public class ParametrosViewModel
     public int? CodigoAdministrador { get; set; }
 
     public DateTime? FechaUltimaModificacion { get; set; }
-
-    public string? UltimaModificacion => FechaUltimaModificacion is null
-        ? null
-        : $"{FechaUltimaModificacion:dd/MM/yyyy} · PER-{CodigoAdministrador:D4}";
 }
