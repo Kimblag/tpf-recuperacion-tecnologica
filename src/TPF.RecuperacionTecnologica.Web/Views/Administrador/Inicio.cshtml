@@ -1,9 +1,14 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Administrador.AdministradorInicioViewModel
 @{
     ViewData["Title"] = "Dashboard administrativo";
-    var variacion = Model.VariacionEntregasPorcentaje >= 0 ? $"+{Model.VariacionEntregasPorcentaje}%" : $"{Model.VariacionEntregasPorcentaje}%";
-    var personalDetalle = $"{Model.Administradores} Administrador · {Model.Coordinadores} Coordinadores · {Model.Tecnicos} Técnicos";
-    var inactivos = Model.PersonalInactivo == 1 ? "1 inactivo" : $"{Model.PersonalInactivo} inactivos";
+    var variacion = Model.VariacionEntregasPorcentaje is { } v
+        ? (v >= 0 ? $"+{v}%" : $"{v}%")
+        : "Sin entregas el mes anterior";
+    var claseVariacion = Model.VariacionEntregasPorcentaje is >= 0 ? "ok" : "";
+    var detalleEntregas = Model.VariacionEntregasPorcentaje is null ? "Sin base de comparación" : "Respecto del mes anterior";
+    string Cantidad(int n, string singular, string plural) => $"{n} {(n == 1 ? singular : plural)}";
+    var personalDetalle = $"{Cantidad(Model.Administradores, "Administrador", "Administradores")} · {Cantidad(Model.Coordinadores, "Coordinador", "Coordinadores")} · {Cantidad(Model.Tecnicos, "Técnico", "Técnicos")}";
+    var inactivos = Cantidad(Model.PersonalInactivo, "inactivo", "inactivos");
 }
 
 @section Migas {
@@ -24,10 +29,10 @@
     </div>
 
     <div class="g-metrics">
-        <partial name="_Metrica" model="@(("Usuarios externos", "users", "i-info", Model.UsuariosExternos.ToString(), $"+{Model.UsuariosNuevosDelMes} este mes", "ok", "Cuentas registradas"))" />
+        <partial name="_Metrica" model="@(("Usuarios externos", "users", "i-info", Model.UsuariosExternos.ToString(), $"+{Model.UsuariosNuevosDelMes} este mes", "ok", "Cuentas activas"))" />
         <partial name="_Metrica" model="@(("Personal activo", "idcard", "i-ok", Model.PersonalActivo.ToString(), inactivos, "", personalDetalle))" />
         <partial name="_Metrica" model="@(("Equipos registrados", "laptop", "i-ok", Model.EquiposRegistrados.ToString(), "", "", "En todos los estados"))" />
-        <partial name="_Metrica" model="@(("Entregas este mes", "truck", "i-ok", Model.EntregasDelMes.ToString(), variacion, "ok", "Respecto del mes anterior"))" />
+        <partial name="_Metrica" model="@(("Entregas este mes", "truck", "i-ok", Model.EntregasDelMes.ToString(), variacion, claseVariacion, detalleEntregas))" />
     </div>
 
     <section class="card">
@@ -39,7 +44,18 @@
             <a class="link" asp-controller="Reportes" asp-action="EquiposPorEstado">Ver reporte</a>
         </div>
         <div class="card-body">
-            <partial name="_DistribucionEquipos" model="Model.EquiposPorEstado" />
+            @if (Model.EquiposRegistrados == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("laptop")" /></span>
+                    <h3>Sin equipos registrados</h3>
+                    <p>La distribución aparece cuando se registren donaciones.</p>
+                </div>
+            }
+            else
+            {
+                <partial name="_DistribucionEquipos" model="Model.EquiposPorEstado" />
+            }
         </div>
     </section>
 

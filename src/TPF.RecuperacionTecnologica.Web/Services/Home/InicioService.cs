@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Reloj;
+using TPF.RecuperacionTecnologica.Web.Services.Reportes;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Administrador;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
@@ -22,12 +25,20 @@ public class InicioService : IInicioService
     private readonly ApplicationDbContext _context;
     private readonly IConfiguracionService _configuracionService;
     private readonly IRelojInstitucional _reloj;
+    private readonly IReporteService _reporteService;
+    private readonly IAuditoriaService _auditoriaService;
 
-    public InicioService(ApplicationDbContext context, IConfiguracionService configuracionService, IRelojInstitucional reloj)
+    public InicioService(ApplicationDbContext context,
+        IConfiguracionService configuracionService,
+        IRelojInstitucional reloj,
+        IReporteService reporteService,
+        IAuditoriaService auditoriaService)
     {
         _context = context;
         _configuracionService = configuracionService;
         _reloj = reloj;
+        _reporteService = reporteService;
+        _auditoriaService = auditoriaService;
     }
 
     public async Task<InicioUsuarioViewModel?> ObtenerInicioUsuarioAsync(string identityUserId)
@@ -454,4 +465,52 @@ public class InicioService : IInicioService
             Detalle = detalle is null ? fecha.ToString("dd/MM/yyyy") : $"{fecha:dd/MM/yyyy} · {detalle}",
             EsExito = exito
         };
+
+    public async Task<AdministradorInicioViewModel> ObtenerInicioAdministradorAsync()
+    {
+        var inicioDeMes = _reloj.InicioDeMesUtc();
+        var inicioDeMesAnterior = _reloj.InicioDeMesUtc(-1);
+
+        var usuariosExternos = await _context.Usuarios.AsNoTracking()
+            .CountAsync(u => u.EstadoUsuario == EstadoUsuario.Activo);
+
+        var usuariosNuevos = await _context.Usuarios.AsNoTracking()
+            .CountAsync(u => u.EstadoUsuario == EstadoUsuario.Activo && u.FechaAlta >= inicioDeMes);
+
+        var personalPorRol = await _context.PersonalInterno.AsNoTracking()
+            .Where(p => p.EstadoPersonal == EstadoPersonal.Activo)
+            .GroupBy(p => p.RolAsignado)
+            .Select(g => new { Rol = g.Key, Cantidad = g.Count() })
+            .ToListAsync();
+
+        var personalInactivo = await _context.PersonalInterno.AsNoTracking()
+            .CountAsync(p => p.EstadoPersonal == EstadoPersonal.Inactivo);
+
+        var entregasDelMes = await _context.Entregas.AsNoTracking()
+            .CountAsync(e => e.FechaEntrega >= inicioDeMes);
+
+        var entregasDelMesAnterior = await _context.Entregas.AsNoTracking()
+            .CountAsync(e => e.FechaEntrega >= inicioDeMesAnterior && e.FechaEntrega < inicioDeMes);
+
+        int? variacion = entregasDelMesAnterior == 0
+            ? null
+            : (int)Math.Round((entregasDelMes - entregasDelMesAnterior) * 100.0 / entregasDelMesAnterior);
+
+        var auditoria = await _auditoriaService.ConsultarAsync(null, null, null, null, null, null, 1, CantidadActividad);
+
+        return new AdministradorInicioViewModel
+        {
+            UsuariosExternos = usuariosExternos,
+            UsuariosNuevosDelMes = usuariosNuevos,
+            PersonalActivo = personalPorRol.Sum(p => p.Cantidad),
+            PersonalInactivo = personalInactivo,
+            Administradores = personalPorRol.Where(p => p.Rol == RolPersonal.Administrador).Sum(p => p.Cantidad),
+            Coordinadores = personalPorRol.Where(p => p.Rol == RolPersonal.Coordinador).Sum(p => p.Cantidad),
+            Tecnicos = personalPorRol.Where(p => p.Rol == RolPersonal.Tecnico).Sum(p => p.Cantidad),
+            EntregasDelMes = entregasDelMes,
+            VariacionEntregasPorcentaje = variacion,
+            EquiposPorEstado = await _reporteService.EquiposPorEstadoAsync(null, null),
+            AuditoriaReciente = auditoria.Elementos
+        };
+    }
 }
