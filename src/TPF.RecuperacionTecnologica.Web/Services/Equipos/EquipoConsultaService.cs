@@ -429,9 +429,9 @@ public class EquipoConsultaService : IEquipoConsultaService
     }
 
     private static List<HitoViewModel> ArmarLineaDeTiempo(
-        DateTime fechaRegistro, DateTime? fechaDisponibilidad, DateTime? fechaCancelacion,
-        IEnumerable<DiagnosticoFilaViewModel> diagnosticos, IEnumerable<SolicitudLegajoViewModel> solicitudes,
-        IEnumerable<AsignacionLegajoViewModel> asignaciones, EntregaLegajoViewModel? entrega)
+    DateTime fechaRegistro, DateTime? fechaDisponibilidad, DateTime? fechaCancelacion,
+    IEnumerable<DiagnosticoFilaViewModel> diagnosticos, IEnumerable<SolicitudLegajoViewModel> solicitudes,
+    IEnumerable<AsignacionLegajoViewModel> asignaciones, EntregaLegajoViewModel? entrega)
     {
         var hitos = new List<HitoViewModel>
         {
@@ -447,7 +447,8 @@ public class EquipoConsultaService : IEquipoConsultaService
                 _ => $"Diagnóstico {d.CodigoDiagnostico}"
             },
             Fecha = d.FechaDiagnostico,
-            Icono = d.TipoDiagnostico == TipoDiagnostico.Rectificacion ? "edit" : "wrench"
+            Icono = d.TipoDiagnostico == TipoDiagnostico.Rectificacion ? "edit" : "wrench",
+            Destino = Destino("Diagnosticos", "Detalle", d.NroDiagnostico, "TecnicoOAdministrador")
         }));
 
         if (fechaDisponibilidad is not null)
@@ -457,17 +458,40 @@ public class EquipoConsultaService : IEquipoConsultaService
 
         foreach (var solicitud in solicitudes)
         {
-            hitos.Add(new() { Titulo = $"Solicitud {solicitud.Codigo} de {solicitud.Solicitante}", Fecha = solicitud.FechaSolicitud, Icono = "tray" });
+            var destinoSolicitud = Destino("Solicitudes", "DetalleInterno", solicitud.NroSolicitud, "Coordinacion");
+
+            hitos.Add(new()
+            {
+                Titulo = $"Solicitud {solicitud.Codigo} de {solicitud.Solicitante}",
+                Fecha = solicitud.FechaSolicitud,
+                Icono = "tray",
+                Destino = destinoSolicitud
+            });
 
             if (solicitud.FechaCancelacion is not null)
             {
-                hitos.Add(new() { Titulo = $"Solicitud {solicitud.Codigo} cancelada", Fecha = solicitud.FechaCancelacion, Icono = "x-circle", Estado = EstadoHito.Cancelado });
+                hitos.Add(new()
+                {
+                    Titulo = $"Solicitud {solicitud.Codigo} cancelada",
+                    Fecha = solicitud.FechaCancelacion,
+                    Icono = "x-circle",
+                    Estado = EstadoHito.Cancelado,
+                    Destino = destinoSolicitud
+                });
             }
         }
 
         foreach (var asignacion in asignaciones)
         {
-            hitos.Add(new() { Titulo = $"Asignación {asignacion.Codigo} a {asignacion.CodigoSolicitud}", Fecha = asignacion.FechaAsignacion, Icono = "swap" });
+            var destinoAsignacion = Destino("Asignaciones", "Detalle", asignacion.NroAsignacion, "Coordinacion");
+
+            hitos.Add(new()
+            {
+                Titulo = $"Asignación {asignacion.Codigo} a {asignacion.CodigoSolicitud}",
+                Fecha = asignacion.FechaAsignacion,
+                Icono = "swap",
+                Destino = destinoAsignacion
+            });
 
             if (asignacion.FechaLiberacion is not null)
             {
@@ -477,14 +501,21 @@ public class EquipoConsultaService : IEquipoConsultaService
                     Fecha = asignacion.FechaLiberacion,
                     Icono = "undo",
                     Estado = EstadoHito.Cancelado,
-                    Texto = asignacion.MotivoLiberacion
+                    Texto = asignacion.MotivoLiberacion,
+                    Destino = destinoAsignacion
                 });
             }
         }
 
         if (entrega is not null)
         {
-            hitos.Add(new() { Titulo = $"Entrega {entrega.Codigo}", Fecha = entrega.FechaEntrega, Icono = "truck" });
+            hitos.Add(new()
+            {
+                Titulo = $"Entrega {entrega.Codigo}",
+                Fecha = entrega.FechaEntrega,
+                Icono = "truck",
+                Destino = Destino("Entregas", "Detalle", entrega.NroEntrega, "Coordinacion")
+            });
         }
 
         if (fechaCancelacion is not null)
@@ -495,4 +526,12 @@ public class EquipoConsultaService : IEquipoConsultaService
         // orden estable: a igual fecha se respeta el orden en que se agregaron
         return hitos.OrderBy(h => h.Fecha).ToList();
     }
+
+    private static DestinoHito Destino(string controlador, string accion, int id, string politica) => new()
+    {
+        Controlador = controlador,
+        Accion = accion,
+        Id = id,
+        Politica = politica
+    };
 }

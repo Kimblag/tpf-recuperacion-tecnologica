@@ -1,5 +1,7 @@
 @model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.HitoViewModel>
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService Autorizacion
 <ol class="timeline">
     @foreach (var hito in Model)
     {
@@ -10,11 +12,20 @@
             EstadoHito.Cancelado => "bad",
             _ => ""
         };
+        var destino = hito.Destino;
+        var enlazar = destino is not null && (await Autorizacion.AuthorizeAsync(User, destino.Politica)).Succeeded;
         <li class="tl @clase" aria-current="@(hito.Estado == EstadoHito.Actual ? "step" : null)">
             <span class="tl-mark"><partial name="_Icon" model="@hito.Icono" /></span>
             <div>
                 <div class="tl-title">
-                    @hito.Titulo
+                    @if (enlazar)
+                    {
+                        <a class="link" asp-controller="@destino!.Controlador" asp-action="@destino.Accion" asp-route-id="@destino.Id">@hito.Titulo</a>
+                    }
+                    else
+                    {
+                        @hito.Titulo
+                    }
                     @if (hito.Estado == EstadoHito.Pendiente)
                     {
                         <span class="tag">Pendiente</span>
