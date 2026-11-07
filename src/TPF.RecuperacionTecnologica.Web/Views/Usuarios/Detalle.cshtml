@@ -36,12 +36,8 @@
             </div>
             <div class="card-body">
                 <dl class="dl">
-                    <dt>Código</dt>
-                    <dd><span class="mono">@Model.Codigo</span></dd>
                     <dt>@(esPersona ? "Documento (DNI)" : "CUIT")</dt>
                     <dd><span class="mono">@Model.DocumentoFormateado</span></dd>
-                    <dt>@(esPersona ? "Nombre y apellido" : "Razón social")</dt>
-                    <dd>@Model.NombreVisible</dd>
                     <dt>Dirección</dt>
                     <dd>@(string.IsNullOrWhiteSpace(Model.Direccion) ? "—" : Model.Direccion)</dd>
                     <dt>Teléfono</dt>
@@ -63,12 +59,8 @@
                 <dl class="dl">
                     <dt>Correo de acceso</dt>
                     <dd>@Model.CorreoElectronico</dd>
-                    <dt>Estado de la cuenta</dt>
-                    <dd><partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" /></dd>
                     <dt>Tipo de usuario</dt>
                     <dd>@Html.DisplayFor(m => m.TipoUsuario)</dd>
-                    <dt>Rol</dt>
-                    <dd>Usuario externo</dd>
                 </dl>
             </div>
         </section>

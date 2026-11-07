@@ -89,8 +89,6 @@
             </div>
             <div class="card-body">
                 <dl class="dl">
-                    <dt>Asignación</dt>
-                    <dd><span class="mono">@Model.Codigo</span></dd>
                     <dt>Solicitud</dt>
                     <dd><a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@Model.NroSolicitud">@Model.CodigoSolicitud</a> · @Model.Solicitante (@Html.DisplayFor(m => m.TipoSolicitante))</dd>
                     <dt>Equipo</dt>
@@ -115,11 +113,8 @@
                         <dt>Motivo de la liberación</dt>
                         <dd>@Model.MotivoLiberacion</dd>
                     }
-                    <dt>Estado</dt>
-                    <dd>
-                        <partial name="_EstadoAsignacionBadge" model="Model.EstadoAsignacion" />
-                        <div class="card-sub mt-1">@explicacionEstado</div>
-                    </dd>
+                    <dt>Situación actual</dt>
+                    <dd>@explicacionEstado</dd>
                 </dl>
             </div>
         </section>

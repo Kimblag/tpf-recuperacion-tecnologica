@@ -68,8 +68,6 @@
             </div>
             <div class="card-body">
                 <dl class="dl">
-                    <dt>Número de solicitud</dt>
-                    <dd><span class="mono">@Model.Codigo</span></dd>
                     <dt>Equipo solicitado</dt>
                     <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
                     <dt>Solicitante</dt>
@@ -82,11 +80,8 @@
                     <dd>@Html.DisplayFor(m => m.OrigenSolicitud)</dd>
                     <dt>Fecha de solicitud</dt>
                     <dd>@Reloj.Fecha(Model.FechaSolicitud)</dd>
-                    <dt>Estado</dt>
-                    <dd>
-                        <partial name="_EstadoSolicitudBadge" model="Model.EstadoSolicitud" />
-                        <div class="card-sub mt-1">@explicacionEstado</div>
-                    </dd>
+                    <dt>Situación actual</dt>
+                    <dd>@explicacionEstado</dd>
                 </dl>
             </div>
         </section>
