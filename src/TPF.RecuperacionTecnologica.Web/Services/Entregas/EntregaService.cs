@@ -298,14 +298,14 @@ public class EntregaService : IEntregaService
 
         if (desde is not null)
         {
-            var inicio = desde.Value.Date;
+            var inicio = _reloj.InicioDeDiaUtc(desde.Value);
             consulta = consulta.Where(e => e.FechaEntrega >= inicio);
         }
 
         if (hasta is not null)
         {
             // se incluye todo el día elegido
-            var fin = hasta.Value.Date.AddDays(1);
+            var fin = _reloj.InicioDeDiaUtc(hasta.Value.AddDays(1));
             consulta = consulta.Where(e => e.FechaEntrega < fin);
         }
 

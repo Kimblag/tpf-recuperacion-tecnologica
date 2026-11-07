@@ -106,7 +106,7 @@
                                     <td data-label="Donante">@fila.Donante</td>
                                     <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
                                     <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
-                                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Registro">@Reloj.Fecha(fila.FechaRegistro)</td>
                                     <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="DetalleInterno" asp-route-id="@fila.NroEquipo" aria-label="Ver donación del equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>

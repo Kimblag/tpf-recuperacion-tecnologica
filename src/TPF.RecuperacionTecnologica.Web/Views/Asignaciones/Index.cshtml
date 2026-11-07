@@ -121,9 +121,9 @@
                                         <div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></div>
                                     </td>
                                     <td data-label="Coordinador">@fila.Coordinador</td>
-                                    <td data-label="Asignada">@fila.FechaAsignacion.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Asignada">@Reloj.Fecha(fila.FechaAsignacion)</td>
                                     <td data-label="Retiro hasta">
-                                        <div>@fila.FechaLimiteRetiro.ToString("dd/MM/yyyy")</div>
+                                        <div>@Reloj.Fecha(fila.FechaLimiteRetiro)</div>
                                         @if (fila.PlazoVencido)
                                         {
                                             <partial name="_Badge" model="@(("Vencida", "danger"))" />

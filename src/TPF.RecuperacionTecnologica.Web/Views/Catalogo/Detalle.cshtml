@@ -53,12 +53,12 @@
                         @if (Model.FechaDisponibilidad is not null)
                         {
                             <dt>Disponible desde</dt>
-                            <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                            <dd>@Reloj.Fecha(Model.FechaDisponibilidad.Value)</dd>
                         }
                         <dt>Revisión técnica</dt>
                         <dd>
                             <partial name="_DictamenBadge" model="Model.DictamenTecnico" />
-                            <span class="card-sub">evaluado el @Model.FechaRevision.ToString("dd/MM/yyyy")</span>
+                            <span class="card-sub">evaluado el @Reloj.Fecha(Model.FechaRevision)</span>
                         </dd>
                         <dt>Personas que ya lo pidieron</dt>
                         <dd>@textoDemanda</dd>

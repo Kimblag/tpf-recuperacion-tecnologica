@@ -95,7 +95,7 @@
                             <dt>Tipo</dt>
                             <dd>@Html.DisplayFor(m => vigente.TipoDiagnostico)</dd>
                             <dt>Fecha</dt>
-                            <dd>@vigente.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
+                            <dd>@Reloj.Fecha(vigente.FechaDiagnostico)</dd>
                             <dt>Técnico</dt>
                             <dd>@vigente.Tecnico</dd>
                             <dt>Dictamen</dt>
@@ -243,17 +243,17 @@
                                 <dt>Donante</dt>
                                 <dd>@Model.Donante</dd>
                                 <dt>Fecha de registro</dt>
-                                <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                                <dd>@Reloj.Fecha(Model.FechaRegistro)</dd>
                             }
                             @if (Model.FechaDisponibilidad is not null)
                             {
                                 <dt>Disponible desde</dt>
-                                <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                                <dd>@Reloj.Fecha(Model.FechaDisponibilidad.Value)</dd>
                             }
                             @if (Model.EstadoEquipo == EstadoEquipo.Cancelado)
                             {
                                 <dt>Fecha de cancelación</dt>
-                                <dd>@(Model.FechaCancelacion?.ToString("dd/MM/yyyy") ?? "—")</dd>
+                                <dd>@(Reloj.Fecha(Model.FechaCancelacion))</dd>
                                 <dt>Motivo de cancelación</dt>
                                 <dd>@(string.IsNullOrWhiteSpace(Model.MotivoCancelacion) ? "—" : Model.MotivoCancelacion)</dd>
                             }
@@ -305,7 +305,7 @@
                                         <td data-label="Solicitante">@fila.Solicitante</td>
                                         <td data-label="Tipo de solicitante">@Html.DisplayFor(m => fila.TipoSolicitante)</td>
                                         <td data-label="Origen">@Html.DisplayFor(m => fila.OrigenSolicitud)</td>
-                                        <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                        <td data-label="Fecha">@Reloj.Fecha(fila.FechaSolicitud)</td>
                                         <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
                                     </tr>
                                 }

@@ -118,7 +118,7 @@
                                     <td data-label="Equipo"><a class="mono" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@fila.NroEquipo">@fila.CodigoEquipo</a></td>
                                     <td data-label="Tipo">@Html.DisplayFor(m => fila.TipoDiagnostico)</td>
                                     <td data-label="Técnico"><span class="mono">@fila.CodigoPersonal</span></td>
-                                    <td data-label="Fecha">@fila.FechaDiagnostico.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaDiagnostico)</td>
                                     <td data-label="Dictamen técnico"><partial name="_DictamenBadge" model="fila.DictamenTecnico" /></td>
                                     <td data-label="Evaluación">
                                         @if (fila.EsVigente)

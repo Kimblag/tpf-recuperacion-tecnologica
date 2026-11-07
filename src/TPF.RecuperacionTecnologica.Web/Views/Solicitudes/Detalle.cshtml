@@ -71,7 +71,7 @@
                     <dt>Origen</dt>
                     <dd>@Html.DisplayFor(m => m.OrigenSolicitud)</dd>
                     <dt>Fecha de solicitud</dt>
-                    <dd>@Model.FechaSolicitud.ToString("dd/MM/yyyy")</dd>
+                    <dd>@Reloj.Fecha(Model.FechaSolicitud)</dd>
                     <dt>Estado</dt>
                     <dd>
                         <partial name="_EstadoSolicitudBadge" model="Model.EstadoSolicitud" />

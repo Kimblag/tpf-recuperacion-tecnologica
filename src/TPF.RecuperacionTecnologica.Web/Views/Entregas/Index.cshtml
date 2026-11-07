@@ -124,7 +124,7 @@
                                         <div class="card-sub">Documento <span class="mono">@fila.DocumentoQuienRetira</span></div>
                                     </td>
                                     <td data-label="Coordinador">@fila.Coordinador</td>
-                                    <td data-label="Fecha de entrega">@fila.FechaEntrega.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha de entrega">@Reloj.Fecha(fila.FechaEntrega)</td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEntrega" aria-label="Ver entrega @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
                                     </td>

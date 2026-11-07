@@ -111,7 +111,7 @@
                                             <span class="q-pos"><span class="visually-hidden">Orden sugerido </span>@(i + 1)</span>
                                             <span>
                                                 <b>@candidata.Solicitante</b> <span class="tag">@Html.DisplayFor(m => candidata.TipoSolicitante)</span><br />
-                                                <span class="card-sub"><span class="mono">@candidata.Codigo</span> · @candidata.FechaSolicitud.ToString("dd/MM/yyyy") · @TextoOrigen(candidata.OrigenSolicitud)</span>
+                                                <span class="card-sub"><span class="mono">@candidata.Codigo</span> · @Reloj.Fecha(candidata.FechaSolicitud) · @TextoOrigen(candidata.OrigenSolicitud)</span>
                                             </span>
                                             @if (i == 0)
                                             {
@@ -139,9 +139,9 @@
                                         <dt>Coordinador</dt>
                                         <dd>@Model.Coordinador</dd>
                                         <dt>Fecha de asignación</dt>
-                                        <dd>@Model.FechaAsignacion.ToString("dd/MM/yyyy")</dd>
+                                        <dd>@Reloj.Fecha(Model.FechaAsignacion)</dd>
                                         <dt>Fecha límite de retiro</dt>
-                                        <dd>@Model.FechaLimiteRetiro.ToString("dd/MM/yyyy") <span class="muted">(@Model.DiasLimiteRetiro días, según los parámetros)</span></dd>
+                                        <dd>@Reloj.Fecha(Model.FechaLimiteRetiro) <span class="muted">(@Model.DiasLimiteRetiro días, según los parámetros)</span></dd>
                                     </dl>
 
                                     <div class="field">

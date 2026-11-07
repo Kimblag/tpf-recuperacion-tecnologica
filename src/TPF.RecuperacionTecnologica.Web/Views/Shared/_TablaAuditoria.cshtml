@@ -31,7 +31,7 @@
                 var destino = DestinoDe(fila.Entidad);
 
                 <tr>
-                    <td data-label="Fecha y hora"><span class="nowrap">@fila.FechaHora.ToString("dd/MM/yyyy HH:mm")</span></td>
+                    <td data-label="Fecha y hora"><span class="nowrap">@Reloj.FechaHora(fila.FechaHora)</span></td>
                     <td data-label="Personal">@fila.Personal</td>
                     <td data-label="Operación"><span class="tag">@Html.DisplayFor(m => fila.Operacion)</span></td>
                     <td data-label="Entidad">@fila.EtiquetaEntidad</td>

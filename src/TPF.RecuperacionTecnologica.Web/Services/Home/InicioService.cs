@@ -15,6 +15,7 @@ public class InicioService : IInicioService
     private const int CantidadReciente = 4;
     private const int CantidadActividad = 5;
     private const int CantidadPendientes = 5;
+
     // se usa solo si todavía no existe la fila de configuración
     private const int DiasAvisoVencimientoPorDefecto = 3;
 
@@ -211,8 +212,7 @@ public class InicioService : IInicioService
         var enReparacion = await equipos.CountAsync(e => e.EstadoEquipo == EstadoEquipo.EnReparacion);
         var disponibles = await equipos.CountAsync(e => e.EstadoEquipo == EstadoEquipo.Disponible);
 
-        var ahora = DateTime.UtcNow;
-        var inicioDeMes = new DateTime(ahora.Year, ahora.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var inicioDeMes = _reloj.InicioDeMesUtc();
 
         var propios = _context.Diagnosticos
             .AsNoTracking()
@@ -289,8 +289,8 @@ public class InicioService : IInicioService
             ?? DiasAvisoVencimientoPorDefecto;
         var finAviso = _reloj.InicioDeDiaUtc(diasAviso + 1);
         var haceUnaSemana = ahora.AddDays(-7);
-        var inicioDeMes = new DateTime(ahora.Year, ahora.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var inicioDeMesAnterior = inicioDeMes.AddMonths(-1);
+        var inicioDeMes = _reloj.InicioDeMesUtc();
+        var inicioDeMesAnterior = _reloj.InicioDeMesUtc(-1);
 
         var disponibles = _context.Equipos
             .AsNoTracking()

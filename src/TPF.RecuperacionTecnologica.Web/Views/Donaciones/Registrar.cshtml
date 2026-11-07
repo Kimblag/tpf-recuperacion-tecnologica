@@ -4,7 +4,7 @@
     ViewData["Title"] = "Nueva donación";
 
     ViewData["Donante"] = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
-    ViewData["Fecha"] = DateTime.Today.ToString("dd/MM/yyyy");
+    ViewData["Fecha"] = Reloj.Fecha(Reloj.AhoraUtc);
 }
 
 @section Migas {

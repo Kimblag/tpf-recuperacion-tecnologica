@@ -23,7 +23,7 @@
             <dt>Número de entrega</dt>
             <dd class="mono">@entrega.Codigo</dd>
             <dt>Fecha de entrega</dt>
-            <dd>@entrega.FechaEntrega.ToString("dd/MM/yyyy")</dd>
+            <dd>@Reloj.Fecha(entrega.FechaEntrega)</dd>
             <dt>Coordinador que entregó</dt>
             <dd>@entrega.Coordinador</dd>
         </dl>

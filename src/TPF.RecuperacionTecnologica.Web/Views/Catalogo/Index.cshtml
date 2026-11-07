@@ -157,7 +157,7 @@
                                     <span class="mono">@equipo.CodigoEquipo</span>
                                     @if (equipo.FechaDisponibilidad is not null)
                                     {
-                                        <span class="card-sub">Desde @equipo.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</span>
+                                        <span class="card-sub">Desde @Reloj.Fecha(equipo.FechaDisponibilidad.Value)</span>
                                     }
                                 </div>
                                 <h3 class="eq-title"><a asp-action="Detalle" asp-route-id="@equipo.NroEquipo">@equipo.MarcaYModelo</a></h3>

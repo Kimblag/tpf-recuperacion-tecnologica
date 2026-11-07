@@ -2,6 +2,7 @@
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
@@ -11,10 +12,12 @@ public class AuditoriaService : IAuditoriaService
 {
     private readonly ApplicationDbContext _context;
     private const int DetalleMaxLength = 500;
+    private readonly IRelojInstitucional _reloj;
 
-    public AuditoriaService(ApplicationDbContext context)
+    public AuditoriaService(ApplicationDbContext context, IRelojInstitucional reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     public async Task RegistrarEventoAsync(TipoOperacionAuditoria tipoOperacion, int? codigoPersonal, string entidadAfectada, int idEntidadAfectada, string? detalle)
@@ -57,14 +60,14 @@ public class AuditoriaService : IAuditoriaService
 
         if (desde is not null)
         {
-            var inicio = desde.Value.Date;
+            var inicio = _reloj.InicioDeDiaUtc(desde.Value);
             consulta = consulta.Where(r => r.FechaHora >= inicio);
         }
 
         if (hasta is not null)
         {
             // se incluye todo el día elegido
-            var fin = hasta.Value.Date.AddDays(1);
+            var fin = _reloj.InicioDeDiaUtc(hasta.Value.AddDays(1));
             consulta = consulta.Where(r => r.FechaHora < fin);
         }
 

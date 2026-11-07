@@ -47,16 +47,16 @@
                         <dt>Observaciones</dt>
                         <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
                         <dt>Fecha de registro</dt>
-                        <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                        <dd>@Reloj.Fecha(Model.FechaRegistro)</dd>
                         @if (Model.FechaDisponibilidad is not null)
                         {
                             <dt>Disponible desde</dt>
-                            <dd>@Model.FechaDisponibilidad.Value.ToString("dd/MM/yyyy")</dd>
+                            <dd>@Reloj.Fecha(Model.FechaDisponibilidad.Value)</dd>
                         }
                         @if (Model.EstadoEquipo == EstadoEquipo.Cancelado)
                         {
                             <dt>Fecha de cancelación</dt>
-                            <dd>@(Model.FechaCancelacion?.ToString("dd/MM/yyyy") ?? "—")</dd>
+                            <dd>@(Reloj.Fecha(Model.FechaCancelacion))</dd>
                             <dt>Motivo de cancelación</dt>
                             <dd>@(string.IsNullOrWhiteSpace(Model.MotivoCancelacion) ? "—" : Model.MotivoCancelacion)</dd>
                         }
@@ -130,7 +130,7 @@
                                 <tr class="@(fila.EsVigente ? "fila-vigente" : "fila-historica")">
                                     <td data-label="Diagnóstico"><span class="mono">@fila.CodigoDiagnostico</span></td>
                                     <td data-label="Tipo"><span class="nowrap"><partial name="_Icon" model="@Icono(fila.TipoDiagnostico)" /> @Html.DisplayFor(m => fila.TipoDiagnostico)</span></td>
-                                    <td data-label="Fecha">@fila.FechaDiagnostico.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaDiagnostico)</td>
                                     <td data-label="Técnico"><span class="mono">@fila.CodigoPersonal</span></td>
                                     <td data-label="Dictamen"><partial name="_DictamenBadge" model="fila.DictamenTecnico" /></td>
                                     <td data-label="Evaluación">
@@ -201,7 +201,7 @@
                                     <td data-label="Solicitante">@fila.Solicitante</td>
                                     <td data-label="Tipo de solicitante">@Html.DisplayFor(m => fila.TipoSolicitante)</td>
                                     <td data-label="Origen">@Html.DisplayFor(m => fila.OrigenSolicitud)</td>
-                                    <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaSolicitud)</td>
                                     <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
                                 </tr>
                             }
@@ -251,13 +251,13 @@
                                     <td data-label="Asignación"><a class="mono" asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@fila.NroAsignacion">@fila.Codigo</a></td>
                                     <td data-label="Solicitud"><a class="mono" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud">@fila.CodigoSolicitud</a></td>
                                     <td data-label="Coordinador">@fila.Coordinador</td>
-                                    <td data-label="Fecha">@fila.FechaAsignacion.ToString("dd/MM/yyyy")</td>
-                                    <td data-label="Límite de retiro">@fila.FechaLimiteRetiro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaAsignacion)</td>
+                                    <td data-label="Límite de retiro">@Reloj.Fecha(fila.FechaLimiteRetiro)</td>
                                     <td data-label="Estado"><partial name="_EstadoAsignacionBadge" model="fila.EstadoAsignacion" /></td>
                                     <td data-label="Liberación">
                                         @if (fila.FechaLiberacion is not null)
                                         {
-                                            <div>@fila.FechaLiberacion.Value.ToString("dd/MM/yyyy")</div>
+                                            <div>@Reloj.Fecha(fila.FechaLiberacion.Value)</div>
                                             @if (!string.IsNullOrWhiteSpace(fila.MotivoLiberacion))
                                             {
                                                 <div class="card-sub">@fila.MotivoLiberacion</div>
@@ -288,7 +288,7 @@
                     <dt>Entrega</dt>
                     <dd><a class="mono" asp-controller="Entregas" asp-action="Detalle" asp-route-id="@entrega.NroEntrega">@entrega.Codigo</a></dd>
                     <dt>Fecha de entrega</dt>
-                    <dd>@entrega.FechaEntrega.ToString("dd/MM/yyyy")</dd>
+                    <dd>@Reloj.Fecha(entrega.FechaEntrega)</dd>
                     <dt>Asignación</dt>
                     <dd><span class="mono">@entrega.CodigoAsignacion</span></dd>
                     <dt>Registrada por</dt>

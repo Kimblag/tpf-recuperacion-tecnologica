@@ -1,4 +1,4 @@
-﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.MisDonacionesViewModel
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.MisDonacionesViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones
 @{
@@ -186,7 +186,7 @@
                                     <td data-label="Tipo"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></td>
                                     <td data-label="Marca y modelo">@fila.MarcaYModelo</td>
                                     <td data-label="Condición declarada">@Html.DisplayFor(m => fila.EstadoInicialDeclarado)</td>
-                                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Registro">@Reloj.Fecha(fila.FechaRegistro)</td>
                                     <td data-label="Estado"><partial name="_PistaEstadoDonacion" model="fila.EstadoEquipo" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroEquipo" aria-label="Ver equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
