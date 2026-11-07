@@ -3,11 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Asignaciones;
-using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
-using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
@@ -17,7 +16,9 @@ using TPF.RecuperacionTecnologica.Web.Services.Email;
 using TPF.RecuperacionTecnologica.Web.Services.Entregas;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.Services.Home;
+using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.Services.Reportes;
 using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
@@ -154,6 +155,21 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.Zero;
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("cuenta", contexto =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            contexto.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 var app = builder.Build();
 app.Use(async (contexto, siguiente) =>
 {
@@ -214,7 +230,7 @@ if (!string.IsNullOrWhiteSpace(imagenes.CarpetaFisica))
 }
 
 app.UseRouting();
-
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

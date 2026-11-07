@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -36,6 +37,7 @@ public class CuentaController : Controller
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> Registrar(RegistroUsuarioViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -75,6 +77,7 @@ public class CuentaController : Controller
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> Login(LoginViewModel modelo, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
@@ -140,6 +143,7 @@ public class CuentaController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> RecuperarContrasena(RecuperarContrasenaViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -169,6 +173,7 @@ public class CuentaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> RestablecerContrasena(RestablecerContrasenaViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -217,6 +222,7 @@ public class CuentaController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [AllowAnonymous]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> ActivarCuenta(ActivarCuentaViewModel modelo)
     {
         if (!ModelState.IsValid)
