@@ -19,6 +19,7 @@
 
     <section class="card overflow" aria-label="Usuarios">
         <form class="filters" role="search" method="get" asp-action="Index">
+            <input type="hidden" asp-for="Orden" />
             <div class="filter">
                 <label for="Tipo">Tipo</label>
                 <div class="select">
@@ -61,13 +62,13 @@
                         <caption class="visually-hidden">Usuarios externos</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Usuario</th>
-                                <th scope="col">Nombre o razón social</th>
-                                <th scope="col">Documento</th>
-                                <th scope="col">Correo</th>
-                                <th scope="col">Teléfono</th>
-                                <th scope="col">Alta</th>
-                                <th scope="col">Estado</th>
+                                <partial name="_EncabezadoOrden" model="@(("Usuario", "usuario", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Nombre o razón social", "nombre", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Documento", "documento", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Correo", "correo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Teléfono", "telefono", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Alta", "alta", Model.Orden, true))" />
+                                <partial name="_EncabezadoOrden" model="@(("Estado", "estado", Model.Orden, false))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>

@@ -7,13 +7,13 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 public interface ISolicitudConsultaService
 {
     Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarPropiasAsync(
-        string identityUserId, string? busqueda, EstadoSolicitud? estado, int pagina, int tamanoPagina);
+        string identityUserId, string? busqueda, EstadoSolicitud? estado, int pagina, int tamanoPagina, string? orden = null);
 
     Task<SolicitudDetalleViewModel?> ObtenerDetallePropioAsync(string identityUserId, int nroSolicitud);
 
     Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarTodasAsync(
         string? busqueda, TipoSolicitante? tipo, OrigenSolicitud? origen, EstadoSolicitud? estado,
-        int pagina, int tamanoPagina, int? nroUsuario = null);
+        int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null);
 
     Task<SolicitudDetalleViewModel?> ObtenerDetalleInternoAsync(int nroSolicitud);
 

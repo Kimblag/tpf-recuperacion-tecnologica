@@ -188,7 +188,7 @@ public class DonacionesController : Controller
         try
         {
             var resultado = await _donacionService.ListarTodasAsync(
-                filtros.Busqueda, filtros.Donante, filtros.Estado, filtros.Pagina, DonacionListadoViewModel.TamanoPagina);
+                filtros.Busqueda, filtros.Donante, filtros.Estado, filtros.Pagina, DonacionListadoViewModel.TamanoPagina, orden: filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;

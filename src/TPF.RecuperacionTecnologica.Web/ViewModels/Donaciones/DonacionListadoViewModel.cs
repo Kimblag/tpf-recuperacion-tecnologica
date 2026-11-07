@@ -21,6 +21,8 @@ public class DonacionListadoViewModel
 
     public EstadoEquipo? Estado { get; set; }
 
+    public string? Orden { get; set; } = "registro_desc";
+
     public IReadOnlyList<DonacionGestionFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }

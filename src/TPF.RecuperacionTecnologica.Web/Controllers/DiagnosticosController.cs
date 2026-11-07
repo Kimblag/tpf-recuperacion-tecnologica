@@ -38,7 +38,7 @@ public class DiagnosticosController : Controller
         try
         {
             var resultado = await _diagnosticoService.ListarAsync(
-                filtros.Busqueda, filtros.Tipo, filtros.Dictamen, filtros.Pagina, DiagnosticoListadoViewModel.TamanoPagina);
+                filtros.Busqueda, filtros.Tipo, filtros.Dictamen, filtros.Pagina, DiagnosticoListadoViewModel.TamanoPagina, filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;

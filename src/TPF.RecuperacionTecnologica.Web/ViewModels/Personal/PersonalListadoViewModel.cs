@@ -12,5 +12,7 @@ public class PersonalListadoViewModel
 
     public IReadOnlyList<PersonalFilaViewModel> Filas { get; set; } = [];
 
+    public string? Orden { get; set; } = "codigo";
+
     public int Total { get; set; }
 }

@@ -53,7 +53,7 @@ public class AsignacionesController : Controller
         {
             var resultado = await _asignacionService.ListarAsync(
                 filtros.Busqueda, filtros.Estado, filtros.Plazo,
-                filtros.Pagina, AsignacionListadoViewModel.TamanoPagina);
+                filtros.Pagina, AsignacionListadoViewModel.TamanoPagina, filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;

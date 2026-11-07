@@ -10,5 +10,7 @@ public class UsuarioListadoViewModel
 
     public IReadOnlyList<UsuarioFilaViewModel> Filas { get; set; } = [];
 
+    public string? Orden { get; set; } = "usuario";
+
     public int Total { get; set; }
 }

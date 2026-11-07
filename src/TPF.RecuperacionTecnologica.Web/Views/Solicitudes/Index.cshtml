@@ -7,6 +7,7 @@
     {
         Busqueda = Model.Busqueda,
         Estado = Model.Estado,
+        Orden = Model.Orden,
         Pagina = pagina
     });
 }
@@ -31,6 +32,7 @@
         <partial name="_AyudaEstadosSolicitud" />
 
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <input type="hidden" asp-for="Orden" />
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
                 <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de solicitud o equipo" maxlength="60" data-filtro-texto />
@@ -82,11 +84,11 @@
                         <caption class="visually-hidden">Mis solicitudes</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Solicitud</th>
-                                <th scope="col">Equipo</th>
-                                <th scope="col">Tipo de solicitante</th>
-                                <th scope="col">Fecha</th>
-                                <th scope="col">Estado</th>
+                                <partial name="_EncabezadoOrden" model="@(("Solicitud", "solicitud", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Equipo", "equipo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Tipo de solicitante", "tipo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Fecha", "fecha", Model.Orden, true))" />
+                                <partial name="_EncabezadoOrden" model="@(("Estado", "estado", Model.Orden, false))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>

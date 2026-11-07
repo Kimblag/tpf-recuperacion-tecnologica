@@ -56,7 +56,7 @@ public class SolicitudesController : Controller
         try
         {
             var resultado = await _consultaService.ListarPropiasAsync(
-                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Pagina, MisSolicitudesViewModel.TamanoPagina);
+                identityUserId, filtros.Busqueda, filtros.Estado, filtros.Pagina, MisSolicitudesViewModel.TamanoPagina, filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;
@@ -341,7 +341,7 @@ public class SolicitudesController : Controller
         {
             var resultado = await _consultaService.ListarTodasAsync(
                 filtros.Busqueda, filtros.Tipo, filtros.Origen, filtros.Estado,
-                filtros.Pagina, SolicitudListadoViewModel.TamanoPagina);
+                filtros.Pagina, SolicitudListadoViewModel.TamanoPagina, orden: filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;

@@ -10,6 +10,7 @@
         Busqueda = Model.Busqueda,
         FechaDesde = Model.FechaDesde?.ToString("yyyy-MM-dd"),
         FechaHasta = Model.FechaHasta?.ToString("yyyy-MM-dd"),
+        Orden = Model.Orden,
         Pagina = pagina
     });
 }
@@ -37,6 +38,7 @@
 
     <section class="card overflow" aria-label="Entregas" data-listado data-filas-carga="5">
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <input type="hidden" asp-for="Orden" />
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
                 <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de entrega, asignación, solicitud o equipo, o quien retiró" maxlength="60" data-filtro-texto />
@@ -97,12 +99,12 @@
                         <caption class="visually-hidden">Entregas</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Entrega</th>
-                                <th scope="col">Solicitud</th>
-                                <th scope="col">Equipo</th>
-                                <th scope="col">Quién retiró</th>
-                                <th scope="col">Coordinador</th>
-                                <th scope="col">Fecha de entrega</th>
+                                <partial name="_EncabezadoOrden" model="@(("Entrega", "entrega", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Solicitud", "solicitud", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Equipo", "equipo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Quién retiró", "retira", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Coordinador", "coordinador", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Fecha de entrega", "fecha", Model.Orden, true))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>

@@ -16,7 +16,7 @@ public interface IDiagnosticoService
     /// La página pedida, ajustada al rango válido, o vacía si ningún diagnóstico cumple los filtros.
     /// </returns>
     Task<ResultadoPaginado<DiagnosticoFilaViewModel>> ListarAsync(
-        string? busqueda, TipoDiagnostico? tipo, DictamenTecnico? dictamen, int pagina, int tamanoPagina);
+        string? busqueda, TipoDiagnostico? tipo, DictamenTecnico? dictamen, int pagina, int tamanoPagina, string? orden = null);
 
     /// <summary>
     /// Devuelve los datos de un diagnóstico, del equipo evaluado y del Técnico que lo registró, para consulta.

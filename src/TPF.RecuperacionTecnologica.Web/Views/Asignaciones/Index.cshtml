@@ -11,6 +11,7 @@
         Busqueda = Model.Busqueda,
         Estado = Model.Estado,
         Plazo = Model.Plazo,
+        Orden = Model.Orden,
         Pagina = pagina
     });
 }
@@ -38,6 +39,7 @@
         <partial name="_AyudaEstadosAsignacion" />
 
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <input type="hidden" asp-for="Orden" />
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
                 <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de asignación, solicitud o equipo, marca o solicitante" maxlength="60" data-filtro-texto />
@@ -97,13 +99,13 @@
                         <caption class="visually-hidden">Asignaciones</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Asignación</th>
-                                <th scope="col">Solicitud</th>
-                                <th scope="col">Equipo</th>
-                                <th scope="col">Coordinador</th>
-                                <th scope="col">Asignada</th>
-                                <th scope="col">Retiro hasta</th>
-                                <th scope="col">Estado</th>
+                                <partial name="_EncabezadoOrden" model="@(("Asignación", "asignacion", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Solicitud", "solicitud", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Equipo", "equipo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Coordinador", "coordinador", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Asignada", "asignada", Model.Orden, true))" />
+                                <partial name="_EncabezadoOrden" model="@(("Retiro hasta", "retiro", Model.Orden, true))" />
+                                <partial name="_EncabezadoOrden" model="@(("Estado", "estado", Model.Orden, false))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>

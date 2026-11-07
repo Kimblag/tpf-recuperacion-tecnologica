@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
@@ -30,8 +31,19 @@ public class DiagnosticoService : IDiagnosticoService
         _logger = logger;
     }
 
+    private static readonly IReadOnlyDictionary<string, Expression<Func<Diagnostico, object>>> ColumnasOrden =
+        new Dictionary<string, Expression<Func<Diagnostico, object>>>
+        {
+            ["diagnostico"] = d => d.NroDiagnostico,
+            ["equipo"] = d => d.NroEquipo,
+            ["tipo"] = d => d.TipoDiagnostico,
+            ["tecnico"] = d => d.CodigoTecnico,
+            ["fecha"] = d => d.FechaDiagnostico,
+            ["dictamen"] = d => d.DictamenTecnico
+        };
+
     public async Task<ResultadoPaginado<DiagnosticoFilaViewModel>> ListarAsync(
-        string? busqueda, TipoDiagnostico? tipo, DictamenTecnico? dictamen, int pagina, int tamanoPagina)
+        string? busqueda, TipoDiagnostico? tipo, DictamenTecnico? dictamen, int pagina, int tamanoPagina, string? orden = null)
     {
         var consulta = _context.Diagnosticos.AsNoTracking();
 
@@ -65,8 +77,8 @@ public class DiagnosticoService : IDiagnosticoService
         pagina = Math.Clamp(pagina, 1, totalPaginas);
 
         var elementos = await consulta
-            .OrderByDescending(d => d.FechaDiagnostico)
-            .ThenByDescending(d => d.NroDiagnostico)
+            .Ordenar(orden, ColumnasOrden, d => d.NroDiagnostico,
+                c => c.OrderByDescending(d => d.FechaDiagnostico).ThenByDescending(d => d.NroDiagnostico))
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
             .Select(d => new DiagnosticoFilaViewModel

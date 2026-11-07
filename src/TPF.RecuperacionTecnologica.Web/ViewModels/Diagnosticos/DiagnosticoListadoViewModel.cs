@@ -17,6 +17,8 @@ public class DiagnosticoListadoViewModel
 
     public DictamenTecnico? Dictamen { get; set; }
 
+    public string? Orden { get; set; } = "fecha_desc";
+
     public IReadOnlyList<DiagnosticoFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }

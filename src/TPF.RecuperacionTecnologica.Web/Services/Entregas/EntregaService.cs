@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
@@ -287,8 +288,19 @@ public class EntregaService : IEntregaService
         return ResultadoEntrega.Ok(entrega.NroEntrega);
     }
 
+    private static readonly IReadOnlyDictionary<string, Expression<Func<Entrega, object>>> ColumnasOrden =
+        new Dictionary<string, Expression<Func<Entrega, object>>>
+        {
+            ["entrega"] = e => e.NroEntrega,
+            ["solicitud"] = e => e.NroSolicitud,
+            ["equipo"] = e => e.Equipo.Marca + " " + e.Equipo.Modelo,
+            ["retira"] = e => e.NombreQuienRetira,
+            ["coordinador"] = e => e.Coordinador.Nombre + " " + e.Coordinador.Apellido,
+            ["fecha"] = e => e.FechaEntrega
+        };
+
     public async Task<ResultadoPaginado<EntregaFilaViewModel>> ListarAsync(
-        string? busqueda, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina)
+        string? busqueda, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina, string? orden = null)
     {
         if (desde is not null && hasta is not null && desde.Value.Date > hasta.Value.Date)
         {
@@ -329,8 +341,8 @@ public class EntregaService : IEntregaService
         pagina = Math.Clamp(pagina, 1, totalPaginas);
 
         var filas = await consulta
-            .OrderByDescending(e => e.FechaEntrega)
-            .ThenByDescending(e => e.NroEntrega)
+            .Ordenar(orden, ColumnasOrden, e => e.NroEntrega,
+                c => c.OrderByDescending(e => e.FechaEntrega).ThenByDescending(e => e.NroEntrega))
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
             .Select(e => new
