@@ -86,7 +86,8 @@ public class PersonalService : IPersonalService
                 Apellido = p.Apellido,
                 CorreoElectronico = p.CorreoElectronico,
                 RolAsignado = p.RolAsignado,
-                EstadoPersonal = p.EstadoPersonal
+                EstadoPersonal = p.EstadoPersonal,
+                EsRaiz = p.EsRaiz
             })
             .ToListAsync();
 
@@ -146,7 +147,6 @@ public class PersonalService : IPersonalService
             .FirstOrDefaultAsync();
     }
 
-
     public async Task<IdentityResult> EditarAsync(
         EdicionPersonalViewModel modelo,
         int codigoAdministrador)
@@ -167,17 +167,8 @@ public class PersonalService : IPersonalService
 
         if (personal.EsRaiz)
         {
-            if (modelo.RolAsignado != personal.RolAsignado)
-            {
-                return Error("AdministradorPrincipal",
-                    "No se puede cambiar el rol del Administrador principal.");
-            }
-
-            if (!string.Equals(modelo.CorreoElectronico.Trim(), personal.CorreoElectronico, StringComparison.OrdinalIgnoreCase))
-            {
-                return Error("AdministradorPrincipal",
-                    "No se puede cambiar el correo del Administrador principal.");
-            }
+            return Error("AdministradorPrincipal",
+                "No se puede editar al Administrador principal.");
         }
 
         var correo = modelo.CorreoElectronico.Trim();
@@ -391,7 +382,7 @@ public class PersonalService : IPersonalService
                 "No se pudo completar la inactivación. Intentá nuevamente.");
         }
         // Invalidar las sesiones existentes de Identity
-        
+
         try
         {
             await _userManager.UpdateSecurityStampAsync(identityUser);
@@ -399,7 +390,7 @@ public class PersonalService : IPersonalService
         catch (Exception ex)
         {
             _logger.LogError(ex, "No se pudieron invalidar las sesiones del personal {CodigoPersonal}",
-                personal.CodigoPersonal); 
+                personal.CodigoPersonal);
         }
         // Regristar la operación en la auditoría
 
@@ -420,11 +411,6 @@ public class PersonalService : IPersonalService
         }
         return IdentityResult.Success;
     }
-
-
-
-
-
 
     public async Task<IdentityResult> AltaAsync(AltaPersonalViewModel modelo, int codigoAdministrador)
     {

@@ -26,7 +26,14 @@
             <p class="page-sub">@Html.DisplayFor(m => m.RolAsignado) · Código @Model.Codigo</p>
         </div>
         <div class="page-actions">
-            <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.CodigoPersonal"><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></a>
+            @if (Model.EsRaiz)
+            {
+                <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></button>
+            }
+            else
+            {
+                <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.CodigoPersonal"><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></a>
+            }
             @if (puedeInactivar)
             {
                 if (estaActivo)
@@ -58,7 +65,7 @@
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
-            <div class="alert-body"><div>Este es el Administrador principal. No se puede inactivar y su rol y su correo no se pueden cambiar.</div></div>
+            <div class="alert-body"><div>Este es el Administrador principal. No se puede editar ni inactivar.</div></div>
         </div>
     }
 
@@ -78,38 +85,48 @@
         </div>
     }
 
-    <div class="grid-2">
-        <section class="card">
-            <div class="card-header">
-                <div><h2 class="card-title">Datos de personal</h2></div>
-            </div>
-            <div class="card-body">
-                <dl class="dl">
-                    <dt>DNI</dt>
-                    <dd><span class="mono">@Model.DniFormateado</span></dd>
-                    <dt>Teléfono</dt>
-                    <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
-                </dl>
-            </div>
-        </section>
+    <section class="card">
+        <div class="card-header">
+            <div><h2 class="card-title">Datos de personal</h2></div>
+        </div>
+        <div class="card-body">
+            <dl class="dl">
+                <dt>DNI</dt>
+                <dd><span class="mono">@Model.DniFormateado</span></dd>
+                <dt>Teléfono</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
+                <dt>Correo de acceso</dt>
+                <dd>@Model.CorreoElectronico</dd>
+            </dl>
+        </div>
+    </section>
 
-        <section class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">Cuenta de acceso</h2>
-                    <p class="card-sub">Credenciales de inicio de sesión</p>
+    <section class="card overflow" aria-labelledby="titulo-actividad">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title" id="titulo-actividad">Actividad reciente</h2>
+                <p class="card-sub">@(Model.TotalActividad == 0 ? "Todavía no registró operaciones" : Model.TotalActividad > Model.Actividad.Count ? $"Últimas {Model.Actividad.Count} de {Model.TotalActividad} operaciones registradas" : Model.TotalActividad == 1 ? "1 operación registrada" : $"{Model.TotalActividad} operaciones registradas")</p>
+            </div>
+            @if (Model.TotalActividad > Model.Actividad.Count)
+            {
+                <a class="btn btn-secondary btn-sm" asp-controller="Auditoria" asp-action="Index" asp-route-CodigoPersonal="@Model.Codigo"><partial name="_Icon" model="@("history")" /><span>Ver toda la actividad</span></a>
+            }
+        </div>
+        <div class="card-body flush">
+            @if (Model.Actividad.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("history")" /></span>
+                    <h3>Sin actividad registrada</h3>
+                    <p>Las operaciones que realice en la plataforma aparecerán acá.</p>
                 </div>
-            </div>
-            <div class="card-body">
-                <dl class="dl">
-                    <dt>Correo de acceso</dt>
-                    <dd>@Model.CorreoElectronico</dd>
-                    <dt>Cuenta</dt>
-                    <dd><partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" /></dd>
-                </dl>
-            </div>
-        </section>
-    </div>
+            }
+            else
+            {
+                <partial name="_TablaAuditoria" model="Model.Actividad" view-data='new ViewDataDictionary(ViewData) { ["OcultarPersonal"] = true }' />
+            }
+        </div>
+    </section>
 </div>
 
 @if (estaActivo && puedeInactivar)

@@ -22,6 +22,7 @@ public class PersonalFilaViewModel
     public string Codigo => $"PER-{CodigoPersonal:D4}";
 
     public string NombreCompleto => $"{Nombre} {Apellido}";
+    public bool EsRaiz { get; set; }
 
     // en pantalla se muestra con puntos = 27.884.310
     public string DniFormateado =>

@@ -87,14 +87,17 @@
                             {
                                 <tr>
                                     <td data-label="Código"><a class="mono" asp-action="Detalle" asp-route-id="@fila.CodigoPersonal">@fila.Codigo</a></td>
-                                    <td data-label="Nombre y apellido">@fila.NombreCompleto</td>
+                                    <td data-label="Nombre y apellido">@fila.NombreCompleto @if (fila.EsRaiz) { <span class="tag">Principal</span> }</td>
                                     <td data-label="DNI"><span class="mono">@fila.DniFormateado</span></td>
                                     <td data-label="Correo"><span class="muted">@fila.CorreoElectronico</span></td>
                                     <td data-label="Rol">@Html.DisplayFor(m => fila.RolAsignado)</td>
                                     <td data-label="Estado"><partial name="_EstadoPersonalBadge" model="fila.EstadoPersonal" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.CodigoPersonal" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
-                                        <a class="btn btn-ghost btn-sm btn-icon" asp-action="Editar" asp-route-id="@fila.CodigoPersonal" aria-label="Editar @fila.Codigo"><partial name="_Icon" model="@("edit")" /></a>
+                                        @if (!fila.EsRaiz)
+                                        {
+                                            <a class="btn btn-ghost btn-sm btn-icon" asp-action="Editar" asp-route-id="@fila.CodigoPersonal" aria-label="Editar @fila.Codigo"><partial name="_Icon" model="@("edit")" /></a>
+                                        }
                                     </td>
                                 </tr>
                             }
