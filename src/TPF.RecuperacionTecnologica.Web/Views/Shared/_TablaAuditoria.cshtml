@@ -1,5 +1,7 @@
 @model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria.AuditoriaFilaViewModel>
 @{
+    var ocultarPersonal = ViewData["OcultarPersonal"] is true;
+
     // detalle interno de cada entidad; todas estas pantallas las puede ver el Administrador
     static (string Controlador, string Accion)? DestinoDe(string entidad) => entidad switch
     {
@@ -18,7 +20,10 @@
         <thead>
             <tr>
                 <th scope="col">Fecha y hora</th>
-                <th scope="col">Personal</th>
+                @if (!ocultarPersonal)
+                {
+                    <th scope="col">Personal</th>
+                }
                 <th scope="col">Operación</th>
                 <th scope="col">Entidad</th>
                 <th scope="col">Identificador</th>
@@ -32,7 +37,10 @@
 
                 <tr>
                     <td data-label="Fecha y hora"><span class="nowrap">@Reloj.FechaHora(fila.FechaHora)</span></td>
-                    <td data-label="Personal">@fila.Personal</td>
+                    @if (!ocultarPersonal)
+                    {
+                        <td data-label="Personal">@fila.Personal</td>
+                    }
                     <td data-label="Operación"><span class="tag">@Html.DisplayFor(m => fila.Operacion)</span></td>
                     <td data-label="Entidad">@fila.EtiquetaEntidad</td>
                     <td data-label="Identificador">

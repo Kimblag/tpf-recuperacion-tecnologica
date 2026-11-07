@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
@@ -10,11 +11,15 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 [Authorize(Policy = "SoloAdministrador")]
 public class PersonalController : Controller
 {
-    private readonly IPersonalService _personalService;
+    private const int CantidadActividad = 10;
 
-    public PersonalController(IPersonalService personalService)
+    private readonly IPersonalService _personalService;
+    private readonly IAuditoriaService _auditoriaService;
+
+    public PersonalController(IPersonalService personalService, IAuditoriaService auditoriaService)
     {
         _personalService = personalService;
+        _auditoriaService = auditoriaService;
     }
 
     [HttpGet]
@@ -74,7 +79,7 @@ public class PersonalController : Controller
             return NotFound();
         }
 
-        await MarcarCuentaPropiaAsync(personal);
+        await PrepararDetalleAsync(personal);
 
         return View(personal);
     }
@@ -89,6 +94,11 @@ public class PersonalController : Controller
             return NotFound();
         }
 
+        if (personal.EsRaiz)
+        {
+            return RedirectToAction(nameof(Detalle), new { id });
+        }
+
         return View(new EdicionPersonalViewModel
         {
             CodigoPersonal = personal.CodigoPersonal,
@@ -99,7 +109,6 @@ public class PersonalController : Controller
             RolAsignado = personal.RolAsignado,
             CorreoElectronico = personal.CorreoElectronico,
             EstadoPersonal = personal.EstadoPersonal,
-            EsRaiz = personal.EsRaiz,
         });
     }
 
@@ -144,14 +153,14 @@ public class PersonalController : Controller
             return NotFound();
         }
 
-        await MarcarCuentaPropiaAsync(personal);
+        await PrepararDetalleAsync(personal);
 
         if (!ModelState.IsValid)
         {
             return View(nameof(Detalle), personal);
         }
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+
         var codigoAdministrador = identityUserId is null
             ? null
             : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
@@ -174,8 +183,14 @@ public class PersonalController : Controller
         return RedirectToAction(nameof(Detalle), new { id = modelo.CodigoPersonal });
     }
 
-    private async Task MarcarCuentaPropiaAsync(PersonalDetalleViewModel personal)
+    private async Task PrepararDetalleAsync(PersonalDetalleViewModel personal)
     {
+        var actividad = await _auditoriaService.ConsultarAsync(
+            null, null, null, personal.CodigoPersonal, null, null, 1, CantidadActividad);
+
+        personal.Actividad = actividad.Elementos;
+        personal.TotalActividad = actividad.Total;
+
         var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (identityUserId is null)
