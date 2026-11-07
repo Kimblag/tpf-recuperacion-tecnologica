@@ -34,7 +34,7 @@ public class AsignarEquipoViewModel
     public IReadOnlyList<SolicitudCandidataViewModel> Candidatas { get; set; } = [];
 
     [Display(Name = "Solicitud a asignar")]
-    [Required(ErrorMessage = "Seleccione la solicitud a asignar.")]
+    [Required(ErrorMessage = "Seleccioná la solicitud a asignar.")]
     public int? NroSolicitudSeleccionada { get; set; }
 
     [Display(Name = "Justificación del cambio de prioridad")]

@@ -1,6 +1,6 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.ActivarCuentaViewModel
 @{
-    ViewData["Title"] = "Elegir una contraseña";
+    ViewData["Title"] = "Elegí tu contraseña";
     Layout = "_LayoutAuth";
 
     var enlaceInvalido = ViewData["EnlaceInvalido"] is true;
@@ -12,7 +12,7 @@
 }
 
 <div class="auth-card">
-    <h1>Elegir una contraseña</h1>
+    <h1>Elegí tu contraseña</h1>
 
     @if (enlaceInvalido)
     {
@@ -21,19 +21,19 @@
                 <partial name="_Icon" model="@("alert")" />
                 <div class="alert-body">
                     <div class="alert-title">El enlace venció o no es válido</div>
-                    <div>El enlace de la invitación dura 3 días y se puede usar una sola vez. Para recibir uno nuevo, hay que pedirlo en la sede o usar la opción "Olvidé mi contraseña" con el mismo correo.</div>
+                    <div>El enlace de la invitación dura 3 días y se puede usar una sola vez. Para recibir uno nuevo, pedilo en la sede o usá la opción "¿Olvidaste tu contraseña?" con el mismo correo.</div>
                 </div>
             </div>
         </div>
 
         <div class="auth-links">
-            <a class="link" asp-action="RecuperarContrasena">Olvidé mi contraseña</a>
+            <a class="link" asp-action="RecuperarContrasena">¿Olvidaste tu contraseña?</a>
             <a class="link" asp-action="Login">Ir al inicio de sesión</a>
         </div>
     }
     else
     {
-        <p class="lead">Para activar la cuenta, elegir la contraseña con la que se va a ingresar.</p>
+        <p class="lead">Para activar tu cuenta, elegí la contraseña con la que vas a ingresar.</p>
 
         <form asp-action="ActivarCuenta" method="post" id="f-activar" novalidate>
             <input type="hidden" asp-for="IdUsuario" />

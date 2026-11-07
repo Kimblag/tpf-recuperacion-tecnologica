@@ -57,7 +57,7 @@ public class CuentaController : Controller
             return View(modelo);
         }
 
-        TempData["Mensaje"] = "Cuenta creada correctamente. Ya puede iniciar sesión.";
+        TempData["Mensaje"] = "Cuenta creada correctamente. Ya podés iniciar sesión.";
         return RedirectToAction(nameof(Login));
     }
 
@@ -103,14 +103,14 @@ public class CuentaController : Controller
 
             case ResultadoInicioSesion.CuentaInactiva:
                 ModelState.AddModelError(string.Empty,
-                    "Su cuenta no está habilitada para ingresar. Comuníquese con la organización.");
+                    "Tu cuenta no está habilitada para ingresar. Comunicate con la organización.");
                 break;
 
             default:
                 // credenciales incorrectas y cuenta bloqueada muestran el mismo mensaje
                 // para no revelar qué correos existen
                 ModelState.AddModelError(string.Empty,
-                    "No se pudo iniciar sesión. Verifique sus datos o intente nuevamente más tarde.");
+                    "No se pudo iniciar sesión. Verificá tus datos o intentá nuevamente más tarde.");
                 break;
         }
 
@@ -156,7 +156,7 @@ public class CuentaController : Controller
             (idUsuario, token) => Url.Action(nameof(RestablecerContrasena), "Cuenta", new { idUsuario, token })!,
             $"{Request.Scheme}://{Request.Host}");
 
-        TempData["Mensaje"] = "Si el correo está registrado, le enviamos las instrucciones para restablecer su contraseña.";
+        TempData["Mensaje"] = "Si el correo está registrado, te enviamos las instrucciones para restablecer tu contraseña.";
         return RedirectToAction(nameof(Login));
     }
 
@@ -202,7 +202,7 @@ public class CuentaController : Controller
             return View(modelo);
         }
 
-        TempData["Mensaje"] = "Contraseña actualizada correctamente. Ya puede iniciar sesión.";
+        TempData["Mensaje"] = "Contraseña actualizada correctamente. Ya podés iniciar sesión.";
         return RedirectToAction(nameof(Login));
     }
 
@@ -257,7 +257,7 @@ public class CuentaController : Controller
             return View(modelo);
         }
 
-        TempData["Mensaje"] = "La cuenta quedó activada. Ya se puede iniciar sesión con el correo y la contraseña elegida.";
+        TempData["Mensaje"] = "La cuenta quedó activada. Ya podés iniciar sesión con tu correo y la contraseña que elegiste.";
         return RedirectToAction(nameof(Login));
     }
 

@@ -5,29 +5,29 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Parametros;
 public class ParametrosViewModel
 {
     [Display(Name = "Nombre de la organización")]
-    [Required(ErrorMessage = "Ingrese el nombre de la organización.")]
+    [Required(ErrorMessage = "Ingresá el nombre de la organización.")]
     [StringLength(120, ErrorMessage = "El nombre no puede superar los 120 caracteres.")]
     public string NombreOrganizacion { get; set; } = string.Empty;
 
     [Display(Name = "Zona de cobertura")]
-    [Required(ErrorMessage = "Ingrese la zona de cobertura.")]
+    [Required(ErrorMessage = "Ingresá la zona de cobertura.")]
     [StringLength(150, ErrorMessage = "La zona no puede superar los 150 caracteres.")]
     public string ZonaCobertura { get; set; } = string.Empty;
 
     [Display(Name = "Días límite de retiro")]
-    [Required(ErrorMessage = "Ingrese la cantidad de días.")]
-    [Range(1, 365, ErrorMessage = "Ingrese un número entero entre 1 y 365.")]
+    [Required(ErrorMessage = "Ingresá la cantidad de días.")]
+    [Range(1, 365, ErrorMessage = "Ingresá un número entero entre 1 y 365.")]
     public int? DiasLimiteRetiro { get; set; }
 
     [Display(Name = "Máximo de solicitudes pendientes por persona")]
-    [Required(ErrorMessage = "Ingrese la cantidad máxima de solicitudes.")]
-    [Range(1, 20, ErrorMessage = "Ingrese un número entero entre 1 y 20.")]
+    [Required(ErrorMessage = "Ingresá la cantidad máxima de solicitudes.")]
+    [Range(1, 20, ErrorMessage = "Ingresá un número entero entre 1 y 20.")]
     public int? MaximoSolicitudesPendientes { get; set; }
 
     // el tope real son los días límite de retiro: se valida en ConfiguracionService
     [Display(Name = "Días de aviso antes del vencimiento")]
-    [Required(ErrorMessage = "Ingrese la cantidad de días.")]
-    [Range(1, 365, ErrorMessage = "Ingrese un número entero entre 1 y 365.")]
+    [Required(ErrorMessage = "Ingresá la cantidad de días.")]
+    [Range(1, 365, ErrorMessage = "Ingresá un número entero entre 1 y 365.")]
     public int? DiasAvisoVencimiento { get; set; }
 
     public byte[] RowVersion { get; set; } = [];

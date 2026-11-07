@@ -21,9 +21,9 @@ public class ErrorViewModel
 
     public string Mensaje => Codigo switch
     {
-        404 => "La dirección no existe o la página ya no está disponible. Revisar el enlace o volver al inicio.",
-        403 => "La cuenta con la que se inició sesión no tiene permiso para ver esta página.",
-        429 => "Se hicieron demasiados pedidos en poco tiempo. Esperar un minuto e intentar de nuevo.",
-        _ => "No se pudo completar la operación. Intentar de nuevo en unos minutos. Si el problema sigue, informarlo a soporte con el código de referencia."
+        404 => "La dirección no existe o la página ya no está disponible. Revisá el enlace o volvé al inicio.",
+        403 => "Tu cuenta no tiene permiso para ver esta página.",
+        429 => "Se hicieron demasiados pedidos en poco tiempo. Esperá un minuto e intentá de nuevo.",
+        _ => "No se pudo completar la operación. Intentá de nuevo en unos minutos. Si el problema sigue, informalo a soporte con el código de referencia."
     };
 }

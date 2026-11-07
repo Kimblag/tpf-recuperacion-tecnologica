@@ -445,7 +445,7 @@ public class DiagnosticoService : IDiagnosticoService
             DescartarArchivos(lote);
 
             return Fallo("EquipoModificado",
-                "El equipo cambió mientras se registraba el diagnóstico. Vuelva a abrirlo e intente nuevamente.");
+                "El equipo cambió mientras se registraba el diagnóstico. Volvé a abrirlo e intentá nuevamente.");
         }
         catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
         {
@@ -458,7 +458,7 @@ public class DiagnosticoService : IDiagnosticoService
             DescartarArchivos(lote);
             _logger.LogError(ex, "Falló el registro del diagnóstico {Tipo} del Equipo {NroEquipo}",
                 diagnostico.TipoDiagnostico, equipo.NroEquipo);
-            return Fallo("RegistroFallido", "No se pudo registrar el diagnóstico. Intente nuevamente.");
+            return Fallo("RegistroFallido", "No se pudo registrar el diagnóstico. Intentá nuevamente.");
         }
 
         try

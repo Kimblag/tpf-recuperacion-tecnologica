@@ -6,7 +6,7 @@
     var explicacionEstado = Model.EstadoSolicitud switch
     {
         EstadoSolicitud.Pendiente => "Se está esperando poder asignar el equipo.",
-        EstadoSolicitud.Asignada => "Se asignó el equipo. Hay que retirarlo hasta la fecha indicada.",
+        EstadoSolicitud.Asignada => "Se asignó el equipo. Tenés que retirarlo hasta la fecha indicada.",
         EstadoSolicitud.Completada => "El equipo ya se retiró.",
         EstadoSolicitud.Cerrada => Model.MotivoCierre ?? "La solicitud se cerró.",
         _ => "La solicitud se canceló."
@@ -68,8 +68,6 @@
                     <dd>@Html.DisplayFor(m => m.TipoSolicitante)</dd>
                     <dt>Motivo</dt>
                     <dd>@Model.MotivoSolicitud</dd>
-                    <dt>Origen</dt>
-                    <dd>@Html.DisplayFor(m => m.OrigenSolicitud)</dd>
                     <dt>Fecha de solicitud</dt>
                     <dd>@Reloj.Fecha(Model.FechaSolicitud)</dd>
                     <dt>Estado</dt>

@@ -159,7 +159,7 @@ public class ImagenEquipoService : IImagenEquipoService
             _logger.LogError(ex, "No se pudieron guardar las imágenes del equipo {NroEquipo}", nroEquipo);
             EliminarArchivos(rutas);
 
-            return Rechazo("ErrorAlGuardar", "No se pudieron guardar las imágenes. Intente nuevamente.");
+            return Rechazo("ErrorAlGuardar", "No se pudieron guardar las imágenes. Intentá nuevamente.");
         }
 
         return new ResultadoLoteImagenes { Imagenes = imagenes, Archivos = rutas };
@@ -171,7 +171,7 @@ public class ImagenEquipoService : IImagenEquipoService
     {
         if (archivos.Count == 0)
         {
-            return Fallo("ArchivoRequerido", "Seleccione al menos una imagen.");
+            return Fallo("ArchivoRequerido", "Seleccioná al menos una imagen.");
         }
 
         var estado = await _context.Equipos
@@ -207,7 +207,7 @@ public class ImagenEquipoService : IImagenEquipoService
             _logger.LogError(ex, "No se pudieron registrar las imágenes del equipo {NroEquipo}", nroEquipo);
             DescartarArchivos(lote);
 
-            return Fallo("ErrorAlGuardar", "No se pudieron guardar las imágenes. Intente nuevamente.");
+            return Fallo("ErrorAlGuardar", "No se pudieron guardar las imágenes. Intentá nuevamente.");
         }
 
         await AuditarAsync(codigoTecnico, nroEquipo,
@@ -253,7 +253,7 @@ public class ImagenEquipoService : IImagenEquipoService
         {
             _logger.LogError(ex, "No se pudo eliminar la imagen {NroImagen} del equipo {NroEquipo}", nroImagen, nroEquipo);
 
-            return Fallo("ErrorAlGuardar", "No se pudo eliminar la foto. Intente nuevamente.");
+            return Fallo("ErrorAlGuardar", "No se pudo eliminar la foto. Intentá nuevamente.");
         }
 
         EliminarArchivos([ruta]);
@@ -301,7 +301,7 @@ public class ImagenEquipoService : IImagenEquipoService
         {
             _logger.LogError(ex, "No se pudo actualizar el ángulo de la imagen {NroImagen}", nroImagen);
 
-            return Fallo("ErrorAlGuardar", "No se pudo actualizar el ángulo. Intente nuevamente.");
+            return Fallo("ErrorAlGuardar", "No se pudo actualizar el ángulo. Intentá nuevamente.");
         }
 
         await AuditarAsync(codigoTecnico, nroEquipo, $"Cambio de ángulo de una imagen del equipo {nroEquipo}");

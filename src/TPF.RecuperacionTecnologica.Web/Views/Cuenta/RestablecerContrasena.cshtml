@@ -1,4 +1,4 @@
-﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.RestablecerContrasenaViewModel
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta.RestablecerContrasenaViewModel
 @{
     ViewData["Title"] = "Restablecer contraseña";
     Layout = "_LayoutAuth";
@@ -11,7 +11,7 @@
 
 <div class="auth-card">
     <h1>Restablecer contraseña</h1>
-    <p class="lead">Elija una contraseña nueva para su cuenta.</p>
+    <p class="lead">Elegí una contraseña nueva para tu cuenta.</p>
 
     <form asp-action="RestablecerContrasena" method="post" id="f-restablecer" novalidate>
         <input type="hidden" asp-for="IdUsuario" />

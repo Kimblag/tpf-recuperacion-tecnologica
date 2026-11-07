@@ -91,6 +91,11 @@
     font-size: calc(12px * var(--fs));
 }
 
+.auth-links-centrado {
+    justify-content: center;
+    gap: 6px;
+}
+
 .auth-foot {
     margin: 0;
     font-size: calc(12px * var(--fs));

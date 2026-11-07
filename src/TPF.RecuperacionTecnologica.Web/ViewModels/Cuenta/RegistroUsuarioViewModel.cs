@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
@@ -48,7 +48,7 @@ public class RegistroUsuarioViewModel : IValidatableObject
     public string Password { get; set; } = string.Empty;
 
     [Display(Name = "Confirmar contraseña")]
-    [Required(ErrorMessage = "Debe confirmar la contraseña.")]
+    [Required(ErrorMessage = "Confirmá la contraseña.")]
     [DataType(DataType.Password)]
     [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
     public string ConfirmPassword { get; set; } = string.Empty;

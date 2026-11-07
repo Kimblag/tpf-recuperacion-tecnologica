@@ -17,7 +17,7 @@ public class ActivarCuentaViewModel
     public string Password { get; set; } = string.Empty;
 
     [Display(Name = "Confirmar contraseña")]
-    [Required(ErrorMessage = "Hay que confirmar la contraseña.")]
+    [Required(ErrorMessage = "Confirmá la contraseña.")]
     [DataType(DataType.Password)]
     [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
     public string ConfirmPassword { get; set; } = string.Empty;

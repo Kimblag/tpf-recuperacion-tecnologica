@@ -1,8 +1,6 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.FormularioSolicitudViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
-    var textoOrigen = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)Model.OrigenSolicitud).ToString()).Text;
-
     var valoresPermitidos = Model.TiposPermitidos.Select(t => ((int)t).ToString()).ToHashSet();
 
     var tiposSolicitante = Html.GetEnumSelectList<TipoSolicitante>()
@@ -30,11 +28,11 @@
     <label class="form-label" for="TipoSolicitante">Tipo de solicitante<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
     <div class="select">
         <select asp-for="TipoSolicitante" class="form-select" asp-items="tiposSolicitante" aria-describedby="TipoSolicitante-hint">
-            <option value="">Seleccione…</option>
+            <option value="">Seleccioná…</option>
         </select>
         <partial name="_Icon" model="@("chevron-down")" />
     </div>
-    <div class="form-text" id="TipoSolicitante-hint">Indica si el equipo es para una persona, una escuela o una organización social.</div>
+    <div class="form-text" id="TipoSolicitante-hint">Indicá si el equipo es para vos, tu escuela o una organización social.</div>
     <span asp-validation-for="TipoSolicitante"></span>
 </div>
 <div class="field span-2">
@@ -42,11 +40,6 @@
     <textarea asp-for="MotivoSolicitud" class="form-control" rows="4" maxlength="500" placeholder="Contar para qué se necesita el equipo" aria-describedby="MotivoSolicitud-hint"></textarea>
     <div class="form-text" id="MotivoSolicitud-hint">Con unas pocas líneas alcanza.</div>
     <span asp-validation-for="MotivoSolicitud"></span>
-</div>
-<div class="field">
-    <label class="form-label" for="OrigenVisible">Origen</label>
-    <input id="OrigenVisible" class="form-control" value="@textoOrigen" disabled aria-describedby="Origen-hint" />
-    <div class="form-text" id="Origen-hint">Se completa solo. "Autoservicio" quiere decir que la solicitud se hizo desde la propia cuenta.</div>
 </div>
 <div class="field">
     <label class="form-label" for="FechaVisible">Fecha de solicitud</label>

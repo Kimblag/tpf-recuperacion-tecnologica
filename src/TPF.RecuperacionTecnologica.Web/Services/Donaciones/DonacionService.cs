@@ -198,7 +198,7 @@ public class DonacionService : IDonacionService
         {
             _logger.LogError(ex, "Falló el registro asistido de la donación del Usuario {NroUsuario}", donante.NroUsuario);
             return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.Fallido,
-                "No se pudo registrar la donación. Intentar nuevamente.");
+                "No se pudo registrar la donación. Intentá nuevamente.");
         }
 
         await AuditarAsistidaAsync(TipoOperacionAuditoria.Donacion, codigoCoordinador, nameof(Equipo),
@@ -251,7 +251,7 @@ public class DonacionService : IDonacionService
         {
             _logger.LogError(ex, "Falló el alta asistida del donante y su donación; se revirtió la transacción");
             return ResultadoRegistroDonacion.Fallo(ErrorRegistroDonacion.Fallido,
-                "No se pudo completar el registro. No se guardó nada. Intentar nuevamente.");
+                "No se pudo completar el registro. No se guardó nada. Intentá nuevamente.");
         }
 
         await AuditarAsistidaAsync(TipoOperacionAuditoria.AltaUsuario, codigoCoordinador, nameof(Usuario),
@@ -369,7 +369,7 @@ public class DonacionService : IDonacionService
         {
             // el RowVersion cambió entre la lectura y el guardado
             return Fallo("DonacionModificada",
-                "La donación cambió mientras se guardaba. Vuelva a abrirla e intente nuevamente.");
+                "La donación cambió mientras se guardaba. Volvé a abrirla e intentá nuevamente.");
         }
         catch (DbUpdateException ex) when (EsNumeroSerieDuplicado(ex))
         {
@@ -378,7 +378,7 @@ public class DonacionService : IDonacionService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la edición de la donación del Equipo {NroEquipo}", equipo.NroEquipo);
-            return Fallo("EdicionFallida", "No se pudieron guardar los cambios. Intente nuevamente.");
+            return Fallo("EdicionFallida", "No se pudieron guardar los cambios. Intentá nuevamente.");
         }
 
         // la edición ya está guardada: si falla la auditoría se registra pero no la deshace
@@ -684,12 +684,12 @@ public class DonacionService : IDonacionService
         catch (DbUpdateConcurrencyException)
         {
             return Fallo("DonacionModificada",
-                "La donación cambió mientras se cancelaba. Vuelva a abrirla e intente nuevamente.");
+                "La donación cambió mientras se cancelaba. Volvé a abrirla e intentá nuevamente.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la cancelación de la donación del Equipo {NroEquipo}", equipo.NroEquipo);
-            return Fallo("CancelacionFallida", "No se pudo cancelar la donación. Intente nuevamente.");
+            return Fallo("CancelacionFallida", "No se pudo cancelar la donación. Intentá nuevamente.");
         }
 
         try

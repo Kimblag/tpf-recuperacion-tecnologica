@@ -9,7 +9,7 @@ public class RegistroDonacionViewModel : IValidatableObject
     // los enums son nullable para que el select arranque sin opción elegida y [Required] funcione
     [Display(Name = "Tipo de equipo")]
     [Required(ErrorMessage = "El tipo de equipo es obligatorio.")]
-    [EnumDataType(typeof(TipoEquipo), ErrorMessage = "Seleccione un tipo de equipo válido.")]
+    [EnumDataType(typeof(TipoEquipo), ErrorMessage = "Seleccioná un tipo de equipo válido.")]
     public TipoEquipo? TipoEquipo { get; set; }
 
     [Required(ErrorMessage = "La marca es obligatoria.")]
@@ -27,7 +27,7 @@ public class RegistroDonacionViewModel : IValidatableObject
 
     [Display(Name = "Estado del equipo")]
     [Required(ErrorMessage = "El estado del equipo es obligatorio.")]
-    [EnumDataType(typeof(EstadoInicialDeclarado), ErrorMessage = "Seleccione un estado válido.")]
+    [EnumDataType(typeof(EstadoInicialDeclarado), ErrorMessage = "Seleccioná un estado válido.")]
     public EstadoInicialDeclarado? EstadoInicialDeclarado { get; set; }
 
     [StringLength(500, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]

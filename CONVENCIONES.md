@@ -465,6 +465,18 @@ No confiar únicamente en las validaciones del frontend.
 
 Toda regla crítica debe validarse del lado del servidor.
 
+### Textos de la interfaz
+
+Todo texto que ve una persona (pantallas, mensajes de validación, mensajes de los Services, correos) se redacta en español rioplatense, hablándole directamente a quien lee con voseo ("Ingresá", "Elegí", "tu cuenta"), como lo hace la guía de contenidos de argentina.gob.ar. No se usa "usted" ni "tú", ni construcciones impersonales con "se debe" o "hay que" para dar instrucciones. Los mensajes de error indican qué corregir.
+
+Los botones y títulos pueden quedar en infinitivo ("Iniciar sesión", "Crear cuenta"). Los textos que hablan de una tercera persona ("dio de baja su cuenta") o describen el estado del sistema ("No se puede cambiar") también pueden quedar.
+
+| Mal | Bien |
+|---|---|
+| Ingrese su correo y le enviaremos las instrucciones. | Ingresá tu correo y te enviaremos las instrucciones. |
+| Seleccione un tipo de equipo válido. | Seleccioná un tipo de equipo válido. |
+| Se debe completar el formulario. | Completá el formulario. |
+
 ## 16. Mensajes de commit
 
 Los commits utilizan una categoría en español seguida de `:` y una descripción breve.

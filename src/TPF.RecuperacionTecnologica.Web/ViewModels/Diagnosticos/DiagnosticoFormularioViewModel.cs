@@ -11,7 +11,7 @@ public class DiagnosticoFormularioViewModel
 
     [Display(Name = "Dictamen técnico")]
     [Required(ErrorMessage = "El dictamen técnico es obligatorio.")]
-    [EnumDataType(typeof(DictamenTecnico), ErrorMessage = "Seleccione un dictamen válido.")]
+    [EnumDataType(typeof(DictamenTecnico), ErrorMessage = "Seleccioná un dictamen válido.")]
     public DictamenTecnico? DictamenTecnico { get; set; }
 
     [Display(Name = "Fallas detectadas")]
