@@ -85,20 +85,10 @@
             </div>
             <div class="card-body">
                 <dl class="dl">
-                    <dt>Código</dt>
-                    <dd><span class="mono">@Model.Codigo</span></dd>
                     <dt>DNI</dt>
                     <dd><span class="mono">@Model.DniFormateado</span></dd>
-                    <dt>Nombre</dt>
-                    <dd>@Model.Nombre</dd>
-                    <dt>Apellido</dt>
-                    <dd>@Model.Apellido</dd>
                     <dt>Teléfono</dt>
                     <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
-                    <dt>Rol</dt>
-                    <dd>@Html.DisplayFor(m => m.RolAsignado)</dd>
-                    <dt>Estado</dt>
-                    <dd><partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" /></dd>
                 </dl>
             </div>
         </section>

@@ -37,14 +37,6 @@
                     <dl class="dl">
                         <dt>Donante</dt>
                         <dd><a asp-controller="Usuarios" asp-action="@(esAdministrador ? "Detalle" : "Ficha")" asp-route-id="@Model.NroUsuarioDonante">@Model.Donante</a></dd>
-                        <dt>Número de equipo</dt>
-                        <dd><span class="mono">@Model.CodigoEquipo</span></dd>
-                        <dt>Tipo de equipo</dt>
-                        <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
-                        <dt>Marca</dt>
-                        <dd>@Model.Marca</dd>
-                        <dt>Modelo</dt>
-                        <dd>@Model.Modelo</dd>
                         <dt>@TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.ValidacionesNumeroSerie.EtiquetaPara(Model.TipoEquipo)</dt>
                         <dd>@if (string.IsNullOrWhiteSpace(Model.NumeroSerie)) { <span class="muted">Sin dato</span> } else { <span class="mono">@Model.NumeroSerie</span> }</dd>
                         <dt>Estado inicial declarado</dt>
@@ -53,8 +45,6 @@
                         <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
                         <dt>Fecha de registro</dt>
                         <dd>@Reloj.Fecha(Model.FechaRegistro)</dd>
-                        <dt>Estado actual</dt>
-                        <dd><partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" /></dd>
                     </dl>
                 </div>
             </section>

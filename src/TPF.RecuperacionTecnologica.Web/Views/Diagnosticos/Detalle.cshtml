@@ -45,8 +45,6 @@
                         <dd>@Model.Tecnico <span class="mono">(@Model.CodigoPersonal)</span></dd>
                         <dt>Fecha de diagnóstico</dt>
                         <dd>@Reloj.Fecha(Model.FechaDiagnostico)</dd>
-                        <dt>Tipo de diagnóstico</dt>
-                        <dd>@Html.DisplayFor(m => m.TipoDiagnostico)</dd>
                         @if (Model.NroDiagnosticoRectificado is not null)
                         {
                             <dt>Rectifica</dt>
