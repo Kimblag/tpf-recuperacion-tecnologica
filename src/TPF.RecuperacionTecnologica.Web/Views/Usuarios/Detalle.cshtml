@@ -47,7 +47,7 @@
                     <dt>Teléfono</dt>
                     <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
                     <dt>Fecha de alta</dt>
-                    <dd>@Model.FechaAlta.ToString("dd/MM/yyyy")</dd>
+                    <dd>@Reloj.Fecha(Model.FechaAlta)</dd>
                 </dl>
             </div>
         </section>

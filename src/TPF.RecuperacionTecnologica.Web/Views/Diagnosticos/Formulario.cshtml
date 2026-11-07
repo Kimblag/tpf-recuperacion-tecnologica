@@ -230,7 +230,7 @@
                             <dt>Tipo</dt>
                             <dd>@Html.DisplayFor(m => m.DiagnosticoVigente!.TipoDiagnostico)</dd>
                             <dt>Fecha</dt>
-                            <dd>@Model.DiagnosticoVigente.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
+                            <dd>@Reloj.Fecha(Model.DiagnosticoVigente.FechaDiagnostico)</dd>
                             <dt>Dictamen técnico</dt>
                             <dd><partial name="_DictamenBadge" model="Model.DiagnosticoVigente.DictamenTecnico" /></dd>
                         </dl>

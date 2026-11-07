@@ -1,3 +1,4 @@
+using TPF.RecuperacionTecnologica.Web.ViewModels.Administrador;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Home;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Home;
@@ -20,4 +21,6 @@ public interface IInicioService
     /// </summary>
     /// <returns>El resumen, o null si la cuenta no corresponde a un Coordinador activo.</returns>
     Task<CoordinadorInicioViewModel?> ObtenerInicioCoordinadorAsync(string identityUserId);
+
+    Task<AdministradorInicioViewModel> ObtenerInicioAdministradorAsync();
 }

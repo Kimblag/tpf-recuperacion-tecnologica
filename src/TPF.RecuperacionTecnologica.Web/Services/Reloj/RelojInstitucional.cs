@@ -37,16 +37,23 @@ public class RelojInstitucional : IRelojInstitucional
 
     public DateTime Hoy => FechaLocal(AhoraUtc);
 
-    public DateTime FechaLocal(DateTime instanteUtc) =>
-        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(instanteUtc, DateTimeKind.Utc), _zona).Date;
+    public DateTime FechaLocal(DateTime instanteUtc) => ALocal(instanteUtc).Date;
 
-    public DateTime InicioDeDiaUtc(int diasDesdeHoy = 0)
-    {
-        var diaLocal = DateTime.SpecifyKind(Hoy.AddDays(diasDesdeHoy), DateTimeKind.Unspecified);
+    public DateTime InicioDeDiaUtc(DateTime fechaLocal) =>
+        TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(fechaLocal.Date, DateTimeKind.Unspecified), _zona);
 
-        return TimeZoneInfo.ConvertTimeToUtc(diaLocal, _zona);
-    }
+    public DateTime InicioDeDiaUtc(int diasDesdeHoy = 0) => InicioDeDiaUtc(Hoy.AddDays(diasDesdeHoy));
 
     public bool PlazoVencido(DateTime fechaLimiteRetiro) =>
         DateTime.SpecifyKind(fechaLimiteRetiro, DateTimeKind.Utc) < InicioDeDiaUtc();
+
+    public DateTime InicioDeMesUtc(int mesesDesdeHoy = 0)
+    {
+        var hoy = Hoy;
+
+        return InicioDeDiaUtc(new DateTime(hoy.Year, hoy.Month, 1).AddMonths(mesesDesdeHoy));
+    }
+
+    public DateTime ALocal(DateTime instanteUtc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(instanteUtc, DateTimeKind.Utc), _zona);
 }

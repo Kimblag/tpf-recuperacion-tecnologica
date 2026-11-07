@@ -119,7 +119,7 @@
                                             <div>@solicitud.MarcaYModelo</div>
                                             <div class="card-sub"><partial name="_TipoEquipo" model="solicitud.TipoEquipo" /> · <span class="mono">@solicitud.CodigoEquipo</span></div>
                                         </td>
-                                        <td data-label="Fecha">@solicitud.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                        <td data-label="Fecha">@Reloj.Fecha(solicitud.FechaSolicitud)</td>
                                         <td class="col-actions" data-label="Acciones">
                                             <a class="btn btn-ghost btn-sm" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@solicitud.NroSolicitud" aria-label="Ver solicitud @solicitud.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
                                         </td>
@@ -172,7 +172,7 @@
                                             <td data-label="Solicitante">@asignacion.Solicitante</td>
                                             <td data-label="Equipo">@asignacion.MarcaYModelo</td>
                                             <td data-label="Retiro hasta">
-                                                <div>@asignacion.FechaLimiteRetiro.ToString("dd/MM/yyyy")</div>
+                                                <div>@Reloj.Fecha(asignacion.FechaLimiteRetiro)</div>
                                                 @if (asignacion.PlazoVencido)
                                                 {
                                                     <partial name="_Badge" model="@(("Vencida", "danger"))" />

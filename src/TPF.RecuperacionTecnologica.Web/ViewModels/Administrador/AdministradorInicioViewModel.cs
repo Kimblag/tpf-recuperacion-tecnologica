@@ -20,7 +20,7 @@ public class AdministradorInicioViewModel
 
     public int EntregasDelMes { get; set; }
 
-    public int VariacionEntregasPorcentaje { get; set; }
+    public int? VariacionEntregasPorcentaje { get; set; }
 
     public IReadOnlyList<EquipoEstadoCantidadViewModel> EquiposPorEstado { get; set; } = [];
 

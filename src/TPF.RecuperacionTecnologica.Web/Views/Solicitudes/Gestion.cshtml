@@ -128,7 +128,7 @@
                                     <td data-label="Solicitante">@fila.Solicitante</td>
                                     <td data-label="Tipo de solicitante">@Html.DisplayFor(m => fila.TipoSolicitante)</td>
                                     <td data-label="Origen">@Html.DisplayFor(m => fila.OrigenSolicitud)</td>
-                                    <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaSolicitud)</td>
                                     <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud" aria-label="Ver solicitud @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>

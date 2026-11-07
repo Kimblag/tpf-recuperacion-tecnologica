@@ -26,4 +26,13 @@ public interface IRelojInstitucional
     /// y recién al día siguiente está vencido.
     /// </summary>
     bool PlazoVencido(DateTime fechaLimiteRetiro);
+
+    /// <summary>Convierte un instante UTC a la hora local de la institución.</summary>
+    DateTime ALocal(DateTime instanteUtc);
+
+    /// <summary>Instante UTC en que empieza un día específico en la zona horaria de la institución.</summary>
+    DateTime InicioDeDiaUtc(DateTime fechaLocal);
+
+    /// <summary>Instante UTC en que empieza el primer día de un mes específico en la zona horaria de la institución.</summary>
+    DateTime InicioDeMesUtc(int mesesDesdeHoy = 0);
 }

@@ -80,7 +80,7 @@
                                     <td data-label="Documento"><span class="mono">@fila.DocumentoFormateado</span></td>
                                     <td data-label="Correo"><span class="muted">@fila.CorreoElectronico</span></td>
                                     <td data-label="Teléfono">@fila.Telefono</td>
-                                    <td data-label="Alta">@fila.FechaAlta.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Alta">@Reloj.Fecha(fila.FechaAlta)</td>
                                     <td data-label="Estado"><partial name="_EstadoUsuarioBadge" model="fila.EstadoUsuario" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroUsuario" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>

@@ -52,7 +52,7 @@
                         <dt>Observaciones</dt>
                         <dd>@if (string.IsNullOrWhiteSpace(Model.Observaciones)) { <span class="muted">Sin observaciones</span> } else { @Model.Observaciones }</dd>
                         <dt>Fecha de registro</dt>
-                        <dd>@Model.FechaRegistro.ToString("dd/MM/yyyy")</dd>
+                        <dd>@Reloj.Fecha(Model.FechaRegistro)</dd>
                         <dt>Estado actual</dt>
                         <dd><partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" /></dd>
                     </dl>

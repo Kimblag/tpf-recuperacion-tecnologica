@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Administrador;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Reportes;
 
@@ -11,10 +12,12 @@ public class ReporteService : IReporteService
     private static readonly CultureInfo Espanol = CultureInfo.GetCultureInfo("es-AR");
 
     private readonly ApplicationDbContext _context;
+    private readonly IRelojInstitucional _reloj;
 
-    public ReporteService(ApplicationDbContext context)
+    public ReporteService(ApplicationDbContext context, IRelojInstitucional reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     public async Task<IReadOnlyList<EquipoEstadoCantidadViewModel>> EquiposPorEstadoAsync(DateTime? desde, DateTime? hasta)
@@ -62,20 +65,30 @@ public class ReporteService : IReporteService
             consulta = consulta.Where(e => e.FechaEntrega < fin);
         }
 
-        // la base agrupa por año y mes; los trimestres y años se arman a partir de los meses
-        var porMes = await consulta
-            .GroupBy(e => new { e.FechaEntrega.Year, e.FechaEntrega.Month })
+        // se obtienen todas las fechas de entrega para agruparlas en memoria,
+        // ya que la agrupación depende de la zona horaria institucional
+        var fechas = await consulta.Select(e => e.FechaEntrega).ToListAsync();
+
+        var porMes = fechas
+            .Select(f => _reloj.ALocal(f))
+            .GroupBy(f => new { f.Year, f.Month })
             .Select(g => new { g.Key.Year, g.Key.Month, Cantidad = g.Count() })
-            .ToListAsync();
+            .ToList();
 
         if (porMes.Count == 0 && (inicio is null || fin is null))
         {
             return [];
         }
 
-        // sin rango completo, los períodos van de la primera a la última entrega
-        var primerMes = inicio ?? porMes.Min(m => new DateTime(m.Year, m.Month, 1));
-        var ultimoMes = fin?.AddDays(-1) ?? porMes.Max(m => new DateTime(m.Year, m.Month, 1));
+        // si no se especifica un rango, no devuelve nada
+        if (porMes.Count == 0 && (desde is null || hasta is null))
+        {
+            return [];
+        }
+
+        // utiliza la fecha elegida por la persona y no los l[imites UTC
+        var primerMes = desde?.Date ?? porMes.Min(m => new DateTime(m.Year, m.Month, 1));
+        var ultimoMes = hasta?.Date ?? porMes.Max(m => new DateTime(m.Year, m.Month, 1));
 
         var cantidades = porMes.ToDictionary(m => (m.Year, m.Month), m => m.Cantidad);
         var filas = new List<PeriodoEntregasViewModel>();
@@ -124,14 +137,16 @@ public class ReporteService : IReporteService
     }
 
     // devuelve el inicio del primer día y el inicio del día siguiente al último, para comparar con >= y <
-    private static (DateTime? Inicio, DateTime? Fin) Rango(DateTime? desde, DateTime? hasta)
+    private (DateTime? Inicio, DateTime? Fin) Rango(DateTime? desde, DateTime? hasta)
     {
         if (desde is not null && hasta is not null && desde.Value.Date > hasta.Value.Date)
         {
             throw new ArgumentException("La fecha hasta no puede ser anterior a la fecha desde.", nameof(hasta));
         }
 
-        return (desde?.Date, hasta?.Date.AddDays(1));
+        return (
+            desde is { } d ? _reloj.InicioDeDiaUtc(d) : (DateTime?)null,
+            hasta is { } h ? _reloj.InicioDeDiaUtc(h.AddDays(1)) : (DateTime?)null);
     }
 
     private static string Etiqueta(DateTime mes, AgrupacionPeriodo agrupacion) => agrupacion switch

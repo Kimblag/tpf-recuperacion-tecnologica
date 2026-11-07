@@ -13,7 +13,7 @@
 
     ViewData["Donante"] = string.IsNullOrWhiteSpace(donante) ? "Todavía no se eligió a la persona donante" : donante;
     ViewData["AyudaDonante"] = "Es la persona elegida en la sección anterior.";
-    ViewData["Fecha"] = DateTime.Today.ToString("dd/MM/yyyy");
+    ViewData["Fecha"] = Reloj.Fecha(Reloj.AhoraUtc);
 }
 
 @section Migas {

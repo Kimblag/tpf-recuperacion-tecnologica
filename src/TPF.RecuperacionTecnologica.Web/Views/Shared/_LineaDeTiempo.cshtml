@@ -1,4 +1,4 @@
-﻿@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.HitoViewModel>
+@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.HitoViewModel>
 @using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
 <ol class="timeline">
     @foreach (var hito in Model)
@@ -26,7 +26,7 @@
                 }
                 else if (hito.Fecha is not null)
                 {
-                    <div class="tl-meta">@hito.Fecha.Value.ToString("dd/MM/yyyy")</div>
+                    <div class="tl-meta">@Reloj.Fecha(hito.Fecha.Value)</div>
                 }
                 @if (!string.IsNullOrWhiteSpace(hito.Texto))
                 {

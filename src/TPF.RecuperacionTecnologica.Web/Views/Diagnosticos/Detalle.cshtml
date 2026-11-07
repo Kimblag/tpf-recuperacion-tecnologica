@@ -44,7 +44,7 @@
                         <dt>Técnico</dt>
                         <dd>@Model.Tecnico <span class="mono">(@Model.CodigoPersonal)</span></dd>
                         <dt>Fecha de diagnóstico</dt>
-                        <dd>@Model.FechaDiagnostico.ToString("dd/MM/yyyy")</dd>
+                        <dd>@Reloj.Fecha(Model.FechaDiagnostico)</dd>
                         <dt>Tipo de diagnóstico</dt>
                         <dd>@Html.DisplayFor(m => m.TipoDiagnostico)</dd>
                         @if (Model.NroDiagnosticoRectificado is not null)

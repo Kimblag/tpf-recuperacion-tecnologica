@@ -105,7 +105,7 @@
                         <dt>Aviso de vencimiento</dt>
                         <dd>@Model.DiasAvisoVencimiento días antes</dd>
                         <dt>Última modificación</dt>
-                        <dd>@(Model.UltimaModificacion ?? "—")</dd>
+                        <dd>@(Model.FechaUltimaModificacion is { } ultima ? $"{Reloj.Fecha(ultima)} · PER-{Model.CodigoAdministrador:D4}" : "—")</dd>
                     </dl>
                 </div>
             </section>

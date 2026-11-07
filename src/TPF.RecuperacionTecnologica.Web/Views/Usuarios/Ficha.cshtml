@@ -67,7 +67,7 @@
                 <dt>Teléfono</dt>
                 <dd>@(string.IsNullOrWhiteSpace(Model.Telefono) ? "—" : Model.Telefono)</dd>
                 <dt>Fecha de alta</dt>
-                <dd>@Model.FechaAlta.ToString("dd/MM/yyyy")</dd>
+                <dd>@Reloj.Fecha(Model.FechaAlta)</dd>
                 <dt>Estado de la cuenta</dt>
                 <dd><partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" /></dd>
             </dl>
@@ -110,7 +110,7 @@
                                 <tr>
                                     <td data-label="Solicitud"><span class="mono">@fila.Codigo</span></td>
                                     <td data-label="Equipo">@fila.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /> · <span class="mono">@fila.CodigoEquipo</span></div></td>
-                                    <td data-label="Fecha">@fila.FechaSolicitud.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaSolicitud)</td>
                                     <td data-label="Estado"><partial name="_EstadoSolicitudBadge" model="fila.EstadoSolicitud" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-controller="Solicitudes" asp-action="DetalleInterno" asp-route-id="@fila.NroSolicitud" aria-label="Ver solicitud @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
@@ -160,7 +160,7 @@
                                 <tr>
                                     <td data-label="Número"><span class="mono">@fila.CodigoEquipo</span></td>
                                     <td data-label="Equipo">@fila.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></div></td>
-                                    <td data-label="Registro">@fila.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Registro">@Reloj.Fecha(fila.FechaRegistro)</td>
                                     <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-controller="Donaciones" asp-action="DetalleInterno" asp-route-id="@fila.NroEquipo" aria-label="Ver donación del equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>

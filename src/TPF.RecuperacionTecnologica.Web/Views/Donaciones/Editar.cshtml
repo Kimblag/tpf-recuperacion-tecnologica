@@ -1,11 +1,11 @@
-﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.EdicionDonacionViewModel
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.EdicionDonacionViewModel
 @{
     ViewData["Title"] = "Editar donación";
 
     ViewData["Donante"] = Model.Donante;
     ViewData["NroEquipo"] = Model.CodigoEquipo;
     ViewData["AyudaNroEquipo"] = "Asignado al registrar la donación.";
-    ViewData["Fecha"] = Model.FechaRegistro.ToString("dd/MM/yyyy");
+    ViewData["Fecha"] = Reloj.Fecha(Model.FechaRegistro);
 }
 
 @section Migas {

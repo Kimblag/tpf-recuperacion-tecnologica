@@ -7,9 +7,8 @@ using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Asignaciones;
-using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
-using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
@@ -23,18 +22,21 @@ public class AsignacionesController : Controller
     private readonly IConfiguracionService _configuracionService;
     private readonly IAsignacionService _asignacionService;
     private readonly ILogger<AsignacionesController> _logger;
+    private readonly IRelojInstitucional _reloj;
 
     public AsignacionesController(
         IDonacionService donacionService,
         IPersonalService personalService,
         IConfiguracionService configuracionService,
         IAsignacionService asignacionService,
+        IRelojInstitucional reloj,
         ILogger<AsignacionesController> logger)
     {
         _donacionService = donacionService;
         _personalService = personalService;
         _configuracionService = configuracionService;
         _asignacionService = asignacionService;
+        _reloj = reloj;
         _logger = logger;
     }
 
@@ -174,7 +176,7 @@ public class AsignacionesController : Controller
             ?? DiasLimiteRetiroPorDefecto;
 
         formulario.Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}";
-        formulario.FechaAsignacion = DateTime.Today;
+        formulario.FechaAsignacion = _reloj.AhoraUtc;
         formulario.DiasLimiteRetiro = diasLimiteRetiro;
 
         if (formulario.NroEquipo is null)

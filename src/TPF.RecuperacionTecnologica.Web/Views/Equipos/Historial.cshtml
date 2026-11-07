@@ -38,7 +38,7 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">Evaluación vigente</h2>
-                    <p class="card-sub">@Html.DisplayFor(m => vigente.TipoDiagnostico) · @vigente.CodigoDiagnostico · @vigente.FechaDiagnostico.ToString("dd/MM/yyyy")</p>
+                    <p class="card-sub">@Html.DisplayFor(m => vigente.TipoDiagnostico) · @vigente.CodigoDiagnostico · @Reloj.Fecha(vigente.FechaDiagnostico)</p>
                 </div>
                 <partial name="_DictamenBadge" model="vigente.DictamenTecnico" />
             </div>
@@ -95,7 +95,7 @@
                                 <tr class="@(fila.EsVigente ? "fila-vigente" : "fila-historica")">
                                     <td data-label="Diagnóstico"><span class="mono">@fila.CodigoDiagnostico</span></td>
                                     <td data-label="Tipo"><span class="nowrap"><partial name="_Icon" model="@Icono(fila.TipoDiagnostico)" /> @Html.DisplayFor(m => fila.TipoDiagnostico)</span></td>
-                                    <td data-label="Fecha">@fila.FechaDiagnostico.ToString("dd/MM/yyyy")</td>
+                                    <td data-label="Fecha">@Reloj.Fecha(fila.FechaDiagnostico)</td>
                                     <td data-label="Técnico"><span class="mono">@fila.CodigoPersonal</span></td>
                                     <td data-label="Dictamen"><partial name="_DictamenBadge" model="fila.DictamenTecnico" /></td>
                                     <td data-label="Evaluación">

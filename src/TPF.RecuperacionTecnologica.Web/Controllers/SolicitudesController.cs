@@ -5,6 +5,7 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Catalogo;
@@ -21,6 +22,7 @@ public class SolicitudesController : Controller
     private readonly ISolicitudConsultaService _consultaService;
     private readonly IUsuarioService _usuarioService;
     private readonly ILogger<SolicitudesController> _logger;
+    private readonly IRelojInstitucional _reloj;
 
     public SolicitudesController(
         IDonacionService donacionService,
@@ -28,6 +30,7 @@ public class SolicitudesController : Controller
         ISolicitudService solicitudService,
         ISolicitudConsultaService consultaService,
         IUsuarioService usuarioService,
+        IRelojInstitucional reloj,
         ILogger<SolicitudesController> logger)
     {
         _donacionService = donacionService;
@@ -35,6 +38,7 @@ public class SolicitudesController : Controller
         _solicitudService = solicitudService;
         _consultaService = consultaService;
         _usuarioService = usuarioService;
+        _reloj = reloj;
         _logger = logger;
     }
 
@@ -159,7 +163,7 @@ public class SolicitudesController : Controller
         formulario.MarcaYModelo = equipo?.MarcaYModelo ?? string.Empty;
         formulario.Solicitante = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
         formulario.OrigenSolicitud = OrigenSolicitud.Autoservicio;
-        formulario.FechaSolicitud = DateTime.Today;
+        formulario.FechaSolicitud = _reloj.AhoraUtc;
         formulario.EstadoSolicitud = EstadoSolicitud.Pendiente;
         formulario.TiposPermitidos = TiposPermitidosDeLaSesion();
 
@@ -190,8 +194,8 @@ public class SolicitudesController : Controller
         _ => "No se puede registrar la solicitud"
     };
 
-   private static void AplicarImpedimento(
-        FormularioSolicitudViewModel formulario, ErrorRegistroSolicitud error, string mensaje, int? nroSolicitudExistente = null)
+    private static void AplicarImpedimento(
+         FormularioSolicitudViewModel formulario, ErrorRegistroSolicitud error, string mensaje, int? nroSolicitudExistente = null)
     {
         formulario.ImpedimentoTitulo = TituloDelImpedimento(error);
         formulario.ImpedimentoMensaje = mensaje;
@@ -563,7 +567,7 @@ public class SolicitudesController : Controller
         var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
 
         formulario.Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}";
-        formulario.FechaSolicitud = DateTime.Today;
+        formulario.FechaSolicitud = _reloj.AhoraUtc;
 
         var selector = formulario.Equipo;
 

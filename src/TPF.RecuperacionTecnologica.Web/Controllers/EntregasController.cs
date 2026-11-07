@@ -6,6 +6,7 @@ using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Entregas;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
@@ -20,17 +21,20 @@ public class EntregasController : Controller
     private readonly IEntregaService _entregaService;
     private readonly IConfiguracionService _configuracionService;
     private readonly ILogger<EntregasController> _logger;
+    private readonly IRelojInstitucional _reloj;
 
     public EntregasController(
         IPersonalService personalService,
         IEntregaService entregaService,
         IConfiguracionService configuracionService,
+        IRelojInstitucional reloj,
         ILogger<EntregasController> logger)
     {
         _personalService = personalService;
         _entregaService = entregaService;
         _configuracionService = configuracionService;
         _logger = logger;
+        _reloj = reloj;
     }
 
     [HttpGet]
@@ -168,7 +172,7 @@ public class EntregasController : Controller
         var nombre = User.FindFirst(ClaimsSesion.Nombre)?.Value ?? string.Empty;
 
         formulario.Coordinador = codigoPersonal is null ? nombre : $"{nombre} · PER-{codigoPersonal:D4}";
-        formulario.FechaEntrega = DateTime.Today;
+        formulario.FechaEntrega = _reloj.AhoraUtc;
 
         if (formulario.Situacion == SituacionEntrega.ElegirAsignacion)
         {
