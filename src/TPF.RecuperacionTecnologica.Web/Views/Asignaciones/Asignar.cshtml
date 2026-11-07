@@ -96,11 +96,11 @@
                             <div class="card-header">
                                 <div>
                                     <h2 class="card-title" id="titulo-candidatas">Solicitudes pendientes para este equipo</h2>
-                                    <p class="card-sub">Elegí la solicitud a asignar. Ya viene seleccionada la sugerida.</p>
+                                    <p class="card-sub">@(Model.Candidatas.Count == 1 ? "1 solicitud pendiente." : $"{Model.Candidatas.Count} solicitudes pendientes.") Elegí la que querés asignar; ya viene seleccionada la sugerida.</p>
                                 </div>
                             </div>
                             <div class="card-body flush">
-                                <fieldset class="queue border-0 m-0 p-0" style="min-width:0">
+                                <fieldset class="queue queue-scroll border-0 m-0 p-0" style="min-width:0">
                                     <legend class="visually-hidden">Solicitud a asignar</legend>
                                     @for (var i = 0; i < Model.Candidatas.Count; i++)
                                     {
@@ -134,8 +134,6 @@
                             <div class="card-body">
                                 <div class="stack" style="gap:16px">
                                     <dl class="dl">
-                                        <dt>Equipo</dt>
-                                        <dd><span class="mono">@Model.CodigoEquipo</span> · @Model.MarcaYModelo</dd>
                                         <dt>Coordinador</dt>
                                         <dd>@Model.Coordinador</dd>
                                         <dt>Fecha de asignación</dt>
@@ -182,14 +180,8 @@
                                     <partial name="_GaleriaEquipo" model="@((Model.Fotos, Model.TipoEquipo, Model.MarcaYModelo, Model.MarcaYModelo))" />
                                 </div>
                                 <dl class="dl">
-                                    <dt>Número</dt>
-                                    <dd><span class="mono">@Model.CodigoEquipo</span></dd>
                                     <dt>Tipo</dt>
                                     <dd><partial name="_TipoEquipo" model="Model.TipoEquipo" /></dd>
-                                    <dt>Marca y modelo</dt>
-                                    <dd>@Model.MarcaYModelo</dd>
-                                    <dt>Estado</dt>
-                                    <dd><partial name="_EstadoEquipoBadge" model="estadoDisponible" /></dd>
                                 </dl>
                             </div>
                         </section>
