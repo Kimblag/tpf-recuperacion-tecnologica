@@ -88,7 +88,16 @@ public class NotificacionService : INotificacionService
         }
     }
 
-    public async Task AvisarCierrePorEntregaAsync(IEnumerable<int> nroSolicitudes)
+    public Task AvisarCierrePorEntregaAsync(IEnumerable<int> nroSolicitudes) =>
+    AvisarCierreDeSolicitudesAsync(nroSolicitudes, PlantillaNotificacion.CierrePorEntrega, "entrega");
+
+    public Task AvisarCierrePorBajaAsync(IEnumerable<int> nroSolicitudes) =>
+        AvisarCierreDeSolicitudesAsync(nroSolicitudes, PlantillaNotificacion.CierrePorBaja, "baja");
+
+    private async Task AvisarCierreDeSolicitudesAsync(
+        IEnumerable<int> nroSolicitudes,
+        Func<string, string, int, string, string?, string> plantilla,
+        string causa)
     {
         var ids = nroSolicitudes.ToList();
 
@@ -118,14 +127,14 @@ public class NotificacionService : INotificacionService
             foreach (var fila in filas.Where(f => !string.IsNullOrWhiteSpace(f.CorreoElectronico)))
             {
                 EnviarEnSegundoPlano(fila.CorreoElectronico, $"Solicitud cerrada - {organizacion}",
-                    PlantillaNotificacion.CierrePorEntrega(
+                    plantilla(
                         organizacion, NombreDe(fila.RazonSocial, fila.Nombre, fila.Apellido), fila.NroSolicitud, fila.Equipo, enlace),
                     $"la solicitud {fila.NroSolicitud}");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "No se pudo preparar el aviso de cierre por entrega de las Solicitudes {Solicitudes}", ids);
+            _logger.LogError(ex, "No se pudo preparar el aviso de cierre por {Causa} de las Solicitudes {Solicitudes}", causa, ids);
         }
     }
 

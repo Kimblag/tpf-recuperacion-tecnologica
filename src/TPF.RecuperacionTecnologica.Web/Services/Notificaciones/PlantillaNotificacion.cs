@@ -52,6 +52,16 @@ public static class PlantillaNotificacion
             "Se puede registrar una nueva solicitud para otro de los equipos disponibles.",
             enlace, "Ver mis solicitudes");
 
+    public static string CierrePorBaja(
+        string organizacion, string solicitante, int nroSolicitud, string equipo, string? enlace) =>
+        Armar(
+            organizacion, "Solicitud cerrada", solicitante,
+            [
+                $"El equipo <strong>{Codificar(equipo)}</strong> no se pudo recuperar y ya no se puede asignar, por lo que la solicitud <strong>{nroSolicitud}</strong> quedó cerrada."
+            ],
+            "Podés registrar una nueva solicitud para otro de los equipos disponibles.",
+            enlace, "Ver mis solicitudes");
+
     private static string Codificar(string texto) => WebUtility.HtmlEncode(texto);
 
     private static string Armar(

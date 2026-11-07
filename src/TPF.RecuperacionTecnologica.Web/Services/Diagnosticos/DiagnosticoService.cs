@@ -1,11 +1,12 @@
-using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
+using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Equipos;
@@ -17,17 +18,20 @@ public class DiagnosticoService : IDiagnosticoService
     private readonly ApplicationDbContext _context;
     private readonly IAuditoriaService _auditoriaService;
     private readonly IImagenEquipoService _imagenEquipoService;
+    private readonly INotificacionService _notificaciones;
     private readonly ILogger<DiagnosticoService> _logger;
 
     public DiagnosticoService(
         ApplicationDbContext context,
         IAuditoriaService auditoriaService,
         IImagenEquipoService imagenEquipoService,
+        INotificacionService notificaciones,
         ILogger<DiagnosticoService> logger)
     {
         _context = context;
         _auditoriaService = auditoriaService;
         _imagenEquipoService = imagenEquipoService;
+        _notificaciones = notificaciones;
         _logger = logger;
     }
 
@@ -275,11 +279,11 @@ public class DiagnosticoService : IDiagnosticoService
         equipo.FechaUltimaModificacion = fecha;
     }
 
-    private async Task<int> CerrarSolicitudesPendientesAsync(Equipo equipo, DateTime fecha)
+    private async Task<List<int>> CerrarSolicitudesPendientesAsync(Equipo equipo, DateTime fecha)
     {
         if (equipo.EstadoEquipo != EstadoEquipo.Baja)
         {
-            return 0;
+            return [];
         }
 
         var pendientes = await _context.Solicitudes
@@ -295,7 +299,7 @@ public class DiagnosticoService : IDiagnosticoService
             solicitud.MotivoCierre = "El equipo no se pudo recuperar y ya no se puede asignar.";
         }
 
-        return pendientes.Count;
+        return pendientes.Select(s => s.NroSolicitud).ToList();
     }
 
     public async Task<IdentityResult> RegistrarInicialAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -388,8 +392,15 @@ public class DiagnosticoService : IDiagnosticoService
         var cambioNumeroSerie = AplicarNumeroSerie(equipo, modelo.NumeroSerie);
         _context.Diagnosticos.Add(diagnostico);
 
-        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico",
-            ArmarComplemento(cerradas, lote.Imagenes.Count, cambioNumeroSerie), lote);
+        var resultado = await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico, "Segundo diagnóstico",
+            ArmarComplemento(cerradas.Count, lote.Imagenes.Count, cambioNumeroSerie), lote);
+
+        if (resultado.Succeeded)
+        {
+            await _notificaciones.AvisarCierrePorBajaAsync(cerradas);
+        }
+
+        return resultado;
     }
 
     public async Task<IdentityResult> RegistrarRectificacionAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo)
@@ -438,9 +449,16 @@ public class DiagnosticoService : IDiagnosticoService
         var cambioNumeroSerie = AplicarNumeroSerie(equipo, modelo.NumeroSerie);
         _context.Diagnosticos.Add(diagnostico);
 
-        return await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico,
+        var resultado = await GuardarYAuditarAsync(equipo, diagnostico, codigoTecnico,
             $"Rectificación del diagnóstico {vigente.NroDiagnostico}",
-            ArmarComplemento(cerradas, lote.Imagenes.Count, cambioNumeroSerie), lote);
+            ArmarComplemento(cerradas.Count, lote.Imagenes.Count, cambioNumeroSerie), lote);
+
+        if (resultado.Succeeded)
+        {
+            await _notificaciones.AvisarCierrePorBajaAsync(cerradas);
+        }
+
+        return resultado;
     }
 
     // el diagnóstico, el cambio de estado y las fotos se guardan juntos en una sola operación
