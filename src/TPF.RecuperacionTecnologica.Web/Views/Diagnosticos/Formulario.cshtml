@@ -196,17 +196,13 @@
             </div>
         </form>
 
-        <div class="stack">
+        <div class="stack col-fija">
             <section class="card">
                 <div class="card-header">
                     <div><h2 class="card-title">Equipo declarado</h2></div>
                 </div>
                 <div class="card-body">
                     <dl class="dl">
-                        <dt>Tipo de equipo</dt>
-                        <dd>@Html.DisplayFor(m => m.TipoEquipo)</dd>
-                        <dt>Marca y modelo</dt>
-                        <dd>@Model.MarcaYModelo</dd>
                         <dt>@Model.EtiquetaNumeroSerie</dt>
                         <dd>@(string.IsNullOrWhiteSpace(Model.NumeroSerieDeclarado) ? "—" : Model.NumeroSerieDeclarado)</dd>
                         <dt>Estado declarado</dt>
