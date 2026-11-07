@@ -774,6 +774,10 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<string>("MotivoCierre")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<string>("MotivoSolicitud")
                         .IsRequired()
                         .HasMaxLength(500)

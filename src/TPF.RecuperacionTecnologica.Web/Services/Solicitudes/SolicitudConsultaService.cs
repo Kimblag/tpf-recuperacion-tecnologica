@@ -2,6 +2,7 @@
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
 
@@ -12,17 +13,19 @@ public class SolicitudConsultaService : ISolicitudConsultaService
     private sealed record DatosSolicitud(
         int NroSolicitud, OrigenSolicitud Origen, DateTime FechaSolicitud, EstadoSolicitud Estado,
         DateTime? FechaCancelacion, string? MotivoCancelacion, DateTime? FechaCierre,
-        bool CanceladaPorCoordinador);
+        bool CanceladaPorCoordinador, string? MotivoCierre);
 
     private sealed record DatosAsignacion(
         int NroSolicitud, DateTime FechaAsignacion, DateTime FechaLimiteRetiro,
         DateTime? FechaLiberacion, string? MotivoLiberacion);
 
     private readonly ApplicationDbContext _context;
+    private readonly IRelojInstitucional _reloj;
 
-    public SolicitudConsultaService(ApplicationDbContext context)
+    public SolicitudConsultaService(ApplicationDbContext context, IRelojInstitucional reloj)
     {
         _context = context;
+        _reloj = reloj;
     }
 
     private static string NombreSolicitante(string? razonSocial, string? nombre, string? apellido) =>
@@ -177,6 +180,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 s.FechaCancelacion,
                 s.MotivoCancelacion,
                 s.FechaCierre,
+                s.MotivoCierre,
                 s.CodigoCoordinadorCancelacion,
                 s.NroUsuario,
                 s.Usuario.RazonSocial,
@@ -208,7 +212,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
         var solicitud = new DatosSolicitud(
             nroSolicitud, datos.OrigenSolicitud, datos.FechaSolicitud, datos.EstadoSolicitud,
             datos.FechaCancelacion, datos.MotivoCancelacion, datos.FechaCierre,
-            datos.CodigoCoordinadorCancelacion is not null);
+            datos.CodigoCoordinadorCancelacion is not null, datos.MotivoCierre);
 
         return new SolicitudDetalleViewModel
         {
@@ -225,11 +229,12 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             OrigenSolicitud = datos.OrigenSolicitud,
             FechaSolicitud = datos.FechaSolicitud,
             EstadoSolicitud = datos.EstadoSolicitud,
-            Hitos = ArmarHitos(solicitud, asignacion, fechaEntrega)
+            Hitos = ArmarHitos(solicitud, asignacion, fechaEntrega),
+            MotivoCierre = datos.MotivoCierre,
         };
     }
 
-    private static List<HitoViewModel> ArmarHitos(DatosSolicitud solicitud, DatosAsignacion? asignacion, DateTime? fechaEntrega)
+    private List<HitoViewModel> ArmarHitos(DatosSolicitud solicitud, DatosAsignacion? asignacion, DateTime? fechaEntrega)
     {
         var hitos = new List<HitoViewModel>
         {
@@ -284,7 +289,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
                 Fecha = solicitud.FechaCierre,
                 Icono = "clock",
                 Estado = EstadoHito.Cancelado,
-                Texto = "El equipo se entregó a otra solicitud."
+                Texto = solicitud.MotivoCierre ?? "La solicitud se cerró."
             });
 
             return hitos;
@@ -297,7 +302,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             Icono = "swap",
             Estado = EstadoHito.Completado,
             Texto = solicitud.Estado == EstadoSolicitud.Asignada && asignacion is not null
-                ? $"Hay que retirarlo hasta el {asignacion.FechaLimiteRetiro:dd/MM/yyyy}."
+                ? $"Hay que retirarlo hasta el {_reloj.Fecha(asignacion.FechaLimiteRetiro)}."
                 : null
         });
 

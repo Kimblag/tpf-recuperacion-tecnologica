@@ -248,6 +248,7 @@ public class EntregaService : IEntregaService
                 otra.EstadoSolicitud = EstadoSolicitud.Cerrada;
                 otra.FechaCierre = ahora;
                 otra.FechaUltimaModificacion = ahora;
+                otra.MotivoCierre = "El equipo se entregó a otra solicitud.";
             }
 
             await _context.SaveChangesAsync();

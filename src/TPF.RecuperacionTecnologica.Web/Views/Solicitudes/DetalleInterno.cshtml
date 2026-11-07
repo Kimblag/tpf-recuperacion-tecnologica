@@ -18,7 +18,7 @@
         EstadoSolicitud.Pendiente => "Se está esperando poder asignar el equipo.",
         EstadoSolicitud.Asignada => "Se asignó el equipo. Hay que retirarlo hasta la fecha indicada.",
         EstadoSolicitud.Completada => "El equipo ya se retiró.",
-        EstadoSolicitud.Cerrada => "Pasó el plazo para retirarlo y la solicitud se cerró.",
+        EstadoSolicitud.Cerrada => Model.MotivoCierre ?? "La solicitud se cerró.",
         _ => "La solicitud se canceló."
     };
 }

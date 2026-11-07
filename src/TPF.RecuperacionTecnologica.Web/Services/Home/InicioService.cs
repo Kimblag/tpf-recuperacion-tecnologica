@@ -421,7 +421,7 @@ public class InicioService : IInicioService
     private static string NombreDe(string? razonSocial, string? nombre, string? apellido) =>
         !string.IsNullOrWhiteSpace(razonSocial) ? razonSocial : $"{nombre} {apellido}".Trim();
 
-    private static ActividadViewModel EventoDeAuditoria(
+    private ActividadViewModel EventoDeAuditoria(
         TipoOperacionAuditoria tipo, string entidad, int id, string? detalle, DateTime fecha)
     {
         var icono = tipo switch
@@ -454,7 +454,7 @@ public class InicioService : IInicioService
         _ => "Funcional"
     };
 
-    private static ActividadViewModel Evento(
+    private ActividadViewModel Evento(
         string icono, string textoAntes, string codigo, string textoDespues, DateTime fecha,
         string? detalle = null, bool exito = false) => new()
         {
@@ -462,7 +462,7 @@ public class InicioService : IInicioService
             TextoAntes = textoAntes,
             Codigo = codigo,
             TextoDespues = textoDespues,
-            Detalle = detalle is null ? fecha.ToString("dd/MM/yyyy") : $"{fecha:dd/MM/yyyy} · {detalle}",
+            Detalle = detalle is null ? _reloj.Fecha(fecha) : $"{_reloj.Fecha(fecha)} · {detalle}",
             EsExito = exito
         };
 

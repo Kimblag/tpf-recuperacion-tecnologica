@@ -35,10 +35,11 @@ public class Solicitud
     public DateTime? FechaCancelacion { get; set; }
 
     public DateTime? FechaCierre { get; set; }
+    public string? MotivoCierre { get; set; }
 
     public int? CodigoCoordinadorCancelacion { get; set; }
-    
+
     public Personal? CoordinadorCancelacion { get; set; }
-    
+
     public byte[] RowVersion { get; set; } = [];
 }
