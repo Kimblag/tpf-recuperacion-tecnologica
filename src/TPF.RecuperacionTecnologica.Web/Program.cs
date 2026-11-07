@@ -3,11 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using System.Threading.RateLimiting;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Asignaciones;
-using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
-using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
@@ -17,7 +16,9 @@ using TPF.RecuperacionTecnologica.Web.Services.Email;
 using TPF.RecuperacionTecnologica.Web.Services.Entregas;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
 using TPF.RecuperacionTecnologica.Web.Services.Home;
+using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.Services.Reportes;
 using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
@@ -147,6 +148,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
         ? CookieSecurePolicy.SameAsRequest
         : CookieSecurePolicy.Always;
+
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
@@ -154,7 +158,37 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.Zero;
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("cuenta", contexto =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            contexto.Connection.RemoteIpAddress?.ToString() ?? "desconocida",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
 var app = builder.Build();
+app.Use(async (contexto, siguiente) =>
+{
+    var cabeceras = contexto.Response.Headers;
+
+    cabeceras["X-Content-Type-Options"] = "nosniff";
+    cabeceras["X-Frame-Options"] = "DENY";
+    cabeceras["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    cabeceras["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+    cabeceras["Content-Security-Policy-Report-Only"] =
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src https://fonts.gstatic.com; img-src 'self' data: blob:; object-src 'none'; " +
+        "base-uri 'self'; form-action 'self'";
+
+    await siguiente();
+});
 
 using (var scope = app.Services.CreateScope())
 {
@@ -199,7 +233,7 @@ if (!string.IsNullOrWhiteSpace(imagenes.CarpetaFisica))
 }
 
 app.UseRouting();
-
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

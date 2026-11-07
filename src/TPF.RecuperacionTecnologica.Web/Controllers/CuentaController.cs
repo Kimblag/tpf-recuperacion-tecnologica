@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -8,7 +9,6 @@ using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
-[AllowAnonymous]
 public class CuentaController : Controller
 {
     private readonly IUsuarioService _usuarioService;
@@ -23,6 +23,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult Registrar()
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -34,7 +35,9 @@ public class CuentaController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> Registrar(RegistroUsuarioViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -59,6 +62,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -71,7 +75,9 @@ public class CuentaController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> Login(LoginViewModel modelo, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
@@ -112,6 +118,7 @@ public class CuentaController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
@@ -122,6 +129,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult RecuperarContrasena()
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -134,6 +142,8 @@ public class CuentaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [AllowAnonymous]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> RecuperarContrasena(RecuperarContrasenaViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -151,6 +161,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult RestablecerContrasena(string? idUsuario = null, string? token = null)
     {
         if (string.IsNullOrEmpty(idUsuario) || string.IsNullOrEmpty(token))
@@ -162,7 +173,9 @@ public class CuentaController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> RestablecerContrasena(RestablecerContrasenaViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -194,6 +207,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> ActivarCuenta(string? idUsuario = null, string? token = null)
     {
         // se revisa el enlace al abrir la pantalla, para no pedir una contraseña que después no se va a poder guardar
@@ -209,6 +223,8 @@ public class CuentaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [AllowAnonymous]
+    [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> ActivarCuenta(ActivarCuentaViewModel modelo)
     {
         if (!ModelState.IsValid)
@@ -307,6 +323,7 @@ public class CuentaController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public IActionResult AccesoDenegado()
     {
         return View();
