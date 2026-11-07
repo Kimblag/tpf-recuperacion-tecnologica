@@ -1,13 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 public class RestablecerContrasenaViewModel
 {
-    [Required(ErrorMessage = "El enlace no es válido o venció. Solicite uno nuevo.")]
+    [Required(ErrorMessage = "El enlace no es válido o venció. Pedí uno nuevo.")]
     public string IdUsuario { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El enlace no es válido o venció. Solicite uno nuevo.")]
+    [Required(ErrorMessage = "El enlace no es válido o venció. Pedí uno nuevo.")]
     public string Token { get; set; } = string.Empty;
 
     [Display(Name = "Contraseña nueva")]
@@ -17,7 +17,7 @@ public class RestablecerContrasenaViewModel
     public string Password { get; set; } = string.Empty;
 
     [Display(Name = "Confirmar contraseña nueva")]
-    [Required(ErrorMessage = "Debe confirmar la contraseña.")]
+    [Required(ErrorMessage = "Confirmá la contraseña.")]
     [DataType(DataType.Password)]
     [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
     public string ConfirmPassword { get; set; } = string.Empty;

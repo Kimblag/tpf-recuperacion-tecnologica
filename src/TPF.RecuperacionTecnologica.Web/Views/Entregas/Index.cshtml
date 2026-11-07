@@ -63,21 +63,21 @@
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
-                    <h3>Revisar los filtros</h3>
-                    <p>Corregir el rango de fechas para ver las entregas.</p>
+                    <h3>Revisá los filtros</h3>
+                    <p>Corregí el rango de fechas para ver las entregas.</p>
                     <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Ver todas</a>
                 </div>
             }
             else if (Model.ErrorAlCargar)
             {
-                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las entregas. Se puede intentar de nuevo en unos minutos.")" />
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las entregas. Intentá de nuevo en unos minutos.")" />
             }
             else if (Model.Filas.Count == 0 && Model.HayFiltros)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
                     <h3>No hay entregas que coincidan</h3>
-                    <p>Probar con otra búsqueda o con otro rango de fechas.</p>
+                    <p>Probá con otra búsqueda o con otro rango de fechas.</p>
                     <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Ver todas</a>
                 </div>
             }

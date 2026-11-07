@@ -85,21 +85,21 @@
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
-                    <h3>Revisar los filtros</h3>
-                    <p>Corregir los filtros marcados para ver el registro de auditoría.</p>
+                    <h3>Revisá los filtros</h3>
+                    <p>Corregí los filtros marcados para ver el registro de auditoría.</p>
                     <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
                 </div>
             }
             else if (Model.ErrorAlCargar)
             {
-                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener el registro de auditoría. Se puede intentar de nuevo en unos minutos.")" />
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener el registro de auditoría. Intentá de nuevo en unos minutos.")" />
             }
             else if (Model.Filas.Count == 0 && Model.HayFiltros)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
                     <h3>Sin operaciones para los filtros elegidos</h3>
-                    <p>Probar con un rango de fechas más amplio o quitar algún filtro.</p>
+                    <p>Probá con un rango de fechas más amplio o quitá algún filtro.</p>
                     <a class="btn btn-secondary" asp-action="Index" data-muestra-carga>Limpiar filtros</a>
                 </div>
             }

@@ -1,4 +1,4 @@
-﻿namespace TPF.RecuperacionTecnologica.Web.Services.Usuarios;
+namespace TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 
 using Microsoft.AspNetCore.Identity;
 
@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity;
 public class IdentityErrorDescriberEs : IdentityErrorDescriber
 {
     public override IdentityError DefaultError() =>
-        new() { Code = nameof(DefaultError), Description = "Ocurrió un error inesperado. Intente nuevamente." };
+        new() { Code = nameof(DefaultError), Description = "Ocurrió un error inesperado. Intentá nuevamente." };
 
     public override IdentityError PasswordTooShort(int length) =>
         new() { Code = nameof(PasswordTooShort), Description = $"La contraseña debe tener al menos {length} caracteres." };
@@ -29,10 +29,10 @@ public class IdentityErrorDescriberEs : IdentityErrorDescriber
         new() { Code = nameof(PasswordRequiresNonAlphanumeric), Description = "La contraseña debe incluir al menos un símbolo." };
 
     public override IdentityError DuplicateEmail(string email) =>
-        new() { Code = nameof(DuplicateEmail), Description = "No se pudo completar el registro con los datos ingresados. Si ya tiene una cuenta, inicie sesión o recupere su contraseña." };
+        new() { Code = nameof(DuplicateEmail), Description = "No se pudo completar el registro con los datos ingresados. Si ya tenés una cuenta, iniciá sesión o recuperá tu contraseña." };
 
     public override IdentityError DuplicateUserName(string userName) =>
-        new() { Code = nameof(DuplicateUserName), Description = "No se pudo completar el registro con los datos ingresados. Si ya tiene una cuenta, inicie sesión o recupere su contraseña." };
+        new() { Code = nameof(DuplicateUserName), Description = "No se pudo completar el registro con los datos ingresados. Si ya tenés una cuenta, iniciá sesión o recuperá tu contraseña." };
 
     public override IdentityError InvalidEmail(string? email) =>
         new() { Code = nameof(InvalidEmail), Description = "El correo electrónico no es válido." };

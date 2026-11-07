@@ -17,7 +17,7 @@
         <div class="page-head">
             <div>
                 <div class="h-id"><h1 tabindex="-1">Registrar entrega</h1></div>
-                <p class="page-sub">Elegir la asignación vigente cuyo equipo se está entregando</p>
+                <p class="page-sub">Elegí la asignación vigente cuyo equipo estás entregando</p>
             </div>
         </div>
 
@@ -42,7 +42,7 @@
                             <partial name="_Icon" model="@("info")" />
                             <div class="alert-body">
                                 <div class="alert-title">@(string.IsNullOrWhiteSpace(Model.Busqueda) ? "No hay asignaciones vigentes" : "No se encontró ninguna asignación vigente")</div>
-                                <div>@(string.IsNullOrWhiteSpace(Model.Busqueda) ? "Para entregar un equipo primero hay que asignarlo a una solicitud." : "Revisar el dato ingresado.")</div>
+                                <div>@(string.IsNullOrWhiteSpace(Model.Busqueda) ? "Para entregar un equipo, primero tenés que asignarlo a una solicitud." : "Revisá el dato ingresado.")</div>
                             </div>
                         </div>
                     }
@@ -90,7 +90,7 @@
             <partial name="_Icon" model="@("x-circle")" />
             <div class="alert-body">
                 <div class="alert-title">No se encontró la asignación</div>
-                <div>El número no corresponde a ninguna asignación. Elegir una de las vigentes.</div>
+                <div>El número no corresponde a ninguna asignación. Elegí una de las vigentes.</div>
             </div>
         </div>
 

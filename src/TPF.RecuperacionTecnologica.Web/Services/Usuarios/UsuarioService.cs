@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
@@ -35,7 +35,7 @@ public class UsuarioService : IUsuarioService
         IdentityResult.Failed(new IdentityError
         {
             Code = "RegistroDuplicado",
-            Description = "No se pudo completar el registro con los datos ingresados. Si ya tiene una cuenta, inicie sesión o recupere su contraseña."
+            Description = "No se pudo completar el registro con los datos ingresados. Si ya tenés una cuenta, iniciá sesión o recuperá tu contraseña."
         });
 
     public async Task<IdentityResult> RegistrarAsync(RegistroUsuarioViewModel modelo)
@@ -98,7 +98,7 @@ public class UsuarioService : IUsuarioService
             return IdentityResult.Failed(new IdentityError
             {
                 Code = "AltaFallida",
-                Description = "No se pudo completar el registro. Intente nuevamente."
+                Description = "No se pudo completar el registro. Intentá nuevamente."
             });
         }
 
@@ -234,7 +234,7 @@ public class UsuarioService : IUsuarioService
             return IdentityResult.Failed(new IdentityError
             {
                 Code = "EdicionFallida",
-                Description = "No se pudieron guardar los cambios. Intente nuevamente."
+                Description = "No se pudieron guardar los cambios. Intentá nuevamente."
             });
         }
 
@@ -286,7 +286,7 @@ public class UsuarioService : IUsuarioService
             return IdentityResult.Failed(new IdentityError
             {
                 Code = "EdicionFallida",
-                Description = "No se pudieron guardar los cambios. Intente nuevamente."
+                Description = "No se pudieron guardar los cambios. Intentá nuevamente."
             });
         }
 
@@ -418,7 +418,7 @@ public class UsuarioService : IUsuarioService
                 errores.Add(new IdentityError
                 {
                     Code = "EquiposComprometidos",
-                    Description = "No puede darse de baja porque tiene equipos donados que la organización ya recibió o tiene comprometidos."
+                    Description = "No podés darte de baja porque tenés equipos donados que la organización ya recibió o tiene comprometidos."
                 });
             }
 
@@ -432,7 +432,7 @@ public class UsuarioService : IUsuarioService
                 errores.Add(new IdentityError
                 {
                     Code = "SolicitudesAbiertas",
-                    Description = "No puede darse de baja porque tiene solicitudes pendientes o asignadas."
+                    Description = "No podés darte de baja porque tenés solicitudes pendientes o asignadas."
                 });
             }
 
@@ -456,7 +456,7 @@ public class UsuarioService : IUsuarioService
             return IdentityResult.Failed(new IdentityError
             {
                 Code = "BajaFallida",
-                Description = "No se pudo dar de baja la cuenta. Intente nuevamente."
+                Description = "No se pudo dar de baja la cuenta. Intentá nuevamente."
             });
         }
 

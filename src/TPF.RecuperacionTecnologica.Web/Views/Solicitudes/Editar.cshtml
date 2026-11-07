@@ -4,7 +4,6 @@
     ViewData["Title"] = "Editar solicitud";
 
     var textoTipo = Html.GetEnumSelectList<TipoSolicitante>().First(i => i.Value == ((int)Model.TipoSolicitante).ToString()).Text;
-    var textoOrigen = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)Model.OrigenSolicitud).ToString()).Text;
 }
 
 @section Migas {
@@ -29,7 +28,7 @@
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
-            <div class="alert-body"><div>Solo se puede cambiar el motivo, y solo mientras la solicitud está Pendiente. El equipo y el tipo de solicitante no se pueden cambiar: para pedir otro equipo hay que hacer una nueva solicitud.</div></div>
+            <div class="alert-body"><div>Solo se puede cambiar el motivo, y solo mientras la solicitud está Pendiente. El equipo y el tipo de solicitante no se pueden cambiar: para pedir otro equipo, hacé una nueva solicitud.</div></div>
         </div>
 
         <form class="card" method="post" asp-action="Editar" asp-route-id="@Model.NroSolicitud" id="f-solicitud-editar" novalidate aria-labelledby="f-solicitud-titulo">
@@ -68,10 +67,6 @@
                             <textarea asp-for="MotivoSolicitud" class="form-control" rows="4" maxlength="500" placeholder="Contar para qué se necesita el equipo" aria-describedby="MotivoSolicitud-hint"></textarea>
                             <div class="form-text" id="MotivoSolicitud-hint">Con unas pocas líneas alcanza.</div>
                             <span asp-validation-for="MotivoSolicitud"></span>
-                        </div>
-                        <div class="field">
-                            <label class="form-label" for="OrigenVisible">Origen</label>
-                            <input id="OrigenVisible" class="form-control" value="@textoOrigen" disabled />
                         </div>
                         <div class="field">
                             <label class="form-label" for="FechaVisible">Fecha de solicitud</label>

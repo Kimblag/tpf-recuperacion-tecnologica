@@ -20,10 +20,10 @@ public class AsignacionService : IAsignacionService
     private const string MotivoLiberacionAutomatica = "Venció el plazo de retiro.";
 
     private const string MensajeConcurrenciaLiberacion =
-        "La asignación cambió mientras se liberaba: otra persona pudo entregarla o liberarla. No se guardó nada. Volver a abrir el detalle e intentar nuevamente.";
+        "La asignación cambió mientras se liberaba: otra persona pudo entregarla o liberarla. No se guardó nada. Volvé a abrir el detalle e intentá nuevamente.";
 
     private const string MensajeConcurrencia =
-        "La solicitud o el equipo cambiaron mientras se asignaba: otra persona pudo asignar el equipo, o la solicitud se editó o se canceló. No se guardó nada. Volver a abrir la pantalla e intentar nuevamente.";
+        "La solicitud o el equipo cambiaron mientras se asignaba: otra persona pudo asignar el equipo, o la solicitud se editó o se canceló. No se guardó nada. Volvé a abrir la pantalla e intentá nuevamente.";
 
     private readonly ApplicationDbContext _context;
     private readonly IConfiguracionService _configuracionService;
@@ -426,7 +426,7 @@ public class AsignacionService : IAsignacionService
             if (solicitud is null || solicitud.EstadoSolicitud != EstadoSolicitud.Pendiente)
             {
                 return ResultadoAsignacion.Fallo(ErrorAsignacion.SolicitudNoPendiente,
-                    "La solicitud ya no está Pendiente: pudo asignarse o cancelarse. Volver a abrir la pantalla.");
+                    "La solicitud ya no está Pendiente: pudo asignarse o cancelarse. Volvé a abrir la pantalla.");
             }
 
             if (solicitud.NroEquipoRequerido != nroEquipo)
@@ -441,7 +441,7 @@ public class AsignacionService : IAsignacionService
             if (cambiaPrioridad && justificacion is null)
             {
                 return ResultadoAsignacion.Fallo(ErrorAsignacion.JustificacionRequerida,
-                    "Para asignar una solicitud distinta de la sugerida hay que justificar el cambio de prioridad.");
+                    "Para asignar una solicitud distinta de la sugerida, justificá el cambio de prioridad.");
             }
 
             var ahora = DateTime.UtcNow;
@@ -479,7 +479,7 @@ public class AsignacionService : IAsignacionService
         {
             _logger.LogError(ex, "Falló la asignación del Equipo {NroEquipo} a la Solicitud {NroSolicitud}", nroEquipo, nroSolicitud);
             return ResultadoAsignacion.Fallo(ErrorAsignacion.Fallido,
-                "No se pudo registrar la asignación. No se guardó nada. Intentar nuevamente.");
+                "No se pudo registrar la asignación. No se guardó nada. Intentá nuevamente.");
         }
 
         try
@@ -674,7 +674,7 @@ public class AsignacionService : IAsignacionService
         {
             _logger.LogError(ex, "Falló la liberación de la Asignación {NroAsignacion}", nroAsignacion);
             return ResultadoAsignacion.Fallo(ErrorAsignacion.Fallido,
-                "No se pudo liberar la asignación. No se guardó nada. Intentar nuevamente.");
+                "No se pudo liberar la asignación. No se guardó nada. Intentá nuevamente.");
         }
 
         return ResultadoAsignacion.Ok(nroAsignacion);

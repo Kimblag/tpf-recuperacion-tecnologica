@@ -16,7 +16,7 @@ public static class PlantillaNotificacion
             organizacion, "Equipo asignado", solicitante,
             [
                 $"Se asignó el equipo <strong>{Codificar(equipo)}</strong> a la solicitud <strong>{nroSolicitud}</strong>.",
-                $"El equipo puede retirarse hasta el <strong>{fechaLimite:dd/MM/yyyy}</strong>, inclusive. Para retirarlo hay que presentarse en la sede con el documento de identidad de la persona titular de la solicitud."
+                $"Podés retirar el equipo hasta el <strong>{fechaLimite:dd/MM/yyyy}</strong>, inclusive. Para retirarlo, presentate en la sede con el documento de identidad de la persona titular de la solicitud."
             ],
             "Pasado ese día, la asignación se libera y el equipo queda disponible para otras personas.",
             enlace, "Ver mis solicitudes");

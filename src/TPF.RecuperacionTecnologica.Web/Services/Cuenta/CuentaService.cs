@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -168,7 +168,7 @@ public class CuentaService : ICuentaService
             var organizacion = await ObtenerNombreOrganizacionAsync();
 
             var destinatario = identityUser.Email!;
-            var asunto = $"Restablecer su contraseña - {organizacion}";
+            var asunto = $"Restablecé tu contraseña - {organizacion}";
             var cuerpo = PlantillaRecuperacionContrasena.Armar(enlace, organizacion);
             var idCuenta = identityUser.Id;
 
@@ -293,7 +293,7 @@ public class CuentaService : ICuentaService
         var enlaceInvalido = IdentityResult.Failed(new IdentityError
         {
             Code = "InvalidToken",
-            Description = "El enlace no es válido o ya venció. Solicite uno nuevo."
+            Description = "El enlace no es válido o ya venció. Pedí uno nuevo."
         });
 
         var identityUser = await _userManager.FindByIdAsync(idUsuario);

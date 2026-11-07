@@ -16,7 +16,7 @@
     var explicacionEstado = Model.EstadoSolicitud switch
     {
         EstadoSolicitud.Pendiente => "Se está esperando poder asignar el equipo.",
-        EstadoSolicitud.Asignada => "Se asignó el equipo. Hay que retirarlo hasta la fecha indicada.",
+        EstadoSolicitud.Asignada => "Se asignó el equipo. Tenés que retirarlo hasta la fecha indicada.",
         EstadoSolicitud.Completada => "El equipo ya se retiró.",
         EstadoSolicitud.Cerrada => Model.MotivoCierre ?? "La solicitud se cerró.",
         _ => "La solicitud se canceló."

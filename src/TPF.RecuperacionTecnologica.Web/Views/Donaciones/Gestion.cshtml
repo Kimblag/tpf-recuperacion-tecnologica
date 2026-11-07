@@ -63,14 +63,14 @@
         <div class="card-body flush">
             @if (Model.ErrorAlCargar)
             {
-                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las donaciones. Se puede intentar de nuevo en unos minutos.")" />
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las donaciones. Intentá de nuevo en unos minutos.")" />
             }
             else if (Model.Filas.Count == 0 && Model.HayFiltros)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
                     <h3>No se encontraron donaciones</h3>
-                    <p>Probar con otra búsqueda o quitar algún filtro.</p>
+                    <p>Probá con otra búsqueda o quitá algún filtro.</p>
                     <a class="btn btn-secondary" asp-action="Gestion" data-muestra-carga>Limpiar filtros</a>
                 </div>
             }

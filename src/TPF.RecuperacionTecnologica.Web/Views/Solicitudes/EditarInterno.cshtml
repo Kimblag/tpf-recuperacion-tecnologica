@@ -29,7 +29,7 @@
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
-            <div class="alert-body"><div>Solo se puede cambiar el motivo, y solo mientras la solicitud está Pendiente. El equipo y el tipo de solicitante no se pueden cambiar: para pedir otro equipo hay que hacer una nueva solicitud.</div></div>
+            <div class="alert-body"><div>Solo se puede cambiar el motivo, y solo mientras la solicitud está Pendiente. El equipo y el tipo de solicitante no se pueden cambiar: para pedir otro equipo, hacé una nueva solicitud.</div></div>
         </div>
 
         <form class="card" method="post" asp-action="EditarInterno" asp-route-id="@Model.NroSolicitud" id="f-solicitud-editar" novalidate aria-labelledby="f-solicitud-titulo">

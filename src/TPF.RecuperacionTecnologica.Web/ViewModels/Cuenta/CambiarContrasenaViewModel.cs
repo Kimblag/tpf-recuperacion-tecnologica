@@ -17,7 +17,7 @@ public class CambiarContrasenaViewModel
     public string Password { get; set; } = string.Empty;
 
     [Display(Name = "Confirmar contraseña nueva")]
-    [Required(ErrorMessage = "Hay que confirmar la contraseña nueva.")]
+    [Required(ErrorMessage = "Confirmá la contraseña nueva.")]
     [DataType(DataType.Password)]
     [Compare(nameof(Password), ErrorMessage = "Las contraseñas no coinciden.")]
     public string ConfirmPassword { get; set; } = string.Empty;

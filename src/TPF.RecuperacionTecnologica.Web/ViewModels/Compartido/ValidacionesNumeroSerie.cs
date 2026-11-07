@@ -43,7 +43,7 @@ public static partial class ValidacionesNumeroSerie
             else if (!CumpleLuhn(numero))
             {
                 yield return new ValidationResult(
-                    "El IMEI no es válido. Revisar que los 15 dígitos estén bien copiados.", [nombreCampo]);
+                    "El IMEI no es válido. Revisá que los 15 dígitos estén bien copiados.", [nombreCampo]);
             }
 
             yield break;

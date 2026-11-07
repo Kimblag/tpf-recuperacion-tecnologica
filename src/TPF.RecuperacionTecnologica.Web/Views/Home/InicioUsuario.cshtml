@@ -1,4 +1,4 @@
-﻿@model TPF.RecuperacionTecnologica.Web.ViewModels.Home.InicioUsuarioViewModel
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Home.InicioUsuarioViewModel
 @{
     ViewData["Title"] = "Inicio";
 
@@ -14,7 +14,7 @@
     <div class="page-head">
         <div>
             <div class="h-id"><h1 tabindex="-1">Inicio</h1></div>
-            <p class="page-sub">Puede donar equipos y solicitar los que necesite, cuando quiera.</p>
+            <p class="page-sub">Podés donar equipos y solicitar los que necesites, cuando quieras.</p>
         </div>
     </div>
 
@@ -31,7 +31,7 @@
             <span class="act-ic ok action-ic"><partial name="_Icon" model="@("laptop")" /></span>
             <span class="action-text">
                 <span class="card-title d-block">Solicitar un equipo</span>
-                <span class="card-sub d-block">Mire los equipos disponibles y pida el que necesite, para usted, su escuela o su organización.</span>
+                <span class="card-sub d-block">Mirá los equipos disponibles y pedí el que necesites, para vos, tu escuela o tu organización.</span>
             </span>
             <span class="link nowrap">Ver catálogo <partial name="_Icon" model="@("arrow-right")" /></span>
         </a>
@@ -40,7 +40,7 @@
     <div class="g-metrics">
         <partial name="_Metrica" model="@(("Donaciones activas", "gift", "i-ok", Model.DonacionesActivas.ToString(), chipDonaciones, "warn", "Todavía en proceso"))" />
         <partial name="_Metrica" model="@(("Solicitudes pendientes", "tray", "i-info", Model.SolicitudesPendientes.ToString(), "", "", "Esperando que le asignen el equipo"))" />
-        <partial name="_Metrica" model="@(("Equipos disponibles", "check-circle", "i-ok", Model.EquiposDisponibles.ToString(), "Catálogo", "", "Puede solicitarlos ahora"))" />
+        <partial name="_Metrica" model="@(("Equipos disponibles", "check-circle", "i-ok", Model.EquiposDisponibles.ToString(), "Catálogo", "", "Podés solicitarlos ahora"))" />
         <partial name="_Metrica" model="@(("Entregas recibidas", "truck", "i-ok", Model.EntregasRecibidas.ToString(), "", "", "Equipos que ya retiró"))" />
     </div>
 
@@ -108,7 +108,7 @@
                     <div class="state">
                         <span class="state-ic"><partial name="_Icon" model="@("tray")" /></span>
                         <h3>Todavía no realizó solicitudes</h3>
-                        <p>Elija un equipo desde “Solicitar un equipo” y aparecerá aquí.</p>
+                        <p>Elegí un equipo desde “Solicitar un equipo” y aparecerá aquí.</p>
                     </div>
                 }
                 else
@@ -148,7 +148,7 @@
         <div class="card-header">
             <div>
                 <h2 class="card-title">Actividad reciente</h2>
-                <p class="card-sub">Historial de sus movimientos</p>
+                <p class="card-sub">Historial de tus movimientos</p>
             </div>
         </div>
         <div class="card-body">

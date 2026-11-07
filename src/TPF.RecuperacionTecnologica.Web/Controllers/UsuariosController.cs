@@ -90,7 +90,7 @@ public class UsuariosController : Controller
             ResultadoReenvioInvitacion.Enviada => "Se envió una nueva invitación por correo. El enlace vence en 3 días.",
             ResultadoReenvioInvitacion.Espera => "Ya se envió una invitación hace menos de 2 minutos. Esperar un momento antes de volver a enviarla.",
             ResultadoReenvioInvitacion.YaActiva => "La cuenta ya eligió su contraseña, así que no hace falta otra invitación.",
-            _ => "La cuenta está dada de baja y no se le puede enviar una invitación."
+            _ => "La cuenta está dada de baja y no se puede enviar una invitación."
         };
 
         // solo el envío correcto usa el mensaje verde; los demás se muestran como aviso en la ficha
@@ -153,7 +153,7 @@ public class UsuariosController : Controller
 
         await _cuentaService.RefrescarSesionAsync(identityUserId);
 
-        TempData["Mensaje"] = "Sus datos se actualizaron correctamente.";
+        TempData["Mensaje"] = "Tus datos se actualizaron correctamente.";
         return RedirectToAction(nameof(Perfil));
     }
 
@@ -198,7 +198,7 @@ public class UsuariosController : Controller
         }
 
         await _cuentaService.CerrarSesionAsync(identityUserId);
-        TempData["Mensaje"] = "Su cuenta fue dada de baja.";
+        TempData["Mensaje"] = "Tu cuenta fue dada de baja.";
         return RedirectToAction("Login", "Cuenta");
     }
 }

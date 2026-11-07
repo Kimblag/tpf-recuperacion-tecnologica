@@ -5,17 +5,17 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Reportes;
 public class GenerarReporteViewModel : IValidatableObject
 {
     [Display(Name = "Fecha desde")]
-    [Required(ErrorMessage = "Ingrese la fecha desde.")]
+    [Required(ErrorMessage = "Ingresá la fecha desde.")]
     [DataType(DataType.Date)]
     public DateTime? Desde { get; set; }
 
     [Display(Name = "Fecha hasta")]
-    [Required(ErrorMessage = "Ingrese la fecha hasta.")]
+    [Required(ErrorMessage = "Ingresá la fecha hasta.")]
     [DataType(DataType.Date)]
     public DateTime? Hasta { get; set; }
 
     [Display(Name = "Tipo de informe")]
-    [Required(ErrorMessage = "Elija el tipo de informe.")]
+    [Required(ErrorMessage = "Elegí el tipo de informe.")]
     public TipoReporte? Tipo { get; set; }
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

@@ -98,12 +98,12 @@ public class ConfiguracionService : IConfiguracionService
         catch (DbUpdateConcurrencyException)
         {
             return Fallo("ConfiguracionModificada",
-                "Otra persona modificó los parámetros mientras se editaban. Volver a abrir la pantalla e intentar nuevamente.");
+                "Otra persona modificó los parámetros mientras se editaban. Volvé a abrir la pantalla e intentá nuevamente.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la modificación de los parámetros institucionales");
-            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentar nuevamente.");
+            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentá nuevamente.");
         }
 
         try

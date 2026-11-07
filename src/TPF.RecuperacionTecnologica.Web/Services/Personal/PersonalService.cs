@@ -283,7 +283,7 @@ public class PersonalService : IPersonalService
                 modelo.CodigoPersonal);
 
             return Error("EdicionFallida",
-                "No se pudo completar la edición. Intente nuevamente.");
+                "No se pudo completar la edición. Intentá nuevamente.");
         }
 
         if (rolAnterior != personal.RolAsignado)
@@ -374,7 +374,7 @@ public class PersonalService : IPersonalService
                 "Error al inactivar el personal con código {CodigoPersonal}",
                 modelo.CodigoPersonal);
             return Error("InactivacionFallida",
-                "No se pudo completar la inactivación. Intente nuevamente.");
+                "No se pudo completar la inactivación. Intentá nuevamente.");
         }
         // Invalidar las sesiones existentes de Identity
         
@@ -456,14 +456,14 @@ public class PersonalService : IPersonalService
                 _logger.LogError("No se pudo asignar el rol {Rol} a la cuenta del Personal: {Errores}",
                     nombreRol, string.Join(", ", rolAsignado.Errors.Select(e => e.Description)));
                 await EliminarCuentaAsync(identityUser);
-                return Error("RolNoAsignado", "No se pudo asignar el rol a la cuenta. Intente nuevamente.");
+                return Error("RolNoAsignado", "No se pudo asignar el rol a la cuenta. Intentá nuevamente.");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la asignación del rol {Rol}; se elimina la cuenta creada", nombreRol);
             await EliminarCuentaAsync(identityUser);
-            return Error("RolNoAsignado", "No se pudo asignar el rol a la cuenta. Intente nuevamente.");
+            return Error("RolNoAsignado", "No se pudo asignar el rol a la cuenta. Intentá nuevamente.");
         }
 
         // 4. registro de Personal; si falla se elimina la cuenta
@@ -490,7 +490,7 @@ public class PersonalService : IPersonalService
             _logger.LogError(ex, "Falló el alta del Personal; se elimina la cuenta de Identity creada");
             _context.Entry(personal).State = EntityState.Detached;
             await EliminarCuentaAsync(identityUser);
-            return Error("AltaFallida", "No se pudo completar el alta. Intente nuevamente.");
+            return Error("AltaFallida", "No se pudo completar el alta. Intentá nuevamente.");
         }
 
         // 5. auditoría una vez hecha el alta: si falla, no se informa error

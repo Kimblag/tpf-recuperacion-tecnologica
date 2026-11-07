@@ -22,7 +22,7 @@ public class RegistroDonacionAsistidaViewModel : RegistroDonacionViewModel
             if (Usuario.NroUsuario is null)
             {
                 yield return new ValidationResult(
-                    "Buscar y seleccionar un usuario activo antes de registrar la donación.",
+                    "Buscá y seleccioná un usuario activo antes de registrar la donación.",
                     [$"{nameof(Usuario)}.{nameof(Usuario.Busqueda)}"]);
             }
 

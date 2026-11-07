@@ -71,14 +71,14 @@
         <div class="card-body flush">
             @if (Model.ErrorAlCargar)
             {
-                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las asignaciones. Se puede intentar de nuevo en unos minutos.")" />
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al obtener las asignaciones. Intentá de nuevo en unos minutos.")" />
             }
             else if (Model.Filas.Count == 0 && Model.HayFiltros)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("filter")" /></span>
                     <h3>No hay asignaciones que coincidan</h3>
-                    <p>Probar con otra búsqueda o con otro estado.</p>
+                    <p>Probá con otra búsqueda o con otro estado.</p>
                     <a class="btn btn-secondary" asp-action="Index" asp-route-Estado="" data-muestra-carga>Ver todas</a>
                 </div>
             }
@@ -87,7 +87,7 @@
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("swap")" /></span>
                     <h3>No hay asignaciones</h3>
-                    <p>Asignar un equipo a una solicitud pendiente.</p>
+                    <p>Asigná un equipo a una solicitud pendiente.</p>
                 </div>
             }
             else

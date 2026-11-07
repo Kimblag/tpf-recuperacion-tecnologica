@@ -28,7 +28,7 @@ public static class PlantillaInvitacionCuenta
                         <td style="background-color:#FFFFFF;border:1px solid #D9DED7;border-radius:10px;padding:28px;">
                           <h1 style="margin:0 0 14px;font-family:{{Fuente}};font-size:20px;line-height:1.3;font-weight:600;color:#202426;">Activar la cuenta</h1>
                           <p style="margin:0 0 14px;font-family:{{Fuente}};font-size:14px;line-height:1.6;color:#202426;">Hola,</p>
-                          <p style="margin:0 0 14px;font-family:{{Fuente}};font-size:14px;line-height:1.6;color:#202426;">{{organizacion}} abrió una cuenta a nombre de esta dirección de correo para registrar una solicitud de equipo. Para activarla, hay que elegir una contraseña con el botón.</p>
+                          <p style="margin:0 0 14px;font-family:{{Fuente}};font-size:14px;line-height:1.6;color:#202426;">{{organizacion}} abrió una cuenta a nombre de esta dirección de correo para registrar una solicitud de equipo. Para activarla, elegí una contraseña con el botón.</p>
                           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px;">
                             <tr>
                               <td align="center" bgcolor="#557744" style="background-color:#557744;border-radius:8px;">
@@ -36,10 +36,10 @@ public static class PlantillaInvitacionCuenta
                               </td>
                             </tr>
                           </table>
-                          <p style="margin:0 0 20px;font-family:{{Fuente}};font-size:12px;line-height:1.5;color:#656D67;">Si el botón no funciona, copiar y pegar este enlace en el navegador:<br><a href="{{enlaceHtml}}" target="_blank" style="color:#476339;word-break:break-all;">{{enlaceHtml}}</a></p>
+                          <p style="margin:0 0 20px;font-family:{{Fuente}};font-size:12px;line-height:1.5;color:#656D67;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:<br><a href="{{enlaceHtml}}" target="_blank" style="color:#476339;word-break:break-all;">{{enlaceHtml}}</a></p>
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                             <tr>
-                              <td style="background-color:#E5EEDC;border:1px solid #D9DED7;border-radius:8px;padding:12px 14px;font-family:{{Fuente}};font-size:13px;line-height:1.5;color:#202426;">El enlace vence en 3 días y solo puede usarse una vez. Si venció, se puede pedir otro en la sede o desde el inicio de sesión, con la opción "Olvidé mi contraseña". Si este correo no era esperado, se puede ignorar.</td>
+                              <td style="background-color:#E5EEDC;border:1px solid #D9DED7;border-radius:8px;padding:12px 14px;font-family:{{Fuente}};font-size:13px;line-height:1.5;color:#202426;">El enlace vence en 3 días y solo se puede usar una vez. Si venció, podés pedir otro en la sede o desde el inicio de sesión, con la opción "¿Olvidaste tu contraseña?". Si no esperabas este correo, ignoralo.</td>
                             </tr>
                           </table>
                         </td>

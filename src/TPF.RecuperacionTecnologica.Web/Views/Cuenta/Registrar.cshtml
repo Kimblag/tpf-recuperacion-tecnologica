@@ -10,7 +10,7 @@
 
 <div class="auth-card wide">
     <h1>Crear cuenta</h1>
-    <p class="lead">El registro es solo para usuarios externos. Las cuentas del personal las gestiona un Administrador.</p>
+    <p class="lead">Creá tu cuenta para donar equipos o solicitar los que necesites.</p>
 
     <form asp-action="Registrar" method="post" id="f-reg" novalidate>
         <div class="stack">
@@ -21,7 +21,7 @@
                         <partial name="_Icon" model="@("x-circle")" />
                         <div class="alert-body">
                             <div class="alert-title">Hay @camposConError.Count @(camposConError.Count == 1 ? "dato" : "datos") para revisar</div>
-                            <div>Corrígelo@(camposConError.Count == 1 ? "" : "s") y vuelve a intentar:</div>
+                            <div>Corregí los datos y volvé a intentar:</div>
                             <ul>
                                 @foreach (var campo in camposConError)
                                 {
@@ -47,7 +47,7 @@
                 }
             </div>
 
-            <p class="form-note">Los datos marcados como “obligatorio” hay que completarlos para continuar. Los demás son opcionales.</p>
+            <p class="form-note">Tenés que completar los datos marcados como “obligatorio” para continuar. Los demás son opcionales.</p>
 
             <div>
                 <span class="form-label" id="um-l">¿Te registras como persona o como institución?</span>
@@ -132,9 +132,9 @@
         </div>
     </form>
 
-    <div class="auth-links">
-        <span class="muted">¿Ya tienes cuenta?</span>
-        <a class="link" asp-controller="Cuenta" asp-action="Login">Iniciar sesión</a>
+    <div class="auth-links auth-links-centrado">
+        <span class="muted">¿Ya tenés cuenta?</span>
+        <a class="link" asp-controller="Cuenta" asp-action="Login">Iniciá sesión</a>
     </div>
 </div>
 

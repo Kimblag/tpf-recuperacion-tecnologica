@@ -72,7 +72,7 @@
             <div class="alert-body">
                 <div class="alert-title">@Model.ImpedimentoTitulo</div>
                 <div>@Model.ImpedimentoMensaje</div>
-                <div>Elegir otro equipo u otro usuario para continuar.</div>
+                <div>Elegí otro equipo u otro usuario para continuar.</div>
             </div>
         </div>
 
@@ -105,7 +105,7 @@
                         <label class="form-label" for="TipoSolicitante">Tipo de solicitante<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <div class="select">
                             <select asp-for="TipoSolicitante" class="form-select" asp-items="Html.GetEnumSelectList<TipoSolicitante>()">
-                                <option value="">Seleccione…</option>
+                                <option value="">Seleccioná…</option>
                             </select>
                             <partial name="_Icon" model="@("chevron-down")" />
                         </div>

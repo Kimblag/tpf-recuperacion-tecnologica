@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
@@ -302,7 +302,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             Icono = "swap",
             Estado = EstadoHito.Completado,
             Texto = solicitud.Estado == EstadoSolicitud.Asignada && asignacion is not null
-                ? $"Hay que retirarlo hasta el {_reloj.Fecha(asignacion.FechaLimiteRetiro)}."
+                ? $"Tenés que retirarlo hasta el {_reloj.Fecha(asignacion.FechaLimiteRetiro)}."
                 : null
         });
 

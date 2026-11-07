@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
@@ -110,7 +110,7 @@ public class SolicitudService : ISolicitudService
         if (pendientes.Count >= maximoPendientes)
         {
             return new ImpedimentoSolicitud(ErrorRegistroSolicitud.LimiteAlcanzado,
-                $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Hay que esperar a que alguna se resuelva o cancelarla para pedir otro equipo.");
+                $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Esperá a que alguna se resuelva o cancelá una para pedir otro equipo.");
         }
 
         return null;
@@ -191,7 +191,7 @@ public class SolicitudService : ISolicitudService
             _logger.LogError(ex, "Falló el registro de la solicitud del Usuario {NroUsuario} para el Equipo {NroEquipo}",
                 usuario.NroUsuario, modelo.NroEquipo);
             return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido,
-                "No se pudo registrar la solicitud. Intentar nuevamente.");
+                "No se pudo registrar la solicitud. Intentá nuevamente.");
         }
 
         try
@@ -243,12 +243,12 @@ public class SolicitudService : ISolicitudService
         catch (DbUpdateConcurrencyException)
         {
             return Fallo("SolicitudModificada",
-                "La solicitud cambió mientras se editaba. Volver a abrirla e intentar nuevamente.");
+                "La solicitud cambió mientras se editaba. Volvé a abrirla e intentá nuevamente.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la edición del motivo de la Solicitud {NroSolicitud}", nroSolicitud);
-            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentar nuevamente.");
+            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentá nuevamente.");
         }
 
         try
@@ -298,12 +298,12 @@ public class SolicitudService : ISolicitudService
         catch (DbUpdateConcurrencyException)
         {
             return Fallo("SolicitudModificada",
-                "La solicitud cambió mientras se cancelaba. Volver a abrirla e intentar nuevamente.");
+                "La solicitud cambió mientras se cancelaba. Volvé a abrirla e intentá nuevamente.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la cancelación de la Solicitud {NroSolicitud}", nroSolicitud);
-            return Fallo("CancelacionFallida", "No se pudo cancelar la solicitud. Intentar nuevamente.");
+            return Fallo("CancelacionFallida", "No se pudo cancelar la solicitud. Intentá nuevamente.");
         }
 
         try
@@ -391,12 +391,12 @@ public class SolicitudService : ISolicitudService
         catch (DbUpdateConcurrencyException)
         {
             return Fallo("SolicitudModificada",
-                "La solicitud cambió mientras se editaba. Volver a abrirla e intentar nuevamente.");
+                "La solicitud cambió mientras se editaba. Volvé a abrirla e intentá nuevamente.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la edición asistida del motivo de la Solicitud {NroSolicitud}", nroSolicitud);
-            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentar nuevamente.");
+            return Fallo("EdicionFallida", "No se pudo guardar el cambio. Intentá nuevamente.");
         }
 
         await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
@@ -448,12 +448,12 @@ public class SolicitudService : ISolicitudService
         catch (DbUpdateConcurrencyException)
         {
             return Fallo("SolicitudModificada",
-                "La solicitud cambió mientras se cancelaba. Volver a abrirla e intentar nuevamente.");
+                "La solicitud cambió mientras se cancelaba. Volvé a abrirla e intentá nuevamente.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falló la cancelación asistida de la Solicitud {NroSolicitud}", nroSolicitud);
-            return Fallo("CancelacionFallida", "No se pudo cancelar la solicitud. Intentar nuevamente.");
+            return Fallo("CancelacionFallida", "No se pudo cancelar la solicitud. Intentá nuevamente.");
         }
 
         await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
@@ -549,7 +549,7 @@ public class SolicitudService : ISolicitudService
         {
             _logger.LogError(ex, "Falló el registro asistido de la solicitud del Usuario {NroUsuario}", usuario.NroUsuario);
             return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido,
-                "No se pudo registrar la solicitud. Intentar nuevamente.");
+                "No se pudo registrar la solicitud. Intentá nuevamente.");
         }
 
         await AuditarAsync(TipoOperacionAuditoria.Solicitud, codigoCoordinador, nameof(Solicitud),
@@ -603,7 +603,7 @@ public class SolicitudService : ISolicitudService
         {
             _logger.LogError(ex, "Falló el alta asistida del usuario y su solicitud; se revirtió la transacción");
             return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.Fallido,
-                "No se pudo completar el registro. No se guardó nada. Intentar nuevamente.");
+                "No se pudo completar el registro. No se guardó nada. Intentá nuevamente.");
         }
 
         await AuditarAsync(TipoOperacionAuditoria.AltaUsuario, codigoCoordinador, nameof(Usuario),

@@ -13,7 +13,7 @@ public class FormularioSolicitudViewModel
 
     [Display(Name = "Tipo de solicitante")]
     [Required(ErrorMessage = "El tipo de solicitante es obligatorio.")]
-    [EnumDataType(typeof(TipoSolicitante), ErrorMessage = "Seleccione un tipo de solicitante válido.")]
+    [EnumDataType(typeof(TipoSolicitante), ErrorMessage = "Seleccioná un tipo de solicitante válido.")]
     public TipoSolicitante? TipoSolicitante { get; set; }
 
     [Display(Name = "Motivo de la solicitud")]

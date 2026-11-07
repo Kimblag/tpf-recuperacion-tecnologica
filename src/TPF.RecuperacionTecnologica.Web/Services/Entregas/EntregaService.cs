@@ -17,7 +17,7 @@ public class EntregaService : IEntregaService
     private const int MaximoNombre = 100;
 
     private const string MensajeConcurrencia =
-        "La asignación cambió mientras se registraba la entrega: otra persona pudo entregarla o liberarla. No se guardó nada. Volver a abrir la asignación e intentar nuevamente.";
+        "La asignación cambió mientras se registraba la entrega: otra persona pudo entregarla o liberarla. No se guardó nada. Volvé a abrir la asignación e intentá nuevamente.";
 
     private readonly ApplicationDbContext _context;
     private readonly IAuditoriaService _auditoriaService;
@@ -169,7 +169,7 @@ public class EntregaService : IEntregaService
         if (string.IsNullOrEmpty(nombre) || nombre.Length > MaximoNombre || documento.Length is < 7 or > 11)
         {
             return ResultadoEntrega.Fallo(ErrorEntrega.DatosInvalidos,
-                "Los datos de quien retira no son válidos. Revisar el nombre y el documento.");
+                "Los datos de quien retira no son válidos. Revisá el nombre y el documento.");
         }
 
         Entrega entrega;
@@ -201,7 +201,7 @@ public class EntregaService : IEntregaService
             if (_reloj.PlazoVencido(asignacion.FechaLimiteRetiro))
             {
                 return ResultadoEntrega.Fallo(ErrorEntrega.PlazoVencido,
-                    "El plazo de retiro venció. Hay que liberar la asignación antes de volver a asignar el equipo.");
+                    "El plazo de retiro venció. Liberá la asignación antes de volver a asignar el equipo.");
             }
 
             // se compara según el tipo de solicitante; el mensaje no revela el documento esperado
@@ -268,7 +268,7 @@ public class EntregaService : IEntregaService
         {
             _logger.LogError(ex, "Falló la entrega de la Asignación {NroAsignacion}", nroAsignacion);
             return ResultadoEntrega.Fallo(ErrorEntrega.Fallido,
-                "No se pudo registrar la entrega. No se guardó nada. Intentar nuevamente.");
+                "No se pudo registrar la entrega. No se guardó nada. Intentá nuevamente.");
         }
 
         try

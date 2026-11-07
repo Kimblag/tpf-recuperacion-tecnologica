@@ -10,11 +10,11 @@ public class RegistroSolicitudAsistidaViewModel : IValidatableObject
 
     [Display(Name = "Tipo de solicitante")]
     [Required(ErrorMessage = "El tipo de solicitante es obligatorio.")]
-    [EnumDataType(typeof(TipoSolicitante), ErrorMessage = "Seleccione un tipo de solicitante válido.")]
+    [EnumDataType(typeof(TipoSolicitante), ErrorMessage = "Seleccioná un tipo de solicitante válido.")]
     public TipoSolicitante? TipoSolicitante { get; set; }
 
     [Display(Name = "Equipo solicitado")]
-    [Required(ErrorMessage = "Buscar y elegir el equipo solicitado.")]
+    [Required(ErrorMessage = "Buscá y elegí el equipo solicitado.")]
     public int? NroEquipo { get; set; }
 
     [Display(Name = "Motivo de la solicitud")]
@@ -41,7 +41,7 @@ public class RegistroSolicitudAsistidaViewModel : IValidatableObject
             if (Usuario.NroUsuario is null)
             {
                 yield return new ValidationResult(
-                    "Buscar y seleccionar un usuario activo antes de registrar la solicitud.",
+                    "Buscá y seleccioná un usuario activo antes de registrar la solicitud.",
                     [$"{nameof(Usuario)}.{nameof(Usuario.Busqueda)}"]);
             }
 
