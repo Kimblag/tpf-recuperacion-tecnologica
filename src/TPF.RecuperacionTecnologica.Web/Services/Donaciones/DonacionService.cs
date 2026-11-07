@@ -484,8 +484,25 @@ public class DonacionService : IDonacionService
         };
     }
 
+    private static readonly IReadOnlyDictionary<string, Expression<Func<Equipo, object>>> ColumnasOrdenGestion =
+        new Dictionary<string, Expression<Func<Equipo, object>>>
+        {
+            ["equipo"] = e => e.NroEquipo,
+            ["donante"] = e => (e.UsuarioDonante.TipoUsuario == TipoUsuario.Persona
+                ? e.UsuarioDonante.Nombre + " " + e.UsuarioDonante.Apellido
+                : e.UsuarioDonante.RazonSocial) ?? string.Empty,
+            ["tipo"] = e => e.TipoEquipo == TipoEquipo.Celular ? 0
+                : e.TipoEquipo == TipoEquipo.Monitor ? 1
+                : e.TipoEquipo == TipoEquipo.Notebook ? 2
+                : e.TipoEquipo == TipoEquipo.PcEscritorio ? 3
+                : 4,
+            ["modelo"] = e => e.Marca + " " + e.Modelo,
+            ["registro"] = e => e.FechaRegistro,
+            ["estado"] = e => e.EstadoEquipo
+        };
+
     public async Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
-        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null)
+        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null)
     {
         var consulta = _context.Equipos.AsNoTracking();
 
@@ -523,8 +540,8 @@ public class DonacionService : IDonacionService
         pagina = Math.Clamp(pagina, 1, totalPaginas);
 
         var elementos = await consulta
-            .OrderByDescending(e => e.FechaRegistro)
-            .ThenByDescending(e => e.NroEquipo)
+            .Ordenar(orden, ColumnasOrdenGestion, e => e.NroEquipo,
+                c => c.OrderByDescending(e => e.FechaRegistro).ThenByDescending(e => e.NroEquipo))
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
             .Select(e => new DonacionGestionFilaViewModel

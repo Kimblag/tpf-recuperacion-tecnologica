@@ -24,7 +24,7 @@ public interface IEntregaService
     /// </summary>
     /// <exception cref="ArgumentException">Si <paramref name="desde"/> es posterior a <paramref name="hasta"/>.</exception>
     Task<ResultadoPaginado<EntregaFilaViewModel>> ListarAsync(
-        string? busqueda, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina);
+        string? busqueda, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina, string? orden = null);
 
     /// <summary>
     /// Detalle de solo lectura de una entrega; null si no existe.

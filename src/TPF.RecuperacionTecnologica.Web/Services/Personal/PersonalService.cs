@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Auditoria;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Personal;
 using PersonalEntidad = TPF.RecuperacionTecnologica.Web.Models.Personal;
@@ -31,7 +33,18 @@ public class PersonalService : IPersonalService
     private static IdentityResult Error(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
-    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado)
+    private static readonly IReadOnlyDictionary<string, Expression<Func<PersonalEntidad, object>>> ColumnasOrden =
+        new Dictionary<string, Expression<Func<PersonalEntidad, object>>>
+        {
+            ["codigo"] = p => p.CodigoPersonal,
+            ["nombre"] = p => p.Apellido + " " + p.Nombre,
+            ["dni"] = p => p.Dni,
+            ["correo"] = p => p.CorreoElectronico,
+            ["rol"] = p => p.RolAsignado,
+            ["estado"] = p => p.EstadoPersonal
+        };
+
+    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden = null)
     {
         var consulta = _context.PersonalInterno.AsNoTracking();
 
@@ -64,7 +77,7 @@ public class PersonalService : IPersonalService
         }
 
         var filas = await consulta
-            .OrderBy(p => p.CodigoPersonal)
+            .Ordenar(orden, ColumnasOrden, p => p.CodigoPersonal, c => c.OrderBy(p => p.CodigoPersonal))
             .Select(p => new PersonalFilaViewModel
             {
                 CodigoPersonal = p.CodigoPersonal,
@@ -82,6 +95,7 @@ public class PersonalService : IPersonalService
             Busqueda = busqueda,
             Rol = rol,
             Estado = estado,
+            Orden = orden ?? "codigo",
             Filas = filas,
             Total = filas.Count
         };

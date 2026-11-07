@@ -14,6 +14,8 @@ public class MisSolicitudesViewModel
 
     public EstadoSolicitud? Estado { get; set; }
 
+    public string? Orden { get; set; } = "fecha_desc";
+
     public IReadOnlyList<SolicitudFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }

@@ -17,6 +17,8 @@ public class AsignacionListadoViewModel
     // solo aplica a las Vigentes: una asignación liberada o concretada ya no tiene plazo
     public FiltroPlazoAsignacion? Plazo { get; set; }
 
+    public string? Orden { get; set; } = "asignada_desc";
+
     public IReadOnlyList<AsignacionFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }

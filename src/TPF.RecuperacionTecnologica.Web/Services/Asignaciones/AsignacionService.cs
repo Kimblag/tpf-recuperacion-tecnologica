@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
@@ -162,8 +163,20 @@ public class AsignacionService : IAsignacionService
             || (a.Solicitud.Usuario.RazonSocial ?? (a.Solicitud.Usuario.Nombre + " " + a.Solicitud.Usuario.Apellido)).Contains(texto));
     }
 
+    private static readonly IReadOnlyDictionary<string, Expression<Func<Asignacion, object>>> ColumnasOrden =
+        new Dictionary<string, Expression<Func<Asignacion, object>>>
+        {
+            ["asignacion"] = a => a.NroAsignacion,
+            ["solicitud"] = a => a.NroSolicitud,
+            ["equipo"] = a => a.Equipo.Marca + " " + a.Equipo.Modelo,
+            ["coordinador"] = a => a.Coordinador.Nombre + " " + a.Coordinador.Apellido,
+            ["asignada"] = a => a.FechaAsignacion,
+            ["retiro"] = a => a.FechaLimiteRetiro,
+            ["estado"] = a => a.EstadoAsignacion
+        };
+
     public async Task<ResultadoPaginado<AsignacionFilaViewModel>> ListarAsync(
-        string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina)
+        string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina, string? orden = null)
     {
         // "hoy" es el día de la institución; los plazos se comparan contra el inicio de ese día
         var inicioHoy = _reloj.InicioDeDiaUtc();
@@ -192,8 +205,8 @@ public class AsignacionService : IAsignacionService
         pagina = Math.Clamp(pagina, 1, totalPaginas);
 
         var filas = await consulta
-            .OrderByDescending(a => a.FechaAsignacion)
-            .ThenByDescending(a => a.NroAsignacion)
+            .Ordenar(orden, ColumnasOrden, a => a.NroAsignacion,
+                c => c.OrderByDescending(a => a.FechaAsignacion).ThenByDescending(a => a.NroAsignacion))
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
             .Select(a => new

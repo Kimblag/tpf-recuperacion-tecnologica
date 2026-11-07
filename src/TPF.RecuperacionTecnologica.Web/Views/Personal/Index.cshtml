@@ -25,6 +25,7 @@
 
     <section class="card overflow" aria-label="Personal">
         <form class="filters" role="search" method="get" asp-action="Index">
+            <input type="hidden" asp-for="Orden" />
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
                 <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, código o DNI" />
@@ -72,12 +73,12 @@
                         <caption class="visually-hidden">Personal</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Código</th>
-                                <th scope="col">Nombre y apellido</th>
-                                <th scope="col">DNI</th>
-                                <th scope="col">Correo</th>
-                                <th scope="col">Rol</th>
-                                <th scope="col">Estado</th>
+                                <partial name="_EncabezadoOrden" model="@(("Código", "codigo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Nombre y apellido", "nombre", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("DNI", "dni", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Correo", "correo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Rol", "rol", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Estado", "estado", Model.Orden, false))" />
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>
                         </thead>

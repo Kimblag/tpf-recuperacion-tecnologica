@@ -65,7 +65,7 @@ public interface IDonacionService
     /// La página pedida, ajustada al rango válido, o vacía si ninguna donación cumple los filtros.
     /// </returns>
     Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
-        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null);
+        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null);
 
     /// <summary>
     /// Devuelve los datos de una donación de cualquier Usuario, en cualquier estado, para consulta del personal interno.

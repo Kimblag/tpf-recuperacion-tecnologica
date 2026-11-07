@@ -10,6 +10,7 @@
         Busqueda = Model.Busqueda,
         Tipo = Model.Tipo,
         Dictamen = Model.Dictamen,
+        Orden = Model.Orden,
         Pagina = pagina
     });
 }
@@ -37,6 +38,7 @@
         <partial name="_AyudaDictamenes" />
 
         <form class="filters" role="search" method="get" asp-action="Index" data-filtros-automaticos>
+            <input type="hidden" asp-for="Orden" />
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
                 <input asp-for="Busqueda" class="form-control sm" placeholder="Nº de diagnóstico o de equipo" maxlength="60" data-filtro-texto />
@@ -100,12 +102,12 @@
                         <caption class="visually-hidden">Diagnósticos</caption>
                         <thead>
                             <tr>
-                                <th scope="col">Diagnóstico</th>
-                                <th scope="col">Equipo</th>
-                                <th scope="col">Tipo</th>
-                                <th scope="col">Técnico</th>
-                                <th scope="col">Fecha</th>
-                                <th scope="col">Dictamen técnico</th>
+                                <partial name="_EncabezadoOrden" model="@(("Diagnóstico", "diagnostico", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Equipo", "equipo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Tipo", "tipo", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Técnico", "tecnico", Model.Orden, false))" />
+                                <partial name="_EncabezadoOrden" model="@(("Fecha", "fecha", Model.Orden, true))" />
+                                <partial name="_EncabezadoOrden" model="@(("Dictamen técnico", "dictamen", Model.Orden, false))" />
                                 <th scope="col">Evaluación</th>
                                 <th scope="col" class="col-actions">Acciones</th>
                             </tr>

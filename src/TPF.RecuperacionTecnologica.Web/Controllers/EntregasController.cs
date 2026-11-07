@@ -51,7 +51,7 @@ public class EntregasController : Controller
         {
             var resultado = await _entregaService.ListarAsync(
                 filtros.Busqueda, filtros.FechaDesde, filtros.FechaHasta,
-                filtros.Pagina, EntregaListadoViewModel.TamanoPagina);
+                filtros.Pagina, EntregaListadoViewModel.TamanoPagina, filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
 using TPF.RecuperacionTecnologica.Web.Models;
@@ -28,11 +29,23 @@ public class SolicitudConsultaService : ISolicitudConsultaService
         _reloj = reloj;
     }
 
+    private static readonly IReadOnlyDictionary<string, Expression<Func<Solicitud, object>>> ColumnasOrden =
+        new Dictionary<string, Expression<Func<Solicitud, object>>>
+        {
+            ["solicitud"] = s => s.NroSolicitud,
+            ["equipo"] = s => s.EquipoRequerido.Marca + " " + s.EquipoRequerido.Modelo,
+            ["solicitante"] = s => s.Usuario.RazonSocial ?? (s.Usuario.Nombre + " " + s.Usuario.Apellido),
+            ["tipo"] = s => s.TipoSolicitante,
+            ["origen"] = s => s.OrigenSolicitud,
+            ["fecha"] = s => s.FechaSolicitud,
+            ["estado"] = s => s.EstadoSolicitud
+        };
+
     private static string NombreSolicitante(string? razonSocial, string? nombre, string? apellido) =>
         !string.IsNullOrWhiteSpace(razonSocial) ? razonSocial : $"{nombre} {apellido}".Trim();
 
     public async Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarPropiasAsync(
-        string identityUserId, string? busqueda, EstadoSolicitud? estado, int pagina, int tamanoPagina)
+        string identityUserId, string? busqueda, EstadoSolicitud? estado, int pagina, int tamanoPagina, string? orden = null)
     {
         var consulta = _context.Solicitudes
             .AsNoTracking()
@@ -45,12 +58,12 @@ public class SolicitudConsultaService : ISolicitudConsultaService
 
         consulta = FiltrarPorTexto(consulta, busqueda, incluirSolicitante: false);
 
-        return await PaginarAsync(consulta, pagina, tamanoPagina);
+        return await PaginarAsync(consulta, pagina, tamanoPagina, orden);
     }
 
     public async Task<ResultadoPaginado<SolicitudFilaViewModel>> ListarTodasAsync(
         string? busqueda, TipoSolicitante? tipo, OrigenSolicitud? origen, EstadoSolicitud? estado,
-        int pagina, int tamanoPagina, int? nroUsuario = null)
+        int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null)
     {
         var consulta = _context.Solicitudes.AsNoTracking();
 
@@ -76,7 +89,7 @@ public class SolicitudConsultaService : ISolicitudConsultaService
 
         consulta = FiltrarPorTexto(consulta, busqueda, incluirSolicitante: true);
 
-        return await PaginarAsync(consulta, pagina, tamanoPagina);
+        return await PaginarAsync(consulta, pagina, tamanoPagina, orden);
     }
 
     private static IQueryable<Solicitud> FiltrarPorTexto(IQueryable<Solicitud> consulta, string? busqueda, bool incluirSolicitante)
@@ -104,15 +117,15 @@ public class SolicitudConsultaService : ISolicitudConsultaService
     }
 
     private async Task<ResultadoPaginado<SolicitudFilaViewModel>> PaginarAsync(
-        IQueryable<Solicitud> consulta, int pagina, int tamanoPagina)
+        IQueryable<Solicitud> consulta, int pagina, int tamanoPagina, string? orden)
     {
         var total = await consulta.CountAsync();
         var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)tamanoPagina));
         pagina = Math.Clamp(pagina, 1, totalPaginas);
 
         var filas = await consulta
-            .OrderByDescending(s => s.FechaSolicitud)
-            .ThenByDescending(s => s.NroSolicitud)
+            .Ordenar(orden, ColumnasOrden, s => s.NroSolicitud,
+                c => c.OrderByDescending(s => s.FechaSolicitud).ThenByDescending(s => s.NroSolicitud))
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
             .Select(s => new

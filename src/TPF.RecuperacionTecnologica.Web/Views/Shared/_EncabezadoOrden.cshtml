@@ -1,0 +1,32 @@
+@model (string Texto, string Columna, string? OrdenActual, bool DescendentePrimero)
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
+@{
+    var actual = OrdenListado.Interpretar(Model.OrdenActual);
+    var activa = string.Equals(actual.Columna, Model.Columna, StringComparison.OrdinalIgnoreCase);
+
+    var descendente = activa ? !actual.Descendente : Model.DescendentePrimero;
+
+    var valores = new RouteValueDictionary();
+    foreach (var par in Context.Request.Query)
+    {
+        if (par.Key.Equals("orden", StringComparison.OrdinalIgnoreCase) || par.Key.Equals("pagina", StringComparison.OrdinalIgnoreCase))
+        {
+            continue;
+        }
+
+        valores[par.Key] = par.Value.ToString();
+    }
+
+    valores["orden"] = OrdenListado.Armar(Model.Columna, descendente);
+
+    var enlace = Url.Action(null, null, valores);
+
+    var ariaSort = activa ? (actual.Descendente ? "descending" : "ascending") : null;
+    var icono = activa ? (actual.Descendente ? "arrow-down" : "arrow-up") : "chevrons";
+}
+<th scope="col" aria-sort="@ariaSort">
+    <a class="orden-link" href="@enlace">
+        <span>@Model.Texto</span>
+        <partial name="_Icon" model="@icono" />
+    </a>
+</th>

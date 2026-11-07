@@ -17,7 +17,7 @@ public interface IAsignacionService
     Task<IReadOnlyList<EquipoSeleccionableViewModel>> ObtenerEquiposConSolicitudPendienteAsync(string? busqueda, int cantidad);
 
     Task<ResultadoPaginado<AsignacionFilaViewModel>> ListarAsync(
-        string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina);
+        string? busqueda, EstadoAsignacion? estado, FiltroPlazoAsignacion? plazo, int pagina, int tamanoPagina, string? orden = null);
 
     Task<AsignacionDetalleViewModel?> ObtenerDetalleAsync(int nroAsignacion);
 

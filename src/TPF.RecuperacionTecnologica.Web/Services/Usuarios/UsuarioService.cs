@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TPF.RecuperacionTecnologica.Web.Data;
@@ -118,7 +119,21 @@ public class UsuarioService : IUsuarioService
         return IdentityResult.Success;
     }
 
-    public async Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado)
+    private static readonly IReadOnlyDictionary<string, Expression<Func<Usuario, object>>> ColumnasOrden =
+        new Dictionary<string, Expression<Func<Usuario, object>>>
+        {
+            ["usuario"] = u => u.NroUsuario,
+            ["nombre"] = u => (u.TipoUsuario == TipoUsuario.Persona
+                ? u.Apellido + " " + u.Nombre
+                : u.RazonSocial) ?? string.Empty,
+            ["documento"] = u => u.NroDocumento,
+            ["correo"] = u => u.CorreoElectronico,
+            ["telefono"] = u => u.Telefono ?? string.Empty,
+            ["alta"] = u => u.FechaAlta,
+            ["estado"] = u => u.EstadoUsuario
+        };
+
+    public async Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado, string? orden = null)
     {
         var consulta = _context.Usuarios.AsNoTracking();
 
@@ -133,7 +148,7 @@ public class UsuarioService : IUsuarioService
         }
 
         var filas = await consulta
-            .OrderBy(u => u.NroUsuario)
+            .Ordenar(orden, ColumnasOrden, u => u.NroUsuario, c => c.OrderBy(u => u.NroUsuario))
             .Select(u => new UsuarioFilaViewModel
             {
                 NroUsuario = u.NroUsuario,
@@ -154,6 +169,7 @@ public class UsuarioService : IUsuarioService
         {
             Tipo = tipo,
             Estado = estado,
+            Orden = orden ?? "usuario",
             Filas = filas,
             Total = filas.Count
         };

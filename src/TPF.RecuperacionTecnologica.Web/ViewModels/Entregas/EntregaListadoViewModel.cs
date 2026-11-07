@@ -18,6 +18,8 @@ public class EntregaListadoViewModel : IValidatableObject
     [Display(Name = "Hasta")]
     public DateTime? FechaHasta { get; set; }
 
+    public string? Orden { get; set; } = "fecha_desc";
+
     public IReadOnlyList<EntregaFilaViewModel> Filas { get; set; } = [];
 
     public int Total { get; set; }
