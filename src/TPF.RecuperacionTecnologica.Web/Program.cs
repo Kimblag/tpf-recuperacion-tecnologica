@@ -155,6 +155,21 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 });
 
 var app = builder.Build();
+app.Use(async (contexto, siguiente) =>
+{
+    var cabeceras = contexto.Response.Headers;
+
+    cabeceras["X-Content-Type-Options"] = "nosniff";
+    cabeceras["X-Frame-Options"] = "DENY";
+    cabeceras["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    cabeceras["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()";
+    cabeceras["Content-Security-Policy-Report-Only"] =
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src https://fonts.gstatic.com; img-src 'self' data: blob:; object-src 'none'; " +
+        "base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+
+    await siguiente();
+});
 
 using (var scope = app.Services.CreateScope())
 {
