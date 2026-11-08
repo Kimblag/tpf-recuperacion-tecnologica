@@ -118,6 +118,18 @@ public static class PlantillaNotificacion
             """;
     }
 
+    public static string IngresoSinRegistro(
+        string organizacion, string coordinador, string tecnico, string situacion, string descripcion, string? enlace) =>
+        Armar(
+            organizacion, "Llegó un equipo que no se pudo ingresar", coordinador,
+            [
+                $"El Técnico <strong>{Codificar(tecnico)}</strong> informó que llegó un equipo al taller y no se pudo registrar su ingreso.",
+                Codificar(situacion),
+                $"Detalle informado: {Codificar(descripcion)}"
+            ],
+            "Conviene comunicarse con la persona que entregó el equipo para registrar o corregir la donación.",
+            enlace, "Ver donaciones");
+
     public static string EntregaAlDonante(
         string organizacion, string donante, int nroEquipo, string equipo, string destinatario, DateTime fechaEntrega, string? enlace) =>
         Armar(

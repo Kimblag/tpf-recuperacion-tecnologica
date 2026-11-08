@@ -506,6 +506,29 @@ public class DiagnosticoService : IDiagnosticoService
         return IdentityResult.Success;
     }
 
+    public async Task<int> InformarIngresoSinRegistroAsync(int codigoTecnico, InformarIngresoViewModel modelo)
+    {
+        var descripcion = modelo.Descripcion.Trim();
+
+        var avisados = await _notificaciones.AvisarIngresoSinRegistroAsync(codigoTecnico, modelo.NroEquipo, descripcion);
+
+        try
+        {
+            var entidad = modelo.NroEquipo is null ? nameof(Models.Personal) : nameof(Equipo);
+            var idEntidad = modelo.NroEquipo ?? codigoTecnico;
+
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.IngresoSinRegistro, codigoTecnico, entidad, idEntidad,
+                $"Ingreso sin registro informado a la Coordinación. {descripcion}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar el ingreso sin registro informado por el Técnico {CodigoTecnico}", codigoTecnico);
+        }
+
+        return avisados;
+    }
+
     private void DescartarArchivos(ResultadoLoteImagenes? lote)
     {
         if (lote is not null)

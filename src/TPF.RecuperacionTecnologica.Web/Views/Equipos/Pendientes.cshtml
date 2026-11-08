@@ -31,6 +31,12 @@
             <div class="h-id"><h1 tabindex="-1">Pendientes de diagnóstico</h1></div>
             <p class="page-sub">Equipos que esperan una evaluación técnica, del más antiguo al más reciente</p>
         </div>
+        @if (esTecnico)
+        {
+            <div class="page-actions">
+                <a class="btn btn-secondary" asp-controller="Diagnosticos" asp-action="InformarIngreso"><partial name="_Icon" model="@("alert")" /><span>Informar ingreso sin registro</span></a>
+            </div>
+        }
     </div>
 
     <section class="card overflow" aria-label="Pendientes de diagnóstico" data-listado data-filas-carga="6">
