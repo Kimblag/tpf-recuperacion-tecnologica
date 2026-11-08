@@ -143,7 +143,7 @@
                 <partial name="_CargaFotos" model="cantidad" />
             </div>
             <div class="form-actions">
-                <a class="btn btn-secondary btn-lg" asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
+                <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-action="Detalle" asp-route-id="@Model.NroEquipo">Cancelar</a>
                 <button type="submit" class="btn btn-primary btn-lg" disabled data-fotos-enviar data-fotos-enviar-con-fotos>Cargar fotos</button>
             </div>
         </form>

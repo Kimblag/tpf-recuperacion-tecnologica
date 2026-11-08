@@ -29,6 +29,27 @@ document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (elemen
 })();
 
 (function () {
+    try {
+        var enlaces = document.querySelectorAll('[data-cancelar-origen]');
+        var actual = location.pathname + location.search;
+        var ultima = sessionStorage.getItem('nav:ultima');
+
+        if (enlaces.length > 0) {
+            if (ultima && ultima !== actual) {
+                enlaces.forEach(function (enlace) {
+                    enlace.setAttribute('href', ultima);
+                });
+            }
+
+            return;
+        }
+
+        sessionStorage.setItem('nav:ultima', actual);
+    } catch (error) {
+    }
+})();
+
+(function () {
     var indicador = document.getElementById('indicador-carga');
 
     if (!indicador) return;
