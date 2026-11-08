@@ -76,6 +76,7 @@ document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (elemen
     }
 
     document.addEventListener('click', function (evento) {
+        if (evento.defaultPrevented) return;
         if (evento.button !== 0 || evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
 
         var enlace = evento.target.closest('a[href]');
