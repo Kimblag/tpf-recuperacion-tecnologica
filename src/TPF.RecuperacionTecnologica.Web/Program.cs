@@ -15,6 +15,7 @@ using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
 using TPF.RecuperacionTecnologica.Web.Services.Entregas;
 using TPF.RecuperacionTecnologica.Web.Services.Equipos;
+using TPF.RecuperacionTecnologica.Web.Services.Exportacion;
 using TPF.RecuperacionTecnologica.Web.Services.Home;
 using TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
@@ -80,6 +81,7 @@ builder.Services.Configure<LiberacionAutomaticaOptions>(builder.Configuration.Ge
 builder.Services.AddHostedService<LiberacionAutomaticaHostedService>();
 builder.Services.AddScoped<IEntregaService, EntregaService>();
 builder.Services.AddScoped<IReporteService, ReporteService>();
+builder.Services.AddScoped<IExportacionService, ExportacionService>();
 
 builder.Services
     .AddIdentity<IdentityUser, IdentityRole>(options =>

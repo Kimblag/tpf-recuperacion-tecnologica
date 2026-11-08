@@ -31,7 +31,7 @@
 }
 
 <div class="stack">
-    <partial name="_EncabezadoReporte" model="@(("Equipos por estado", "Situación actual del inventario.", Model.PeriodoConsultado))" />
+    <partial name="_EncabezadoReporte" model="@(("Equipos por estado", "Situación actual del inventario.", Model.PeriodoConsultado, Model.ErrorAlCargar || Model.Total == 0 ? null : "ExportarEquiposPorEstado"))" />
 
     @if (Model.ErrorAlCargar)
     {
