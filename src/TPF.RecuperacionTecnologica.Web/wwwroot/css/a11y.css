@@ -9,12 +9,12 @@
 }
 
 html {
-    font-size: calc(14px * var(--fs));
+    font-size: calc(87.5% * var(--fs));
 }
 
 @media (min-width: 768px) {
     html {
-        font-size: calc(16px * var(--fs));
+        font-size: calc(100% * var(--fs));
     }
 }
 
