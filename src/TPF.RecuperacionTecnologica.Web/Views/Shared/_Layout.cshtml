@@ -163,6 +163,13 @@
                         </div>
                     </div>
                 }
+                @if (TempData["MensajeError"] is string mensajeError)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <partial name="_Icon" model="@("x-circle")" />
+                        <div class="alert-body">@mensajeError</div>
+                    </div>
+                }
                 @RenderBody()
             </main>
 
