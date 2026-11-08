@@ -117,4 +117,16 @@ public static class PlantillaNotificacion
             </html>
             """;
     }
+
+    public static string EntregaAlDonante(
+        string organizacion, string donante, int nroEquipo, string equipo, string destinatario, DateTime fechaEntrega, string? enlace) =>
+        Armar(
+            organizacion, "Tu equipo fue entregado", donante,
+            [
+                $"El equipo <strong>{Codificar(equipo)}</strong> (equipo Nº <strong>{nroEquipo}</strong>), " +
+                $"que donaste, ya tiene destino: el <strong>{fechaEntrega:dd/MM/yyyy}</strong> se entregó a {Codificar(destinatario)}.",
+                "Gracias por tu aporte: gracias a donaciones como la tuya, más personas pueden acceder a tecnología."
+            ],
+            "Podés ver todas las etapas del equipo desde Mis donaciones.",
+            enlace, "Ver mis donaciones");
 }

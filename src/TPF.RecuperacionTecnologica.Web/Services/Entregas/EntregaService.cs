@@ -284,6 +284,7 @@ public class EntregaService : IEntregaService
         }
 
         await _notificaciones.AvisarCierrePorEntregaAsync(solicitudesCerradas);
+        await _notificaciones.AvisarEntregaAlDonanteAsync(entrega.NroEntrega);
 
         return ResultadoEntrega.Ok(entrega.NroEntrega);
     }
