@@ -32,7 +32,6 @@ public interface IPersonalService
     /// </summary>
     Task<int?> ObtenerCodigoPersonalAsync(string identityUserId);
 
-
     /// <summary>
     /// Devuelve el detalle de un integrante del Personal, o null si no existe.
     /// </summary>
@@ -54,4 +53,12 @@ public interface IPersonalService
     /// Inactiva un integrante de Personal e invalida sus sesiones.
     /// </summary>
     Task<IdentityResult> InactivarAsync(InactivarPersonalViewModel modelo, int codigoAdministrador);
+
+    /// <summary>
+    /// Reactiva un integrante de Personal.
+    /// </summary>
+    /// <param name="codigoPersonal"></param>
+    /// <param name="codigoAdministrador"></param>
+    /// <returns></returns>
+    Task<IdentityResult> ReactivarAsync(int codigoPersonal, int codigoAdministrador);
 }
