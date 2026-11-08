@@ -1,0 +1,32 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.InactivarUsuarioViewModel
+
+<div class="modal fade" id="modal-inactivar" tabindex="-1" aria-labelledby="modal-inactivar-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" asp-action="Inactivar" method="post" novalidate>
+            <input type="hidden" asp-for="NroUsuario" />
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-inactivar-titulo"><partial name="_Icon" model="@("ban")" />Inactivar usuario</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <div class="modal-body">
+                <p>Vas a inactivar a <b>@Model.NombreCompleto</b> (<span class="mono">@Model.Codigo</span>).</p>
+                <div class="alert alert-warning" role="note">
+                    <partial name="_Icon" model="@("alert")" />
+                    <div class="alert-body">
+                        <div>Esta acción es definitiva: la cuenta no se puede reactivar y el documento y el correo no se pueden volver a registrar. Se cancelan sus solicitudes pendientes y sus donaciones que todavía no se recibieron. Sus registros históricos se conservan.</div>
+                    </div>
+                </div>
+                <div class="field" style="margin-top:14px">
+                    <label class="form-label" for="MotivoInactivacion">Motivo de inactivación<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                    <textarea asp-for="MotivoInactivacion" class="form-control" rows="3" maxlength="300" aria-describedby="MotivoInactivacion-hint"></textarea>
+                    <div class="form-text" id="MotivoInactivacion-hint">Queda guardado junto con la fecha de hoy en el legajo del usuario.</div>
+                    <span asp-validation-for="MotivoInactivacion"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                <button type="submit" class="btn btn-danger">Inactivar usuario</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -881,7 +881,7 @@ public class DonacionService : IDonacionService
             [
                 registrada,
                 Hito("Donación cancelada", fechaCancelacion, "x", EstadoHito.Cancelado,
-                    "Cancelada por el donante antes de la recepción.")
+                    "Cancelada antes de la recepción.")
             ];
         }
 

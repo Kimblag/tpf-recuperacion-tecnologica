@@ -4,6 +4,7 @@ using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Donaciones;
+using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
@@ -19,17 +20,20 @@ public class UsuariosController : Controller
     private readonly ICuentaService _cuentaService;
     private readonly ISolicitudConsultaService _solicitudConsultaService;
     private readonly IDonacionService _donacionService;
+    private readonly IPersonalService _personalService;
 
     public UsuariosController(
         IUsuarioService usuarioService,
         ICuentaService cuentaService,
         ISolicitudConsultaService solicitudConsultaService,
-        IDonacionService donacionService)
+        IDonacionService donacionService,
+        IPersonalService personalService)
     {
         _usuarioService = usuarioService;
         _cuentaService = cuentaService;
         _solicitudConsultaService = solicitudConsultaService;
         _donacionService = donacionService;
+        _personalService = personalService;
     }
 
     [HttpGet]
@@ -46,6 +50,40 @@ public class UsuariosController : Controller
         var usuario = await _usuarioService.ObtenerDetalleAsync(id);
 
         return usuario is null ? NotFound() : View(usuario);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloAdministrador")]
+    public async Task<IActionResult> Inactivar(InactivarUsuarioViewModel modelo)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["MensajeError"] = "El motivo de inactivación es obligatorio.";
+            return RedirectToAction(nameof(Detalle), new { id = modelo.NroUsuario });
+        }
+
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var codigoAdministrador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoAdministrador is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _usuarioService.InactivarAsync(modelo, codigoAdministrador.Value);
+
+        if (!resultado.Succeeded)
+        {
+            TempData["MensajeError"] = resultado.Errors.First().Description;
+            return RedirectToAction(nameof(Detalle), new { id = modelo.NroUsuario });
+        }
+
+        TempData["Mensaje"] = "El usuario se inactivó correctamente.";
+        return RedirectToAction(nameof(Detalle), new { id = modelo.NroUsuario });
     }
 
     [HttpGet]
