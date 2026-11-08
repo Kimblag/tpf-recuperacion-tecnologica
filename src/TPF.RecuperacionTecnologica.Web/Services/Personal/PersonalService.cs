@@ -525,4 +525,51 @@ public class PersonalService : IPersonalService
             _logger.LogError(ex, "No se pudo eliminar la cuenta {IdentityUserId} tras un alta fallida", identityUser.Id);
         }
     }
+
+    public async Task<IdentityResult> ReactivarAsync(int codigoPersonal, int codigoAdministrador)
+    {
+        var personal = await _context.PersonalInterno
+            .FirstOrDefaultAsync(p => p.CodigoPersonal == codigoPersonal);
+
+        if (personal is null)
+        {
+            return Error("PersonalNoEncontrado", "No se encontró el personal especificado.");
+        }
+
+        if (personal.EstadoPersonal == EstadoPersonal.Activo)
+        {
+            return Error("YaActivo", "El personal ya se encuentra activo.");
+        }
+
+        try
+        {
+            personal.EstadoPersonal = EstadoPersonal.Activo;
+            personal.FechaInactivacion = null;
+            personal.MotivoInactivacion = null;
+            personal.FechaUltimaModificacion = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al reactivar el personal con código {CodigoPersonal}", codigoPersonal);
+            return Error("ReactivacionFallida", "No se pudo completar la reactivación. Intentá nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.ReactivacionPersonal,
+                codigoAdministrador,
+                nameof(Models.Personal),
+                personal.CodigoPersonal,
+                $"Reactivación de personal ({personal.RolAsignado})");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la reactivación del Personal {CodigoPersonal}", personal.CodigoPersonal);
+        }
+
+        return IdentityResult.Success;
+    }
 }

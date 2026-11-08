@@ -42,7 +42,9 @@
                 }
                 else
                 {
-                    <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+                    <form asp-action="Reactivar" asp-route-id="@Model.CodigoPersonal" method="post">
+                        <button type="submit" class="btn btn-primary"><partial name="_Icon" model="@("refresh")" /><span>Reactivar</span></button>
+                    </form>
                 }
             }
         </div>
@@ -81,7 +83,7 @@
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
-            <div class="alert-body"><div>Este personal está inactivo y no puede iniciar sesión. Sus registros históricos se conservan.</div></div>
+            <div class="alert-body"><div>Este personal está inactivo y no puede iniciar sesión. Sus registros históricos se conservan y se puede reactivar desde acá.</div></div>
         </div>
     }
 

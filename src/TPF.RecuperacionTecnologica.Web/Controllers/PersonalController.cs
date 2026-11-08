@@ -183,6 +183,33 @@ public class PersonalController : Controller
         return RedirectToAction(nameof(Detalle), new { id = modelo.CodigoPersonal });
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reactivar(int id)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var codigoAdministrador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoAdministrador is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _personalService.ReactivarAsync(id, codigoAdministrador.Value);
+
+        if (!resultado.Succeeded)
+        {
+            TempData["MensajeError"] = resultado.Errors.First().Description;
+            return RedirectToAction(nameof(Detalle), new { id });
+        }
+
+        TempData["Mensaje"] = "El integrante del personal se reactivó correctamente.";
+        return RedirectToAction(nameof(Detalle), new { id });
+    }
+
     private async Task PrepararDetalleAsync(PersonalDetalleViewModel personal)
     {
         var actividad = await _auditoriaService.ConsultarAsync(
