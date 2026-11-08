@@ -94,3 +94,9 @@ document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (elemen
 
     window.addEventListener('pageshow', ocultar);
 })();
+
+(function () {
+    var resumen = document.getElementById('resumen-errores');
+
+    if (resumen) resumen.focus();
+})();
