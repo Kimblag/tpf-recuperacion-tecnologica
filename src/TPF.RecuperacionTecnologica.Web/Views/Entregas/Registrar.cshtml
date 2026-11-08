@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="form-actions">
-                <a class="btn btn-secondary btn-lg" asp-action="Index">Cancelar</a>
+                <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-action="Index">Cancelar</a>
             </div>
         </section>
     }
@@ -235,7 +235,7 @@
                 </div>
             </div>
             <div class="form-actions">
-                <a class="btn btn-secondary btn-lg" asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@Model.NroAsignacion">Cancelar</a>
+                <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-controller="Asignaciones" asp-action="Detalle" asp-route-id="@Model.NroAsignacion">Cancelar</a>
                 <button type="submit" class="btn btn-primary btn-lg" id="registrar-entrega"><partial name="_Icon" model="@("truck")" /><span>Registrar entrega</span></button>
             </div>
         </form>

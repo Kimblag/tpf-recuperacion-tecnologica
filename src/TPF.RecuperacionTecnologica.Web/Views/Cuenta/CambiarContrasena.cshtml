@@ -62,11 +62,11 @@
             <div class="form-actions">
                 @if (esUsuarioExterno)
                 {
-                    <a class="btn btn-secondary btn-lg" asp-controller="Usuarios" asp-action="Perfil">Cancelar</a>
+                    <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-controller="Usuarios" asp-action="Perfil">Cancelar</a>
                 }
                 else
                 {
-                    <a class="btn btn-secondary btn-lg" asp-action="MiCuenta">Cancelar</a>
+                    <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-action="MiCuenta">Cancelar</a>
                 }
                 <button type="submit" class="btn btn-primary btn-lg">Cambiar contraseña</button>
             </div>
