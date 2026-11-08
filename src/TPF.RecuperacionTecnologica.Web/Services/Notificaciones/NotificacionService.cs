@@ -278,7 +278,7 @@ public class NotificacionService : INotificacionService
     private static string NombreDe(string? razonSocial, string? nombre, string? apellido) =>
         !string.IsNullOrWhiteSpace(razonSocial) ? razonSocial : $"{nombre} {apellido}".Trim();
 
-    private async Task<(string Organizacion, string? Enlace)> ObtenerContextoAsync()
+    private async Task<(string Organizacion, string? Enlace)> ObtenerContextoAsync(string ruta = "Solicitudes")
     {
         var nombre = (await _configuracionService.ObtenerAsync())?.NombreOrganizacion;
         var organizacion = string.IsNullOrWhiteSpace(nombre) ? NombreOrganizacionPorDefecto : nombre.Trim();
@@ -292,7 +292,7 @@ public class NotificacionService : INotificacionService
             return (organizacion, null);
         }
 
-        return (organizacion, urlBase.TrimEnd('/') + "/Solicitudes");
+        return (organizacion, urlBase.TrimEnd('/') + "/" + ruta);
     }
 
     private void EnviarEnSegundoPlano(string destinatario, string asunto, string cuerpo, string referencia)
@@ -309,5 +309,52 @@ public class NotificacionService : INotificacionService
                 _logger.LogError(ex, "No se pudo enviar el aviso de {Referencia}", referencia);
             }
         });
+    }
+
+    public async Task AvisarEntregaAlDonanteAsync(int nroEntrega)
+    {
+        try
+        {
+            var fila = await _context.Entregas
+                .AsNoTracking()
+                .Where(e => e.NroEntrega == nroEntrega)
+                .Select(e => new
+                {
+                    e.NroEquipo,
+                    e.FechaEntrega,
+                    Equipo = e.Equipo.Marca + " " + e.Equipo.Modelo,
+                    e.Solicitud.TipoSolicitante,
+                    e.Equipo.UsuarioDonante.CorreoElectronico,
+                    e.Equipo.UsuarioDonante.EstadoUsuario,
+                    e.Equipo.UsuarioDonante.RazonSocial,
+                    e.Equipo.UsuarioDonante.Nombre,
+                    e.Equipo.UsuarioDonante.Apellido
+                })
+                .FirstOrDefaultAsync();
+
+            if (fila is null || fila.EstadoUsuario != EstadoUsuario.Activo || string.IsNullOrWhiteSpace(fila.CorreoElectronico))
+            {
+                return;
+            }
+
+            var destinatario = fila.TipoSolicitante switch
+            {
+                TipoSolicitante.Escuela => "una escuela",
+                TipoSolicitante.OrganizacionSocial => "una organización social",
+                _ => "una persona particular"
+            };
+
+            var (organizacion, enlace) = await ObtenerContextoAsync("Donaciones");
+
+            EnviarEnSegundoPlano(fila.CorreoElectronico, $"Tu equipo fue entregado - {organizacion}",
+                PlantillaNotificacion.EntregaAlDonante(
+                    organizacion, NombreDe(fila.RazonSocial, fila.Nombre, fila.Apellido), fila.NroEquipo, fila.Equipo,
+                    destinatario, _reloj.FechaLocal(fila.FechaEntrega), enlace),
+                $"la entrega {nroEntrega}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo preparar el aviso de entrega al donante de la Entrega {NroEntrega}", nroEntrega);
+        }
     }
 }

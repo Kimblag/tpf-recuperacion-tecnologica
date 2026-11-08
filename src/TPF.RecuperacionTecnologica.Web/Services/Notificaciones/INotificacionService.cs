@@ -23,4 +23,7 @@ public interface INotificacionService
     /// y todavía no lo recibieron. Cada asignación lo recibe una sola vez. Devuelve cuántos se enviaron.
     /// </summary>
     Task<int> EnviarAvisosDeVencimientoAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Avisa que se entregó el equipo al donante.</summary>
+    Task AvisarEntregaAlDonanteAsync(int nroEntrega);
 }
