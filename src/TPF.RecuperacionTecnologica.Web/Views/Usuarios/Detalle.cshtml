@@ -1,9 +1,11 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.UsuarioDetalleViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios
 @{
     ViewData["Title"] = "Detalle de usuario";
 
     var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+    var estaActivo = Model.EstadoUsuario == EstadoUsuario.Activo;
 }
 
 @section Migas {
@@ -22,9 +24,27 @@
             <p class="page-sub">Usuario externo @Model.Codigo</p>
         </div>
         <div class="page-actions">
+            @if (estaActivo)
+            {
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-inactivar"><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
+            }
             <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
         </div>
     </div>
+
+    @if (!estaActivo)
+    {
+        <div class="alert alert-info" role="status">
+            <partial name="_Icon" model="@("info")" />
+            <div class="alert-body">
+                <div>Esta cuenta está inactiva desde el @(Model.FechaBaja is null ? "—" : Reloj.Fecha(Model.FechaBaja.Value)) y no puede iniciar sesión. No se puede reactivar.</div>
+                @if (!string.IsNullOrWhiteSpace(Model.MotivoBaja))
+                {
+                    <div>Motivo: @Model.MotivoBaja</div>
+                }
+            </div>
+        </div>
+    }
 
     <div class="grid-2">
         <section class="card">
@@ -66,3 +86,12 @@
         </section>
     </div>
 </div>
+
+@if (estaActivo)
+{
+    <partial name="_ModalInactivar" model="new InactivarUsuarioViewModel { NroUsuario = Model.NroUsuario, NombreCompleto = Model.NombreVisible, Codigo = Model.Codigo }" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

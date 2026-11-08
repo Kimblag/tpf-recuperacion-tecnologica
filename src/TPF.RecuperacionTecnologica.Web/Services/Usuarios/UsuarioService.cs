@@ -18,7 +18,6 @@ public class UsuarioService : IUsuarioService
     private readonly IAuditoriaService _auditoriaService;
     private readonly ILogger<UsuarioService> _logger;
 
-
     public UsuarioService(
         ApplicationDbContext context,
         UserManager<IdentityUser> userManager,
@@ -102,7 +101,6 @@ public class UsuarioService : IUsuarioService
                 Description = "No se pudo completar el registro. Intentá nuevamente."
             });
         }
-
 
         // registrar auditoria fuera de la transaccion porque si falla, el registro ya estara hecho
         // no se debe informar error
@@ -193,7 +191,9 @@ public class UsuarioService : IUsuarioService
                 Telefono = u.Telefono,
                 Direccion = u.Direccion,
                 FechaAlta = u.FechaAlta,
-                EstadoUsuario = u.EstadoUsuario
+                EstadoUsuario = u.EstadoUsuario,
+                FechaBaja = u.FechaBaja,
+                MotivoBaja = u.MotivoBaja
             })
             .FirstOrDefaultAsync();
     }
@@ -457,6 +457,8 @@ public class UsuarioService : IUsuarioService
                 return IdentityResult.Failed(errores.ToArray());
             }
 
+            await CancelarDonacionesPendientesAsync(usuario.NroUsuario, "Cancelada por la baja de la cuenta del donante.");
+
             usuario.EstadoUsuario = EstadoUsuario.Inactivo;
             usuario.FechaBaja = DateTime.UtcNow;
             usuario.MotivoBaja = modelo.MotivoBaja.Trim();
@@ -504,5 +506,135 @@ public class UsuarioService : IUsuarioService
         }
 
         return IdentityResult.Success;
+    }
+
+    public async Task<IdentityResult> InactivarAsync(InactivarUsuarioViewModel modelo, int codigoAdministrador)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.NroUsuario == modelo.NroUsuario);
+
+        if (usuario is null)
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "UsuarioNoEncontrado",
+                Description = "No se encontró el usuario especificado."
+            });
+        }
+
+        if (usuario.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "YaInactivo",
+                Description = "El usuario ya se encuentra inactivo."
+            });
+        }
+
+        var motivo = modelo.MotivoInactivacion.Trim();
+
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            var tieneEquipoAsignado = await _context.Solicitudes.AnyAsync(s =>
+                s.NroUsuario == usuario.NroUsuario
+                && s.EstadoSolicitud == EstadoSolicitud.Asignada);
+
+            if (tieneEquipoAsignado)
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = "EquipoAsignado",
+                    Description = "El usuario tiene una solicitud con un equipo asignado. Primero hay que liberar esa asignación desde Asignaciones."
+                });
+            }
+
+            var ahora = DateTime.UtcNow;
+
+            var pendientes = await _context.Solicitudes
+                .Where(s => s.NroUsuario == usuario.NroUsuario && s.EstadoSolicitud == EstadoSolicitud.Pendiente)
+                .ToListAsync();
+
+            foreach (var solicitud in pendientes)
+            {
+                solicitud.EstadoSolicitud = EstadoSolicitud.Cancelada;
+                solicitud.FechaCancelacion = ahora;
+                solicitud.FechaCierre = ahora;
+                solicitud.MotivoCancelacion = "Cancelada por la inactivación de la cuenta.";
+                solicitud.FechaUltimaModificacion = ahora;
+            }
+
+            await CancelarDonacionesPendientesAsync(usuario.NroUsuario, "Cancelada por la inactivación de la cuenta del donante.");
+
+            usuario.EstadoUsuario = EstadoUsuario.Inactivo;
+            usuario.FechaBaja = ahora;
+            usuario.MotivoBaja = motivo;
+            usuario.FechaUltimaModificacion = ahora;
+
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "UsuarioModificado",
+                Description = "Los datos cambiaron mientras se inactivaba al usuario. Volvé a abrir la ficha e intentá nuevamente."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la inactivación del Usuario {NroUsuario}; se revirtió la transacción", usuario.NroUsuario);
+
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "InactivacionFallida",
+                Description = "No se pudo inactivar al usuario. Intentá nuevamente."
+            });
+        }
+
+        try
+        {
+            var identityUser = await _userManager.FindByIdAsync(usuario.IdentityUserId);
+
+            if (identityUser is not null)
+            {
+                await _userManager.UpdateSecurityStampAsync(identityUser);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudieron invalidar las sesiones del Usuario {NroUsuario} tras la inactivación", usuario.NroUsuario);
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.BajaUsuario, codigoAdministrador, nameof(Usuario), usuario.NroUsuario,
+                $"Inactivación de usuario ({usuario.TipoUsuario}) por el Administrador. Motivo: {motivo}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la inactivación del Usuario {NroUsuario}", usuario.NroUsuario);
+        }
+
+        return IdentityResult.Success;
+    }
+
+    private async Task CancelarDonacionesPendientesAsync(int nroUsuario, string motivo)
+    {
+        var pendientes = await _context.Equipos
+            .Where(e => e.NroUsuarioDonante == nroUsuario && e.EstadoEquipo == EstadoEquipo.PendienteRecepcion)
+            .ToListAsync();
+
+        var ahora = DateTime.UtcNow;
+
+        foreach (var equipo in pendientes)
+        {
+            equipo.EstadoEquipo = EstadoEquipo.Cancelado;
+            equipo.FechaCancelacion = ahora;
+            equipo.MotivoCancelacion = motivo;
+            equipo.FechaUltimaModificacion = ahora;
+        }
     }
 }

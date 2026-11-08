@@ -61,4 +61,12 @@ public interface IUsuarioService
     Task<UsuarioEncontradoViewModel?> ObtenerUsuarioEncontradoAsync(int nroUsuario);
 
     Task<ResultadoAltaAsistida> AltaAsistidaAsync(SelectorUsuarioViewModel datos);
+
+    /// <summary>
+    /// Desactiva la cuenta de un Usuario, dejándolo Inactivo y registrando la fecha y el motivo de baja.
+    /// </summary>
+    /// <param name="modelo"></param>
+    /// <param name="codigoAdministrador"></param>
+    /// <returns></returns>
+    Task<IdentityResult> InactivarAsync(InactivarUsuarioViewModel modelo, int codigoAdministrador);
 }
