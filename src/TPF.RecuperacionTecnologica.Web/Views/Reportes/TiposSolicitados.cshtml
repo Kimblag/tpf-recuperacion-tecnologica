@@ -24,7 +24,7 @@
 }
 
 <div class="stack">
-    <partial name="_EncabezadoReporte" model="@(("Tipos de equipo más solicitados", "Ranking según la cantidad de solicitudes registradas.", Model.PeriodoConsultado, (string?)null))" />
+    <partial name="_EncabezadoReporte" model="@(("Tipos de equipo más solicitados", "Ranking según la cantidad de solicitudes registradas.", Model.PeriodoConsultado, Model.ErrorAlCargar || Model.Total == 0 ? null : "ExportarTiposSolicitados"))" />
 
     @if (Model.ErrorAlCargar)
     {

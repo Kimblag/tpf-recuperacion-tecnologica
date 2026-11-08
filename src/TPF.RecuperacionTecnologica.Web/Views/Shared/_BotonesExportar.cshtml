@@ -1,0 +1,22 @@
+@model string
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Reportes
+@{
+    RouteValueDictionary Enlace(FormatoExportacion formato)
+    {
+        var valores = new RouteValueDictionary();
+
+        foreach (var par in Context.Request.Query)
+        {
+            if (!par.Key.Equals("formato", StringComparison.OrdinalIgnoreCase) && !par.Key.Equals("pagina", StringComparison.OrdinalIgnoreCase))
+            {
+                valores[par.Key] = par.Value.ToString();
+            }
+        }
+
+        valores["formato"] = formato;
+
+        return valores;
+    }
+}
+<a class="btn btn-secondary" href="@Url.Action(Model, Enlace(FormatoExportacion.Excel))"><partial name="_Icon" model="@("file")" /><span>Descargar Excel</span></a>
+<a class="btn btn-secondary" href="@Url.Action(Model, Enlace(FormatoExportacion.Pdf))"><partial name="_Icon" model="@("file")" /><span>Descargar PDF</span></a>

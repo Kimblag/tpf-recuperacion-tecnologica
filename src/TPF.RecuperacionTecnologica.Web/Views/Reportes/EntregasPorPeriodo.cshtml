@@ -20,7 +20,7 @@
 }
 
 <div class="stack">
-    <partial name="_EncabezadoReporte" model="@(("Entregas por período", "Equipos entregados por mes, trimestre o año.", Model.PeriodoConsultado, (string?)null))" />
+    <partial name="_EncabezadoReporte" model="@(("Entregas por período", "Equipos entregados por mes, trimestre o año.", Model.PeriodoConsultado, Model.ErrorAlCargar || Model.Total == 0 ? null : "ExportarEntregasPorPeriodo"))" />
 
     @if (Model.ErrorAlCargar)
     {
