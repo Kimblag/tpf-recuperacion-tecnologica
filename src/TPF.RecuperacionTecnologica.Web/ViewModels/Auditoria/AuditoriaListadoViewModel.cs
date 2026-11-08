@@ -1,5 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.Services.Reloj;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Reportes;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria;
 
@@ -90,6 +93,78 @@ public class AuditoriaListadoViewModel : IValidatableObject
                 "El identificador debe ser un número o un código como SOL-000030.", [nameof(Identificador)]);
         }
     }
+
+    public const int LimiteExportacion = 5000;
+
+    public string DescripcionFiltros()
+    {
+        var filtros = new List<string>();
+
+        if (FechaDesde is not null)
+        {
+            filtros.Add($"desde {FechaDesde:dd/MM/yyyy}");
+        }
+
+        if (FechaHasta is not null)
+        {
+            filtros.Add($"hasta {FechaHasta:dd/MM/yyyy}");
+        }
+
+        if (Operacion is not null)
+        {
+            filtros.Add($"operación {NombreEnum.De(Operacion.Value)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(CodigoPersonal))
+        {
+            filtros.Add($"personal {CodigoPersonal.Trim()}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Entidad))
+        {
+            filtros.Add($"entidad {EtiquetaEntidad(Entidad.Trim())}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Identificador))
+        {
+            filtros.Add($"identificador {Identificador.Trim()}");
+        }
+
+        return filtros.Count == 0
+            ? "Sin filtros: todas las operaciones registradas."
+            : $"Filtros: {string.Join(" · ", filtros)}.";
+    }
+
+    public TablaExportable ATabla(IRelojInstitucional reloj) => new()
+    {
+        Titulo = "Registro de auditoría",
+        Descripcion = Total > LimiteExportacion
+            ? $"Se incluyen las {LimiteExportacion:N0} operaciones más recientes de {Total:N0}. Acotá las fechas para exportar el resto."
+            : $"{Total:N0} {(Total == 1 ? "operación registrada" : "operaciones registradas")}.",
+        Periodo = DescripcionFiltros(),
+        NombreArchivo = "auditoria",
+        Horizontal = true,
+        Columnas =
+        [
+            new ColumnaExportable("Fecha y hora", peso: 1.4f),
+            new ColumnaExportable("Personal", peso: 2f),
+            new ColumnaExportable("Operación", peso: 1.8f),
+            new ColumnaExportable("Entidad", peso: 1.2f),
+            new ColumnaExportable("Identificador", peso: 1.3f),
+            new ColumnaExportable("Detalle", peso: 3.5f)
+        ],
+        Filas = Filas
+            .Select(f => (IReadOnlyList<object>)new object[]
+            {
+                reloj.FechaHora(f.FechaHora),
+                f.Personal,
+                NombreEnum.De(f.Operacion),
+                f.EtiquetaEntidad,
+                f.Identificador,
+                f.Detalle ?? string.Empty
+            })
+            .ToList()
+    };
 
     private static int? LeerNumero(string? texto)
     {

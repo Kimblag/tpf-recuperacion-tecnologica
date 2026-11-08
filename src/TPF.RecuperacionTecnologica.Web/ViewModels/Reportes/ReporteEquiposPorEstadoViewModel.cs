@@ -17,7 +17,7 @@ public class ReporteEquiposPorEstadoViewModel : ReporteBaseViewModel
         NombreArchivo = "equipos-por-estado",
         Columnas =
         [
-            new ColumnaExportable("Estado"),
+            new ColumnaExportable("Estado", peso: 3f),
             new ColumnaExportable("Cantidad", TipoColumna.Entero),
             new ColumnaExportable("Proporción", TipoColumna.Porcentaje)
         ],

@@ -18,6 +18,7 @@ public class ExportacionService : IExportacionService
     private const string ColorBorde = "#D8DDDF";
     private const string TipoExcel = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     private const string TipoPdf = "application/pdf";
+    private const double MaximoAnchoColumna = 60;
 
     private static readonly CultureInfo Cultura = CultureInfo.GetCultureInfo("es-AR");
 
@@ -100,8 +101,24 @@ public class ExportacionService : IExportacionService
 
         hoja.Columns(1, tabla.Columnas.Count).AdjustToContents();
         hoja.Column(1).Width = Math.Max(hoja.Column(1).Width, 28);
+
+        for (var c = 1; c <= tabla.Columnas.Count; c++)
+        {
+            if (hoja.Column(c).Width > MaximoAnchoColumna)
+            {
+                hoja.Column(c).Width = MaximoAnchoColumna;
+            }
+        }
+
+        if (tabla.Filas.Count > 0)
+        {
+            var datos = hoja.Range(filaEncabezado + 1, 1, filaEncabezado + tabla.Filas.Count, tabla.Columnas.Count);
+            datos.Style.Alignment.WrapText = true;
+            datos.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+        }
+
         hoja.SheetView.FreezeRows(filaEncabezado);
-        hoja.PageSetup.PageOrientation = XLPageOrientation.Portrait;
+        hoja.PageSetup.PageOrientation = tabla.Horizontal ? XLPageOrientation.Landscape : XLPageOrientation.Portrait;
         hoja.PageSetup.FitToPages(1, 0);
 
         using var memoria = new MemoryStream();
@@ -146,7 +163,7 @@ public class ExportacionService : IExportacionService
         {
             documento.Page(pagina =>
             {
-                pagina.Size(PageSizes.A4);
+                pagina.Size(tabla.Horizontal ? PageSizes.A4.Landscape() : PageSizes.A4);
                 pagina.Margin(40);
                 pagina.DefaultTextStyle(estilo => estilo.FontSize(10).FontColor(ColorTexto));
 
@@ -170,7 +187,7 @@ public class ExportacionService : IExportacionService
                     {
                         for (var c = 0; c < tabla.Columnas.Count; c++)
                         {
-                            columnas.RelativeColumn(c == 0 ? 3f : 1.5f);
+                            columnas.RelativeColumn(tabla.Columnas[c].Peso);
                         }
                     });
 

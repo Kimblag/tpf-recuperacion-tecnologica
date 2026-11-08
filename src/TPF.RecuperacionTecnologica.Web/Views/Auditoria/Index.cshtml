@@ -29,6 +29,12 @@
             <div class="h-id"><h1 tabindex="-1">Auditoría</h1></div>
             <p class="page-sub">Registro centralizado de las operaciones realizadas en la plataforma</p>
         </div>
+        @if (filtrosValidos && !Model.ErrorAlCargar && Model.Total > 0)
+        {
+            <div class="page-actions">
+                <partial name="_BotonesExportar" model="@("Exportar")" />
+            </div>
+        }
     </div>
 
     <partial name="_ResumenErrores" />

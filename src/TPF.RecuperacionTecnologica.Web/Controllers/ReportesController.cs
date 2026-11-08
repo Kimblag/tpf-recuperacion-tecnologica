@@ -144,6 +144,64 @@ public class ReportesController : Controller
         return View(modelo);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ExportarEntregasPorPeriodo(
+        DateTime? desde, DateTime? hasta, FormatoExportacion formato, AgrupacionPeriodo agrupacion = AgrupacionPeriodo.Mes)
+    {
+        if (RangoInvertido(desde, hasta, TipoReporte.EntregasPorPeriodo) is { } rechazo)
+        {
+            return rechazo;
+        }
+
+        try
+        {
+            var modelo = new ReporteEntregasPorPeriodoViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                Agrupacion = agrupacion,
+                Filas = await _reporteService.EntregasPorPeriodoAsync(desde, hasta, agrupacion)
+            };
+
+            return await DescargarAsync(modelo.ATabla(), formato);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo exportar el informe de entregas por período");
+            TempData["MensajeError"] = "No se pudo generar el archivo. Intentá de nuevo en unos minutos.";
+
+            return RedirectToAction(nameof(EntregasPorPeriodo), new { desde, hasta, agrupacion });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarTiposSolicitados(DateTime? desde, DateTime? hasta, FormatoExportacion formato)
+    {
+        if (RangoInvertido(desde, hasta, TipoReporte.TiposSolicitados) is { } rechazo)
+        {
+            return rechazo;
+        }
+
+        try
+        {
+            var modelo = new ReporteTiposSolicitadosViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                Filas = await _reporteService.TiposSolicitadosAsync(desde, hasta)
+            };
+
+            return await DescargarAsync(modelo.ATabla(), formato);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo exportar el informe de tipos más solicitados");
+            TempData["MensajeError"] = "No se pudo generar el archivo. Intentá de nuevo en unos minutos.";
+
+            return RedirectToAction(nameof(TiposSolicitados), new { desde, hasta });
+        }
+    }
+
     private async Task<FileContentResult> DescargarAsync(TablaExportable tabla, FormatoExportacion formato)
     {
         var archivo = await _exportacionService.ExportarAsync(tabla, formato);

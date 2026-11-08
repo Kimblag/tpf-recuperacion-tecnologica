@@ -15,15 +15,18 @@ public enum FormatoExportacion
 
 public class ColumnaExportable
 {
-    public ColumnaExportable(string titulo, TipoColumna tipo = TipoColumna.Texto)
+    public ColumnaExportable(string titulo, TipoColumna tipo = TipoColumna.Texto, float peso = 1.5f)
     {
         Titulo = titulo;
         Tipo = tipo;
+        Peso = peso;
     }
 
     public string Titulo { get; }
 
     public TipoColumna Tipo { get; }
+
+    public float Peso { get; }
 }
 
 public class TablaExportable
@@ -35,6 +38,8 @@ public class TablaExportable
     public string Periodo { get; set; } = string.Empty;
 
     public string NombreArchivo { get; set; } = string.Empty;
+
+    public bool Horizontal { get; set; }
 
     public IReadOnlyList<ColumnaExportable> Columnas { get; set; } = [];
 
