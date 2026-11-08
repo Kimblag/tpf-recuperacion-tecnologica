@@ -4,6 +4,7 @@
     ViewData["Title"] = "Ficha de la persona";
 
     var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+    var puedeCorregir = Model.EstadoUsuario == EstadoUsuario.Activo && !Model.TieneContrasena;
 }
 
 @section Migas {
@@ -20,6 +21,12 @@
             </div>
             <p class="page-sub">Usuario externo @Model.Codigo</p>
         </div>
+        @if (puedeCorregir)
+        {
+            <div class="page-actions">
+                <a class="btn btn-secondary" asp-action="Corregir" asp-route-id="@Model.NroUsuario"><partial name="_Icon" model="@("edit")" /><span>Corregir datos</span></a>
+            </div>
+        }
     </div>
 
     @if (TempData["AvisoInvitacion"] is string avisoInvitacion)
@@ -51,7 +58,7 @@
         <div class="card-header">
             <div>
                 <h2 class="card-title">Datos de contacto</h2>
-                <p class="card-sub">Solo lectura</p>
+                <p class="card-sub">@(puedeCorregir ? "Se pueden corregir hasta que la persona active su cuenta" : "Solo lectura")</p>
             </div>
         </div>
         <div class="card-body">
