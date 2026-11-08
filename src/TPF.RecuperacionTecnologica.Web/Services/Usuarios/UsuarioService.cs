@@ -621,6 +621,124 @@ public class UsuarioService : IUsuarioService
         return IdentityResult.Success;
     }
 
+    public async Task<CorreccionUsuarioViewModel?> ObtenerCorreccionAsync(int nroUsuario)
+    {
+        return await _context.Usuarios
+            .AsNoTracking()
+            .Where(u => u.NroUsuario == nroUsuario
+                && u.EstadoUsuario == EstadoUsuario.Activo
+                && _context.Users.Any(i => i.Id == u.IdentityUserId && i.PasswordHash == null))
+            .Select(u => new CorreccionUsuarioViewModel
+            {
+                NroUsuario = u.NroUsuario,
+                TipoUsuario = u.TipoUsuario,
+                Nombre = u.Nombre,
+                Apellido = u.Apellido,
+                RazonSocial = u.RazonSocial,
+                Telefono = u.Telefono,
+                CorreoElectronico = u.CorreoElectronico
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<ResultadoCorreccionUsuario> CorregirAsync(CorreccionUsuarioViewModel modelo, int codigoCoordinador)
+    {
+        const string NoCorregible = "Esta cuenta ya no se puede corregir: la persona activó su cuenta y administra sus propios datos.";
+
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.NroUsuario == modelo.NroUsuario);
+
+        if (usuario is null || usuario.EstadoUsuario != EstadoUsuario.Activo)
+        {
+            return ResultadoCorreccionUsuario.Fallo("No se encontró a la persona o su cuenta ya no está activa.");
+        }
+
+        var identityUser = await _userManager.FindByIdAsync(usuario.IdentityUserId);
+
+        if (identityUser is null)
+        {
+            return ResultadoCorreccionUsuario.Fallo("No se encontró la cuenta de acceso de la persona.");
+        }
+
+        if (await _userManager.HasPasswordAsync(identityUser))
+        {
+            return ResultadoCorreccionUsuario.Fallo(NoCorregible);
+        }
+
+        var correo = modelo.CorreoElectronico.Trim();
+        var correoCambio = !string.Equals(usuario.CorreoElectronico, correo, StringComparison.OrdinalIgnoreCase);
+
+        if (correoCambio && await _context.Usuarios.AnyAsync(u => u.NroUsuario != usuario.NroUsuario && u.CorreoElectronico == correo))
+        {
+            return ResultadoCorreccionUsuario.Fallo("Ya existe una cuenta con ese correo electrónico.");
+        }
+
+        await using var transaccion = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            if (correoCambio)
+            {
+                var resultadoCorreo = await _userManager.SetEmailAsync(identityUser, correo);
+
+                if (!resultadoCorreo.Succeeded)
+                {
+                    return ResultadoCorreccionUsuario.Fallo(MensajeDeCorreo(resultadoCorreo));
+                }
+
+                var resultadoUsuario = await _userManager.SetUserNameAsync(identityUser, correo);
+
+                if (!resultadoUsuario.Succeeded)
+                {
+                    return ResultadoCorreccionUsuario.Fallo(MensajeDeCorreo(resultadoUsuario));
+                }
+
+                usuario.CorreoElectronico = correo;
+            }
+
+            if (usuario.TipoUsuario == TipoUsuario.Persona)
+            {
+                usuario.Nombre = modelo.Nombre?.Trim();
+                usuario.Apellido = modelo.Apellido?.Trim();
+            }
+            else
+            {
+                usuario.RazonSocial = modelo.RazonSocial?.Trim();
+            }
+
+            usuario.Telefono = string.IsNullOrWhiteSpace(modelo.Telefono) ? null : modelo.Telefono.Trim();
+            usuario.FechaUltimaModificacion = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            await transaccion.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falló la corrección de datos del Usuario {NroUsuario}; se revirtió la transacción", usuario.NroUsuario);
+
+            return ResultadoCorreccionUsuario.Fallo("No se pudieron guardar los cambios. Intentá nuevamente.");
+        }
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.CorreccionUsuario, codigoCoordinador, nameof(Usuario), usuario.NroUsuario,
+                correoCambio
+                    ? "Corrección de datos de contacto de una cuenta sin activar (incluye el correo)"
+                    : "Corrección de datos de contacto de una cuenta sin activar");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar la corrección de datos del Usuario {NroUsuario}", usuario.NroUsuario);
+        }
+
+        return ResultadoCorreccionUsuario.Ok(correoCambio, identityUser.Id);
+    }
+
+    private static string MensajeDeCorreo(IdentityResult resultado) =>
+        resultado.Errors.Any(e => e.Code is "DuplicateUserName" or "DuplicateEmail")
+            ? "Ya existe una cuenta con ese correo electrónico."
+            : "No se pudo actualizar el correo electrónico. Revisá que sea válido.";
+
     private async Task CancelarDonacionesPendientesAsync(int nroUsuario, string motivo)
     {
         var pendientes = await _context.Equipos

@@ -1,0 +1,87 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.CorreccionUsuarioViewModel
+@using TPF.RecuperacionTecnologica.Web.Models.Enums
+@{
+    ViewData["Title"] = "Corregir datos de la persona";
+
+    var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-action="Ficha" asp-route-id="@Model.NroUsuario">Ficha de la persona</a></li>
+    <li aria-current="page">Corregir datos</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Corregir datos de la persona</h1></div>
+            <p class="page-sub">Usuario externo <span class="mono">@Model.Codigo</span></p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="status">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body">
+            <div>Se pueden corregir los datos mientras la persona no activó su cuenta. Si cambiás el correo, se envía una nueva invitación a la dirección actualizada y la anterior deja de valer.</div>
+            <div>El documento no se puede modificar.</div>
+        </div>
+    </div>
+
+    <form class="card" asp-action="Corregir" method="post" id="f-correccion" novalidate aria-labelledby="f-correccion-titulo">
+        <input type="hidden" asp-for="NroUsuario" />
+        <input type="hidden" asp-for="TipoUsuario" />
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-correccion-titulo">Datos de contacto</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    @if (esPersona)
+                    {
+                        <div class="field">
+                            <label class="form-label" for="Nombre">Nombre<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="Nombre" class="form-control" maxlength="100" autocomplete="off" />
+                            <span asp-validation-for="Nombre"></span>
+                        </div>
+                        <div class="field">
+                            <label class="form-label" for="Apellido">Apellido<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="Apellido" class="form-control" maxlength="100" autocomplete="off" />
+                            <span asp-validation-for="Apellido"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="field span-2">
+                            <label class="form-label" for="RazonSocial">Razón social<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                            <input asp-for="RazonSocial" class="form-control" maxlength="150" autocomplete="off" />
+                            <span asp-validation-for="RazonSocial"></span>
+                        </div>
+                    }
+                    <div class="field">
+                        <label class="form-label" for="CorreoElectronico">Correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="CorreoElectronico" type="email" class="form-control" maxlength="254" autocomplete="off" inputmode="email" />
+                        <span asp-validation-for="CorreoElectronico"></span>
+                    </div>
+                    <div class="field">
+                        <label class="form-label" for="Telefono">Teléfono</label>
+                        <input asp-for="Telefono" type="tel" class="form-control" maxlength="20" autocomplete="off" inputmode="tel" />
+                        <span asp-validation-for="Telefono"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-action="Ficha" asp-route-id="@Model.NroUsuario">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Guardar correcciones</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

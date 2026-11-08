@@ -108,6 +108,65 @@ public class UsuariosController : Controller
         return View(ficha);
     }
 
+    [HttpGet]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> Corregir(int id)
+    {
+        var modelo = await _usuarioService.ObtenerCorreccionAsync(id);
+
+        if (modelo is null)
+        {
+            TempData["AvisoInvitacion"] = "Esta cuenta ya no se puede corregir: la persona activó su cuenta o está dada de baja.";
+            return RedirectToAction(nameof(Ficha), new { id });
+        }
+
+        return View(modelo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> Corregir(CorreccionUsuarioViewModel modelo)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(modelo);
+        }
+
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var codigoCoordinador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoCoordinador is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _usuarioService.CorregirAsync(modelo, codigoCoordinador.Value);
+
+        if (!resultado.Exitoso)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+            return View(modelo);
+        }
+
+        if (resultado.CorreoCambio)
+        {
+            await _cuentaService.EnviarInvitacionAsync(
+                resultado.IdentityUserId!,
+                (idUsuario, token) => Url.Action("ActivarCuenta", "Cuenta", new { idUsuario, token })!,
+                $"{Request.Scheme}://{Request.Host}");
+        }
+
+        TempData["Mensaje"] = resultado.CorreoCambio
+            ? "Los datos se corrigieron y se envió una nueva invitación al correo actualizado."
+            : "Los datos se corrigieron.";
+
+        return RedirectToAction(nameof(Ficha), new { id = modelo.NroUsuario });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Policy = "Coordinacion")]

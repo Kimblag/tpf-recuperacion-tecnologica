@@ -69,4 +69,8 @@ public interface IUsuarioService
     /// <param name="codigoAdministrador"></param>
     /// <returns></returns>
     Task<IdentityResult> InactivarAsync(InactivarUsuarioViewModel modelo, int codigoAdministrador);
+
+    Task<CorreccionUsuarioViewModel?> ObtenerCorreccionAsync(int nroUsuario);
+
+    Task<ResultadoCorreccionUsuario> CorregirAsync(CorreccionUsuarioViewModel modelo, int codigoCoordinador);
 }
