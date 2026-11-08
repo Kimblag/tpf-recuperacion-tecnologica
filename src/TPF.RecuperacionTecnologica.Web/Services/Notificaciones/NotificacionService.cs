@@ -4,6 +4,7 @@ using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.Services.Email;
 using TPF.RecuperacionTecnologica.Web.Services.Reloj;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.Services.Notificaciones;
 
@@ -355,6 +356,63 @@ public class NotificacionService : INotificacionService
         catch (Exception ex)
         {
             _logger.LogError(ex, "No se pudo preparar el aviso de entrega al donante de la Entrega {NroEntrega}", nroEntrega);
+        }
+    }
+
+    public async Task<int> AvisarIngresoSinRegistroAsync(int codigoTecnico, int? nroEquipo, string descripcion)
+    {
+        try
+        {
+            var coordinadores = await _context.PersonalInterno
+                .AsNoTracking()
+                .Where(p => p.RolAsignado == RolPersonal.Coordinador
+                    && p.EstadoPersonal == EstadoPersonal.Activo
+                    && p.CorreoElectronico != "")
+                .Select(p => new { p.CorreoElectronico, p.Nombre, p.Apellido })
+                .ToListAsync();
+
+            if (coordinadores.Count == 0)
+            {
+                return 0;
+            }
+
+            var tecnico = await _context.PersonalInterno
+                .AsNoTracking()
+                .Where(p => p.CodigoPersonal == codigoTecnico)
+                .Select(p => p.Nombre + " " + p.Apellido)
+                .FirstOrDefaultAsync() ?? $"PER-{codigoTecnico:D4}";
+
+            var situacion = "No se indicó el número del equipo.";
+
+            if (nroEquipo is not null)
+            {
+                var estado = await _context.Equipos
+                    .AsNoTracking()
+                    .Where(e => e.NroEquipo == nroEquipo)
+                    .Select(e => (EstadoEquipo?)e.EstadoEquipo)
+                    .FirstOrDefaultAsync();
+
+                situacion = estado is null
+                    ? $"El equipo Nº {nroEquipo} no figura en el sistema."
+                    : $"El equipo Nº {nroEquipo} figura como {NombreEnum.De(estado.Value)}.";
+            }
+
+            var (organizacion, enlace) = await ObtenerContextoAsync("Donaciones/Gestion");
+
+            foreach (var coordinador in coordinadores)
+            {
+                EnviarEnSegundoPlano(coordinador.CorreoElectronico, $"Equipo recibido sin registro - {organizacion}",
+                    PlantillaNotificacion.IngresoSinRegistro(
+                        organizacion, $"{coordinador.Nombre} {coordinador.Apellido}".Trim(), tecnico, situacion, descripcion, enlace),
+                    "el ingreso sin registro");
+            }
+
+            return coordinadores.Count;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo preparar el aviso de ingreso sin registro del equipo {NroEquipo}", nroEquipo);
+            return 0;
         }
     }
 }

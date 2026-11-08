@@ -58,4 +58,6 @@ public interface IDiagnosticoService
     /// En esos casos el dictamen vigente se mantiene.
     /// </returns>
     Task<IdentityResult> RegistrarRectificacionAsync(int codigoTecnico, DiagnosticoFormularioViewModel modelo);
+
+    Task<int> InformarIngresoSinRegistroAsync(int codigoTecnico, InformarIngresoViewModel modelo);
 }

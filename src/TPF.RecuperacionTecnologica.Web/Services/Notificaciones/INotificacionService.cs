@@ -26,4 +26,6 @@ public interface INotificacionService
 
     /// <summary>Avisa que se entregó el equipo al donante.</summary>
     Task AvisarEntregaAlDonanteAsync(int nroEntrega);
+
+    Task<int> AvisarIngresoSinRegistroAsync(int codigoTecnico, int? nroEquipo, string descripcion);
 }

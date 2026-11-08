@@ -95,6 +95,49 @@ public class DiagnosticosController : Controller
     public Task<IActionResult> Rectificar(int nroEquipo, DiagnosticoFormularioViewModel formulario) =>
         GuardarAsync(nroEquipo, TipoDiagnostico.Rectificacion, formulario, "La rectificación se guardó correctamente.");
 
+    [HttpGet]
+    [Authorize(Policy = "SoloTecnico")]
+    public IActionResult InformarIngreso(int? nroEquipo)
+    {
+        return View(new InformarIngresoViewModel { NroEquipo = nroEquipo });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloTecnico")]
+    public async Task<IActionResult> InformarIngreso(InformarIngresoViewModel modelo)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(modelo);
+        }
+
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var codigoTecnico = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoTecnico is null)
+        {
+            return Forbid();
+        }
+
+        var avisados = await _diagnosticoService.InformarIngresoSinRegistroAsync(codigoTecnico.Value, modelo);
+
+        if (avisados == 0)
+        {
+            TempData["MensajeError"] = "Quedó registrado, pero no hay Coordinadores activos a quienes avisar por correo. Avisá en persona.";
+        }
+        else
+        {
+            TempData["Mensaje"] = avisados == 1
+                ? "Se avisó al Coordinador por correo."
+                : $"Se avisó por correo a {avisados} Coordinadores.";
+        }
+
+        return RedirectToAction("Pendientes", "Equipos");
+    }
+
     private async Task<IActionResult> MostrarFormularioAsync(int nroEquipo, TipoDiagnostico tipo)
     {
         var equipo = await _equipoConsultaService.ObtenerDetalleAsync(nroEquipo);
@@ -108,7 +151,7 @@ public class DiagnosticosController : Controller
 
         if (redireccion is not null || bloqueo is not null)
         {
-            return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo! });
+            return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo!, DonacionCancelada = equipo.EstadoEquipo == EstadoEquipo.Cancelado });
         }
 
         var formulario = ArmarFormulario(nroEquipo, equipo, tipo);
@@ -153,7 +196,7 @@ public class DiagnosticosController : Controller
 
         if (redireccion is not null || bloqueo is not null)
         {
-            return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo! });
+            return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo!, DonacionCancelada = equipo.EstadoEquipo == EstadoEquipo.Cancelado });
         }
 
         var conFallas = formulario.DictamenTecnico is DictamenTecnico.NecesitaReparacion or DictamenTecnico.NoRecuperable;

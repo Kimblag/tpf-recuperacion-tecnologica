@@ -1,0 +1,60 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Diagnosticos.InformarIngresoViewModel
+@{
+    ViewData["Title"] = "Informar ingreso sin registro";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li><a asp-controller="Equipos" asp-action="Pendientes">Pendientes de diagnóstico</a></li>
+    <li aria-current="page">Informar ingreso sin registro</li>
+}
+
+<div class="stack narrow">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Informar ingreso sin registro</h1></div>
+            <p class="page-sub">Avisá a la Coordinación que llegó un equipo que no se puede ingresar</p>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="status">
+        <partial name="_Icon" model="@("info")" />
+        <div class="alert-body"><div>Usá esta opción cuando llega un equipo que no figura en el sistema o cuya donación fue cancelada. Se envía un correo a todos los Coordinadores activos y queda registrado en la auditoría.</div></div>
+    </div>
+
+    <form class="card" asp-action="InformarIngreso" method="post" id="f-ingreso" novalidate aria-labelledby="f-ingreso-titulo">
+        <div class="card-header">
+            <div><h2 class="card-title" id="f-ingreso-titulo">Datos del equipo que llegó</h2></div>
+        </div>
+        <div class="card-body">
+            <div class="stack" style="gap:16px">
+                <partial name="_ResumenErrores" />
+
+                <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label class="form-label" for="NroEquipo">Número de equipo</label>
+                        <input asp-for="NroEquipo" class="form-control" inputmode="numeric" maxlength="9" autocomplete="off" aria-describedby="NroEquipo-hint" />
+                        <div class="form-text" id="NroEquipo-hint">Si el equipo trae un número, indicalo. Si no, dejalo vacío.</div>
+                        <span asp-validation-for="NroEquipo"></span>
+                    </div>
+                    <div class="field span-2">
+                        <label class="form-label" for="Descripcion">Qué llegó al taller<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="4" maxlength="400" placeholder="Tipo de equipo, marca, modelo y quién lo trajo" aria-describedby="Descripcion-hint"></textarea>
+                        <div class="form-text" id="Descripcion-hint">Con unas pocas líneas alcanza.</div>
+                        <span asp-validation-for="Descripcion"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary btn-lg" data-cancelar-origen asp-controller="Equipos" asp-action="Pendientes">Cancelar</a>
+            <button type="submit" class="btn btn-primary btn-lg">Avisar a la Coordinación</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

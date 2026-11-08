@@ -21,6 +21,10 @@
         <span class="state-ic"><partial name="_Icon" model="@("alert")" /></span>
         <h3>No se puede diagnosticar este equipo</h3>
         <p>@Model.Mensaje</p>
+        @if (Model.DonacionCancelada)
+        {
+            <a class="btn btn-primary" asp-action="InformarIngreso" asp-route-nroEquipo="@Model.NroEquipo"><partial name="_Icon" model="@("alert")" /><span>Informar ingreso sin registro</span></a>
+        }
         <a class="btn btn-secondary" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al equipo</span></a>
     </div>
 </div>

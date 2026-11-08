@@ -57,5 +57,8 @@ public enum TipoOperacionAuditoria
     ActivacionCuenta,
 
     [Display(Name = "Reactivación de personal")]
-    ReactivacionPersonal
+    ReactivacionPersonal,
+
+    [Display(Name = "Ingreso sin registro")]
+    IngresoSinRegistro
 }
