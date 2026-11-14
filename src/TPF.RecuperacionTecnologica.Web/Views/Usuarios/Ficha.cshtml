@@ -5,6 +5,7 @@
 
     var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
     var puedeCorregir = Model.EstadoUsuario == EstadoUsuario.Activo && !Model.TieneContrasena;
+    var pendienteActivacion = puedeCorregir;
 }
 
 @section Migas {
@@ -17,7 +18,14 @@
         <div>
             <div class="h-id">
                 <h1 tabindex="-1">@Model.NombreVisible</h1>
-                <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
+                @if (pendienteActivacion)
+                {
+                    <partial name="_Badge" model="@(("Pendiente de activación", "warn"))" />
+                }
+                else
+                {
+                    <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
+                }
             </div>
             <p class="page-sub">Usuario externo @Model.Codigo</p>
         </div>
@@ -76,7 +84,16 @@
                 <dt>Fecha de alta</dt>
                 <dd>@Reloj.Fecha(Model.FechaAlta)</dd>
                 <dt>Estado de la cuenta</dt>
-                <dd><partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" /></dd>
+                <dd>
+                    @if (pendienteActivacion)
+                    {
+                        <partial name="_Badge" model="@(("Pendiente de activación", "warn"))" />
+                    }
+                    else
+                    {
+                        <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
+                    }
+                </dd>
             </dl>
         </div>
     </section>

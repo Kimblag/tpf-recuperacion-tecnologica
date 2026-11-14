@@ -1,0 +1,68 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.UsuarioListadoViewModel
+@{
+    ViewData["Title"] = "Personas pendientes de activación";
+}
+
+@section Migas {
+    <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
+    <li aria-current="page">Personas</li>
+}
+
+<div class="stack">
+    <div class="page-head">
+        <div>
+            <div class="h-id"><h1 tabindex="-1">Personas pendientes de activación</h1></div>
+            <p class="page-sub">Cuentas registradas con atención asistida que todavía no activaron su contraseña</p>
+        </div>
+    </div>
+
+    <section class="card overflow" aria-label="Personas pendientes de activación">
+        <div class="card-body flush">
+            @if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("users")" /></span>
+                    <h3>No hay personas pendientes</h3>
+                    <p>Todas las cuentas registradas con atención asistida ya activaron su contraseña.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Personas pendientes de activación</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Usuario</th>
+                                <th scope="col">Nombre o razón social</th>
+                                <th scope="col">Correo</th>
+                                <th scope="col">Teléfono</th>
+                                <th scope="col">Alta</th>
+                                <th scope="col" class="col-actions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Usuario"><a class="mono" asp-action="Ficha" asp-route-id="@fila.NroUsuario">@fila.Codigo</a></td>
+                                    <td data-label="Nombre o razón social">@fila.NombreVisible</td>
+                                    <td data-label="Correo"><span class="muted">@fila.CorreoElectronico</span></td>
+                                    <td data-label="Teléfono">@fila.Telefono</td>
+                                    <td data-label="Alta">@Reloj.Fecha(fila.FechaAlta)</td>
+                                    <td class="col-actions" data-label="Acciones">
+                                        <a class="btn btn-ghost btn-sm" asp-action="Ficha" asp-route-id="@fila.NroUsuario" aria-label="Ver ficha de @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver ficha</span></a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-foot">
+                    <span>@Model.Total @(Model.Total == 1 ? "persona pendiente" : "personas pendientes")</span>
+                </div>
+            }
+        </div>
+    </section>
+</div>

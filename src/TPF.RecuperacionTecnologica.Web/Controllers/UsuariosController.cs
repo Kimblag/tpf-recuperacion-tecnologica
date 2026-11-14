@@ -44,6 +44,13 @@ public class UsuariosController : Controller
     }
 
     [HttpGet]
+    [Authorize(Policy = "Coordinacion")]
+    public async Task<IActionResult> Personas()
+    {
+        return View(await _usuarioService.ListarPendientesActivacionAsync());
+    }
+
+    [HttpGet]
     [Authorize(Policy = "SoloAdministrador")]
     public async Task<IActionResult> Detalle(int id)
     {
