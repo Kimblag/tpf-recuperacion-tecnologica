@@ -42,6 +42,8 @@ public class ReportesController : Controller
         {
             TipoReporte.EntregasPorPeriodo => RedirectToAction(nameof(EntregasPorPeriodo), rango),
             TipoReporte.TiposSolicitados => RedirectToAction(nameof(TiposSolicitados), rango),
+            TipoReporte.Trazabilidad => RedirectToAction(nameof(Trazabilidad), rango),
+            TipoReporte.Excepciones => RedirectToAction(nameof(Excepciones), rango),
             _ => RedirectToAction(nameof(EquiposPorEstado), rango)
         };
     }
@@ -199,6 +201,108 @@ public class ReportesController : Controller
             TempData["MensajeError"] = "No se pudo generar el archivo. Intentá de nuevo en unos minutos.";
 
             return RedirectToAction(nameof(TiposSolicitados), new { desde, hasta });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Trazabilidad(DateTime? desde, DateTime? hasta)
+    {
+        if (RangoInvertido(desde, hasta, TipoReporte.Trazabilidad) is { } rechazo)
+        {
+            return rechazo;
+        }
+
+        var modelo = new ReporteTrazabilidadViewModel { Desde = desde, Hasta = hasta };
+
+        try
+        {
+            modelo.Filas = await _reporteService.TrazabilidadPorEquipoAsync(desde, hasta);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo generar el informe de trazabilidad por equipo");
+            modelo.ErrorAlCargar = true;
+        }
+
+        return View(modelo);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarTrazabilidad(DateTime? desde, DateTime? hasta, FormatoExportacion formato)
+    {
+        if (RangoInvertido(desde, hasta, TipoReporte.Trazabilidad) is { } rechazo)
+        {
+            return rechazo;
+        }
+
+        try
+        {
+            var modelo = new ReporteTrazabilidadViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                Filas = await _reporteService.TrazabilidadPorEquipoAsync(desde, hasta)
+            };
+
+            return await DescargarAsync(modelo.ATabla(), formato);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo exportar el informe de trazabilidad por equipo");
+            TempData["MensajeError"] = "No se pudo generar el archivo. Intentá de nuevo en unos minutos.";
+
+            return RedirectToAction(nameof(Trazabilidad), new { desde, hasta });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Excepciones(DateTime? desde, DateTime? hasta)
+    {
+        if (RangoInvertido(desde, hasta, TipoReporte.Excepciones) is { } rechazo)
+        {
+            return rechazo;
+        }
+
+        var modelo = new ReporteExcepcionesViewModel { Desde = desde, Hasta = hasta };
+
+        try
+        {
+            modelo.Filas = await _reporteService.ExcepcionesAsync(desde, hasta);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo generar el informe de excepciones de gestión");
+            modelo.ErrorAlCargar = true;
+        }
+
+        return View(modelo);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarExcepciones(DateTime? desde, DateTime? hasta, FormatoExportacion formato)
+    {
+        if (RangoInvertido(desde, hasta, TipoReporte.Excepciones) is { } rechazo)
+        {
+            return rechazo;
+        }
+
+        try
+        {
+            var modelo = new ReporteExcepcionesViewModel
+            {
+                Desde = desde,
+                Hasta = hasta,
+                Filas = await _reporteService.ExcepcionesAsync(desde, hasta)
+            };
+
+            return await DescargarAsync(modelo.ATabla(), formato);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "No se pudo exportar el informe de excepciones de gestión");
+            TempData["MensajeError"] = "No se pudo generar el archivo. Intentá de nuevo en unos minutos.";
+
+            return RedirectToAction(nameof(Excepciones), new { desde, hasta });
         }
     }
 

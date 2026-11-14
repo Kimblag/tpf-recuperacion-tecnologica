@@ -87,8 +87,28 @@
                     </div>
                 </div>
             </a>
+            <a class="card rep-card" asp-action="Trazabilidad">
+                <div class="card-body">
+                    <span class="act-ic"><partial name="_Icon" model="@("history")" /></span>
+                    <div>
+                        <div class="card-title">Trazabilidad por equipo</div>
+                        <p class="card-sub">Quién donó, diagnosticó, asignó y entregó cada equipo, y a qué tipo de beneficiario.</p>
+                        <span class="link">Ver reporte</span>
+                    </div>
+                </div>
+            </a>
+            <a class="card rep-card" asp-action="Excepciones">
+                <div class="card-body">
+                    <span class="act-ic"><partial name="_Icon" model="@("alert")" /></span>
+                    <div>
+                        <div class="card-title">Excepciones de gestión</div>
+                        <p class="card-sub">Asignaciones fuera de la prioridad sugerida y liberaciones, con su motivo.</p>
+                        <span class="link">Ver reporte</span>
+                    </div>
+                </div>
+            </a>
         </div>
-        <p class="form-text">Los accesos rápidos muestran el período predeterminado; para un rango específico, use el formulario de arriba.</p>
+        <p class="form-text">Los accesos rápidos muestran el período predeterminado; para un rango específico, usá el formulario de arriba.</p>
     </div>
 </div>
 

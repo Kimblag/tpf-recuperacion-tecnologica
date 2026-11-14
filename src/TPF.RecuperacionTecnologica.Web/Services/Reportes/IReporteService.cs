@@ -27,4 +27,16 @@ public interface IReporteService
     /// </summary>
     /// <exception cref="ArgumentException">Si <paramref name="desde"/> es posterior a <paramref name="hasta"/>.</exception>
     Task<IReadOnlyList<TipoEquipoSolicitudesViewModel>> TiposSolicitadosAsync(DateTime? desde, DateTime? hasta);
+
+    /// <summary>
+    /// Una fila por equipo registrado en el rango, con quién lo donó, diagnosticó, asignó y entregó.
+    /// </summary>
+    /// <exception cref="ArgumentException">Si <paramref name="desde"/> es posterior a <paramref name="hasta"/>.</exception>
+    Task<IReadOnlyList<FilaTrazabilidadViewModel>> TrazabilidadPorEquipoAsync(DateTime? desde, DateTime? hasta);
+
+    /// <summary>
+    /// Asignaciones con justificación por no seguir la prioridad sugerida y asignaciones liberadas, dentro del rango.
+    /// </summary>
+    /// <exception cref="ArgumentException">Si <paramref name="desde"/> es posterior a <paramref name="hasta"/>.</exception>
+    Task<IReadOnlyList<FilaExcepcionViewModel>> ExcepcionesAsync(DateTime? desde, DateTime? hasta);
 }

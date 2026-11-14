@@ -1,0 +1,74 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Reportes.ReporteTrazabilidadViewModel
+@{
+    ViewData["Title"] = "Trazabilidad por equipo";
+}
+
+@section Migas {
+    <li><a asp-controller="Administrador" asp-action="Inicio">Administrador</a></li>
+    <li><a asp-action="Index">Reportes</a></li>
+    <li aria-current="page">Trazabilidad por equipo</li>
+}
+
+<div class="stack">
+    <partial name="_EncabezadoReporte" model="@(("Trazabilidad por equipo", "Quién donó, diagnosticó, asignó y entregó cada equipo, y a qué tipo de beneficiario.", Model.PeriodoConsultado, Model.ErrorAlCargar || Model.Total == 0 ? null : "ExportarTrazabilidad"))" />
+
+    @if (Model.ErrorAlCargar)
+    {
+        <section class="card">
+            <div class="card-body">
+                <partial name="_ErrorCarga" model="@("Ocurrió un error al generar el informe de trazabilidad por equipo. Intentá de nuevo en unos minutos.")" />
+            </div>
+        </section>
+    }
+    else if (Model.Total == 0)
+    {
+        <partial name="_ReporteVacio" />
+    }
+    else
+    {
+        <section class="card overflow">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Equipos registrados</h2>
+                    <p class="card-sub">Total: @Model.Total equipos. Los datos se completan a medida que el equipo avanza en el proceso.</p>
+                </div>
+            </div>
+            <div class="card-body flush">
+                <div class="table-wrap">
+                    <table class="table table-stack">
+                        <caption class="visually-hidden">Trazabilidad por equipo</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Equipo</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Registro</th>
+                                <th scope="col">Donante</th>
+                                <th scope="col">Diagnóstico</th>
+                                <th scope="col">Asignación</th>
+                                <th scope="col">Beneficiario</th>
+                                <th scope="col">Entrega</th>
+                                <th scope="col">Retiró</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var fila in Model.Filas)
+                            {
+                                <tr>
+                                    <td data-label="Equipo">@fila.Equipo</td>
+                                    <td data-label="Estado">@fila.Estado</td>
+                                    <td data-label="Registro"><span class="mono">@fila.FechaRegistro</span></td>
+                                    <td data-label="Donante">@fila.Donante</td>
+                                    <td data-label="Diagnóstico">@fila.Diagnostico</td>
+                                    <td data-label="Asignación">@fila.Asignacion</td>
+                                    <td data-label="Beneficiario">@fila.Beneficiario</td>
+                                    <td data-label="Entrega">@fila.Entrega</td>
+                                    <td data-label="Retiró">@fila.Retiro</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    }
+</div>

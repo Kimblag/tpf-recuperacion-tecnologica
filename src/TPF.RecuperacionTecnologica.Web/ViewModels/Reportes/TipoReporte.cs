@@ -11,5 +11,11 @@ public enum TipoReporte
     EntregasPorPeriodo,
 
     [Display(Name = "Tipos de equipo más solicitados")]
-    TiposSolicitados
+    TiposSolicitados,
+
+    [Display(Name = "Trazabilidad por equipo")]
+    Trazabilidad,
+
+    [Display(Name = "Excepciones de gestión")]
+    Excepciones
 }
