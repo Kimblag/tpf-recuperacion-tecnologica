@@ -24,7 +24,7 @@
                 <h1 tabindex="-1">@Model.MarcaYModelo</h1>
                 <partial name="_EstadoEquipoBadge" model="EstadoEquipo.Disponible" />
             </div>
-            <p class="page-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · Equipo <span class="mono">@Model.CodigoEquipo</span></p>
+            <p class="page-sub page-sub-id"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · Equipo <span class="mono">@Model.CodigoEquipo</span></p>
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al catálogo</span></a>

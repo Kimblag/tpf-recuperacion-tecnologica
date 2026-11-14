@@ -112,6 +112,13 @@
     color: var(--bs-secondary-color);
 }
 
+.page-sub.page-sub-id {
+    margin-top: 4px;
+    font-size: calc(16px * var(--fs));
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
 .page-actions {
     display: flex;
     align-items: center;

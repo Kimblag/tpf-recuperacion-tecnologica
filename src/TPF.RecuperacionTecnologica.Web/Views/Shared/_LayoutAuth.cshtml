@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Recuperación Tecnológica</title>
+    <title>@ViewData["Title"] - @ViewData["NombreOrganizacion"]</title>
     <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="~/favicon.ico" sizes="48x48" />
     <link rel="icon" href="~/favicon-32.png" type="image/png" sizes="32x32" />
@@ -45,8 +45,8 @@
             <partial name="_ThemeToggle" />
         </div>
         <div class="auth-brand">
-            <span class="brand-mark" aria-hidden="true">R</span>
-            <span class="brand-name">Recuperación Tecnológica</span>
+            <span class="brand-mark" aria-hidden="true">@ViewData["InicialOrganizacion"]</span>
+            <span class="brand-name">@ViewData["NombreOrganizacion"]</span>
         </div>
         <main id="main" class="auth-main" tabindex="-1">
             @if (TempData["Mensaje"] is string mensaje)
