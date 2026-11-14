@@ -23,7 +23,7 @@
                 <h1 tabindex="-1">Equipo <span class="mono">@Model.CodigoEquipo</span></h1>
                 <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
             </div>
-            <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo · @TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.ValidacionesNumeroSerie.EtiquetaPara(Model.TipoEquipo): @if (string.IsNullOrWhiteSpace(Model.NumeroSerie)) { <span class="muted">sin dato</span> } else { <span class="mono">@Model.NumeroSerie</span> }</p>
+            <p class="page-sub page-sub-id">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo · @TPF.RecuperacionTecnologica.Web.ViewModels.Compartido.ValidacionesNumeroSerie.EtiquetaPara(Model.TipoEquipo): @if (string.IsNullOrWhiteSpace(Model.NumeroSerie)) { <span class="muted">sin dato</span> } else { <span class="mono">@Model.NumeroSerie</span> }</p>
         </div>
         <div class="page-actions">
             @if (verSolicitudes)
@@ -113,69 +113,67 @@
                 </div>
             </section>
 
-            @if (esCoordinador)
-            {
-                <section class="card">
-                    <div class="card-header">
-                        <div>
-                            <h2 class="card-title">Características técnicas</h2>
-                            <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
-                        </div>
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Características técnicas</h2>
+                        <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
                     </div>
-                    <div class="card-body">
-                        @if (Model.DiagnosticoVigente is { } verificado)
-                        {
-                            var hayVerificadas = new[] { verificado.Procesador, verificado.MemoriaRam, verificado.Almacenamiento, verificado.TamanoPantalla, verificado.EstadoBateria, verificado.Otros }
-                                .Any(texto => !string.IsNullOrWhiteSpace(texto));
+                </div>
+                <div class="card-body">
+                    @if (Model.DiagnosticoVigente is { } verificado)
+                    {
+                        var hayVerificadas = new[] { verificado.Procesador, verificado.MemoriaRam, verificado.Almacenamiento, verificado.TamanoPantalla, verificado.EstadoBateria, verificado.Otros }
+                            .Any(texto => !string.IsNullOrWhiteSpace(texto));
 
-                            if (hayVerificadas)
-                            {
-                                <dl class="dl">
-                                    @if (!string.IsNullOrWhiteSpace(verificado.Procesador))
-                                    {
-                                        <dt>Procesador</dt>
-                                        <dd>@verificado.Procesador</dd>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(verificado.MemoriaRam))
-                                    {
-                                        <dt>Memoria RAM</dt>
-                                        <dd>@verificado.MemoriaRam</dd>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(verificado.Almacenamiento))
-                                    {
-                                        <dt>Almacenamiento</dt>
-                                        <dd>@verificado.Almacenamiento</dd>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(verificado.TamanoPantalla))
-                                    {
-                                        <dt>Tamaño de pantalla</dt>
-                                        <dd>@verificado.TamanoPantalla</dd>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(verificado.EstadoBateria))
-                                    {
-                                        <dt>Estado de la batería</dt>
-                                        <dd>@verificado.EstadoBateria</dd>
-                                    }
-                                    @if (!string.IsNullOrWhiteSpace(verificado.Otros))
-                                    {
-                                        <dt>Otros datos</dt>
-                                        <dd>@verificado.Otros</dd>
-                                    }
-                                </dl>
-                            }
-                            else
-                            {
-                                <p class="muted">No se verificaron características técnicas.</p>
-                            }
+                        if (hayVerificadas)
+                        {
+                            <dl class="dl">
+                                @if (!string.IsNullOrWhiteSpace(verificado.Procesador))
+                                {
+                                    <dt>Procesador</dt>
+                                    <dd>@verificado.Procesador</dd>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(verificado.MemoriaRam))
+                                {
+                                    <dt>Memoria RAM</dt>
+                                    <dd>@verificado.MemoriaRam</dd>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(verificado.Almacenamiento))
+                                {
+                                    <dt>Almacenamiento</dt>
+                                    <dd>@verificado.Almacenamiento</dd>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(verificado.TamanoPantalla))
+                                {
+                                    <dt>Tamaño de pantalla</dt>
+                                    <dd>@verificado.TamanoPantalla</dd>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(verificado.EstadoBateria))
+                                {
+                                    <dt>Estado de la batería</dt>
+                                    <dd>@verificado.EstadoBateria</dd>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(verificado.Otros))
+                                {
+                                    <dt>Otros datos</dt>
+                                    <dd>@verificado.Otros</dd>
+                                }
+                            </dl>
                         }
                         else
                         {
-                            <p class="muted">Todavía no hay características verificadas.</p>
+                            <p class="muted">No se verificaron características técnicas.</p>
                         }
-                    </div>
-                </section>
-            }
-            else
+                    }
+                    else
+                    {
+                        <p class="muted">Todavía no hay características verificadas.</p>
+                    }
+                </div>
+            </section>
+
+            @if (!esCoordinador)
             {
                 <section class="card">
                     <div class="card-header">

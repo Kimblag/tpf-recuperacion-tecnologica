@@ -20,7 +20,7 @@
                 <h1 tabindex="-1">Donación del equipo <span class="mono">@Model.CodigoEquipo</span></h1>
                 <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
             </div>
-            <p class="page-sub">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+            <p class="page-sub page-sub-id">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("laptop")" /><span>Ver equipo</span></a>

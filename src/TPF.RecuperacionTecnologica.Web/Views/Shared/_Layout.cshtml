@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Recuperación Tecnológica</title>
+    <title>@ViewData["Title"] - @ViewData["NombreOrganizacion"]</title>
     <link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="~/favicon.ico" sizes="48x48" />
     <link rel="icon" href="~/favicon-32.png" type="image/png" sizes="32x32" />
@@ -56,8 +56,8 @@
             </div>
             <div class="offcanvas-body d-flex flex-column">
                 <div class="d-flex align-items-center gap-2 mb-4">
-                    <span class="d-inline-flex align-items-center justify-content-center brand-mark fw-semibold" style="width:28px;height:28px;">R</span>
-                    <span class="fw-semibold" style="font-family:var(--app-font-brand)">Recuperación Tecnológica</span>
+                    <span class="d-inline-flex align-items-center justify-content-center brand-mark fw-semibold" style="width:28px;height:28px;">@ViewData["InicialOrganizacion"]</span>
+                    <span class="fw-semibold" style="font-family:var(--app-font-brand)">@ViewData["NombreOrganizacion"]</span>
                 </div>
                 @if (User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
                 {
@@ -178,7 +178,7 @@
             </main>
 
             <footer class="app-footer px-4">
-                <span>Recuperación Tecnológica</span>
+                <span>@ViewData["NombreOrganizacion"]</span>
                 <span>Plataforma para la Recuperación y Redistribución de Equipos Tecnológicos</span>
             </footer>
         </div>

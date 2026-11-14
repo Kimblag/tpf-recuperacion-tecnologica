@@ -36,7 +36,7 @@
                 <h1 tabindex="-1">Solicitud <span class="mono">@Model.Codigo</span></h1>
                 <partial name="_EstadoSolicitudBadge" model="Model.EstadoSolicitud" />
             </div>
-            <p class="page-sub">@Model.MarcaYModelo</p>
+            <p class="page-sub page-sub-id">@Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Gestion"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>

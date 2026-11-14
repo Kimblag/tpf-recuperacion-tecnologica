@@ -1,3 +1,23 @@
-﻿@{
+﻿@using TPF.RecuperacionTecnologica.Web.Services.Configuracion
+@inject IConfiguracionService Configuracion
+@{
     Layout = "_Layout";
+
+    var nombreOrganizacion = "Recuperación Tecnológica";
+
+    try
+    {
+        var configuracion = await Configuracion.ObtenerAsync();
+
+        if (!string.IsNullOrWhiteSpace(configuracion?.NombreOrganizacion))
+        {
+            nombreOrganizacion = configuracion.NombreOrganizacion.Trim();
+        }
+    }
+    catch (Exception)
+    {
+    }
+
+    ViewData["NombreOrganizacion"] = nombreOrganizacion;
+    ViewData["InicialOrganizacion"] = nombreOrganizacion[..1].ToUpperInvariant();
 }

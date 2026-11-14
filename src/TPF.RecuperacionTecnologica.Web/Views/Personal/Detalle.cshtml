@@ -23,7 +23,7 @@
                 <h1 tabindex="-1">@Model.NombreCompleto</h1>
                 <partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" />
             </div>
-            <p class="page-sub">@Html.DisplayFor(m => m.RolAsignado) · Código @Model.Codigo</p>
+            <p class="page-sub page-sub-id">@Html.DisplayFor(m => m.RolAsignado) · Código @Model.Codigo</p>
         </div>
         <div class="page-actions">
             @if (Model.EsRaiz)

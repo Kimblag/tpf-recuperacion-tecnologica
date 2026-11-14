@@ -25,7 +25,7 @@
                 <h1 tabindex="-1">Historial de diagnósticos</h1>
                 <partial name="_EstadoEquipoBadge" model="Model.EstadoEquipo" />
             </div>
-            <p class="page-sub">Equipo @Model.CodigoEquipo · @Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
+            <p class="page-sub page-sub-id">Equipo @Model.CodigoEquipo · @Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
             <a class="btn btn-secondary" asp-action="Detalle" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("arrow-left")" /><span>Volver al equipo</span></a>
@@ -116,6 +116,10 @@
                                         else if (!fila.EsVigente)
                                         {
                                             <span class="muted">Reemplazado por @(fila.NroDiagnosticoReemplazante is null ? "una evaluación posterior" : $"DIA-{fila.NroDiagnosticoReemplazante.Value:D6}")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="muted">—</span>
                                         }
                                     </td>
                                 </tr>
