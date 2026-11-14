@@ -44,7 +44,6 @@
             <div class="filter">
                 <label asp-for="FechaDesde">Desde</label>
                 <input asp-for="FechaDesde" type="date" class="form-control sm" />
-                <span asp-validation-for="FechaDesde"></span>
             </div>
             <div class="filter">
                 <label asp-for="FechaHasta">Hasta</label>
@@ -62,7 +61,6 @@
             <div class="filter">
                 <label asp-for="CodigoPersonal">Código de personal</label>
                 <input asp-for="CodigoPersonal" class="form-control sm" placeholder="Ej.: PER-0002" maxlength="20" />
-                <span asp-validation-for="CodigoPersonal"></span>
             </div>
             <div class="filter">
                 <label for="Entidad">Entidad</label>
@@ -76,7 +74,6 @@
             <div class="filter">
                 <label asp-for="Identificador">Identificador</label>
                 <input asp-for="Identificador" class="form-control sm" placeholder="Ej.: SOL-000030" maxlength="20" />
-                <span asp-validation-for="Identificador"></span>
             </div>
             <div class="filter" style="min-width:0">
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>

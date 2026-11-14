@@ -248,9 +248,11 @@
     <script>
         // evita registrar dos veces con un doble clic: el servidor también lo impide con un índice único
         document.getElementById('f-entrega')?.addEventListener('submit', function (e) {
-            if (!e.defaultPrevented) {
-                document.getElementById('registrar-entrega').disabled = true;
-            }
+            setTimeout(function () {
+                if (!e.defaultPrevented) {
+                    document.getElementById('registrar-entrega').disabled = true;
+                }
+            }, 0);
         });
     </script>
 }

@@ -27,6 +27,16 @@
             <div class="card-body">
                 <div class="stack" style="gap:16px">
                     <partial name="_ResumenErrores" />
+                    @if (ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" role="alert" tabindex="-1" id="resumen-errores" hidden>
+                            <partial name="_Icon" model="@("x-circle")" />
+                            <div class="alert-body">
+                                <div class="alert-title">Revisá los campos marcados</div>
+                                <ul></ul>
+                            </div>
+                        </div>
+                    }
                     <input type="hidden" asp-for="RowVersion" />
 
                     <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
@@ -118,6 +128,25 @@
     <script>
         var resumen = document.getElementById('resumen-errores');
         if (resumen) resumen.focus();
+
+        var avisoErrores = document.getElementById('resumen-errores');
+        if (avisoErrores && window.jQuery) {
+            window.jQuery('#f-parametros').on('invalid-form.validate', function (evento, validador) {
+                var lista = avisoErrores.querySelector('ul');
+                lista.innerHTML = '';
+                validador.errorList.forEach(function (error) {
+                    var etiqueta = document.querySelector('label[for="' + error.element.id + '"]');
+                    var item = document.createElement('li');
+                    var enlace = document.createElement('a');
+                    enlace.href = '#' + error.element.id;
+                    enlace.textContent = etiqueta ? etiqueta.firstChild.textContent.trim() : error.element.name;
+                    item.appendChild(enlace);
+                    lista.appendChild(item);
+                });
+                avisoErrores.hidden = false;
+                setTimeout(function () { avisoErrores.focus(); }, 0);
+            });
+        }
 
         var campo = document.getElementById('NombreOrganizacion');
         var nombre = document.getElementById('vista-previa-nombre');
