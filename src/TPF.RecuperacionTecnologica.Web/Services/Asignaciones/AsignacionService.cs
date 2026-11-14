@@ -18,7 +18,7 @@ public class AsignacionService : IAsignacionService
     private const int MaximoJustificacion = 300;
     private const int MaximoMotivoLiberacion = 300;
     private const int TamanoLoteLiberacionAutomatica = 50;
-    private const string MotivoLiberacionAutomatica = "Venció el plazo de retiro.";
+    public const string MotivoLiberacionAutomatica = "Venció el plazo de retiro.";
 
     private const string MensajeConcurrenciaLiberacion =
         "La asignación cambió mientras se liberaba: otra persona pudo entregarla o liberarla. No se guardó nada. Volvé a abrir el detalle e intentá nuevamente.";
