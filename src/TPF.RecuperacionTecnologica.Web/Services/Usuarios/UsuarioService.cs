@@ -173,6 +173,34 @@ public class UsuarioService : IUsuarioService
         };
     }
 
+    public async Task<UsuarioListadoViewModel> ListarPendientesActivacionAsync()
+    {
+        var filas = await _context.Usuarios.AsNoTracking()
+            .Where(u => u.EstadoUsuario == EstadoUsuario.Activo
+                && _context.Users.Any(i => i.Id == u.IdentityUserId && i.PasswordHash == null))
+            .OrderBy(u => u.FechaAlta)
+            .ThenBy(u => u.NroUsuario)
+            .Select(u => new UsuarioFilaViewModel
+            {
+                NroUsuario = u.NroUsuario,
+                TipoUsuario = u.TipoUsuario,
+                Nombre = u.Nombre,
+                Apellido = u.Apellido,
+                RazonSocial = u.RazonSocial,
+                CorreoElectronico = u.CorreoElectronico,
+                Telefono = u.Telefono,
+                FechaAlta = u.FechaAlta,
+                EstadoUsuario = u.EstadoUsuario
+            })
+            .ToListAsync();
+
+        return new UsuarioListadoViewModel
+        {
+            Filas = filas,
+            Total = filas.Count
+        };
+    }
+
     public async Task<UsuarioDetalleViewModel?> ObtenerDetalleAsync(int nroUsuario)
     {
         return await _context.Usuarios

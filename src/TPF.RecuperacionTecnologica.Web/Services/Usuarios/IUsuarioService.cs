@@ -24,6 +24,8 @@ public interface IUsuarioService
     /// <param name="estado">Si se indica, solo los Usuarios en ese estado.</param>
     Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado, string? orden = null);
 
+    Task<UsuarioListadoViewModel> ListarPendientesActivacionAsync();
+
     /// <summary>
     /// Devuelve el detalle de un Usuario, o null si no existe.
     /// </summary>
