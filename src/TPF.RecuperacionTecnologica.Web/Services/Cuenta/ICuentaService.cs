@@ -38,6 +38,11 @@ public interface ICuentaService
     Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena);
 
     /// <summary>
+    /// Indica si el enlace para restablecer la contraseña todavía sirve, para avisar antes de que la persona complete el formulario.
+    /// </summary>
+    Task<bool> EsEnlaceRestablecimientoValidoAsync(string idUsuario, string token);
+
+    /// <summary>
     /// Activa una cuenta invitada: verifica el token de la invitación, guarda la primera contraseña,
     /// confirma el correo y audita la activación. Si el enlace venció, no es válido o la cuenta ya tiene
     /// contraseña, devuelve siempre el mismo error.

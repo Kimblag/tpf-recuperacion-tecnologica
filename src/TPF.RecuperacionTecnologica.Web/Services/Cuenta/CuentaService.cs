@@ -288,6 +288,34 @@ public class CuentaService : ICuentaService
         return ResultadoReenvioInvitacion.Enviada;
     }
 
+    public async Task<bool> EsEnlaceRestablecimientoValidoAsync(string idUsuario, string token)
+    {
+        var identityUser = await _userManager.FindByIdAsync(idUsuario);
+
+        if (identityUser is null)
+        {
+            return false;
+        }
+
+        string tokenOriginal;
+
+        try
+        {
+            tokenOriginal = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
+        // se usa el mismo proveedor y propósito que revisa ResetPasswordAsync
+        return await _userManager.VerifyUserTokenAsync(
+            identityUser,
+            _userManager.Options.Tokens.PasswordResetTokenProvider,
+            UserManager<IdentityUser>.ResetPasswordTokenPurpose,
+            tokenOriginal);
+    }
+
     public async Task<IdentityResult> RestablecerContrasenaAsync(string idUsuario, string token, string nuevaContrasena)
     {
         var enlaceInvalido = IdentityResult.Failed(new IdentityError
