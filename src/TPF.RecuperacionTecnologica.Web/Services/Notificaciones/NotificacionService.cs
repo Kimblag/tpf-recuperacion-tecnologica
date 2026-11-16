@@ -324,7 +324,6 @@ public class NotificacionService : INotificacionService
                     e.NroEquipo,
                     e.FechaEntrega,
                     Equipo = e.Equipo.Marca + " " + e.Equipo.Modelo,
-                    e.Solicitud.TipoSolicitante,
                     e.Equipo.UsuarioDonante.CorreoElectronico,
                     e.Equipo.UsuarioDonante.EstadoUsuario,
                     e.Equipo.UsuarioDonante.RazonSocial,
@@ -338,19 +337,12 @@ public class NotificacionService : INotificacionService
                 return;
             }
 
-            var destinatario = fila.TipoSolicitante switch
-            {
-                TipoSolicitante.Escuela => "una escuela",
-                TipoSolicitante.OrganizacionSocial => "una organización social",
-                _ => "una persona particular"
-            };
-
             var (organizacion, enlace) = await ObtenerContextoAsync("Donaciones");
 
             EnviarEnSegundoPlano(fila.CorreoElectronico, $"Tu equipo fue entregado - {organizacion}",
                 PlantillaNotificacion.EntregaAlDonante(
                     organizacion, NombreDe(fila.RazonSocial, fila.Nombre, fila.Apellido), fila.NroEquipo, fila.Equipo,
-                    destinatario, _reloj.FechaLocal(fila.FechaEntrega), enlace),
+                    _reloj.FechaLocal(fila.FechaEntrega), enlace),
                 $"la entrega {nroEntrega}");
         }
         catch (Exception ex)
