@@ -162,11 +162,18 @@ public class CuentaController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult RestablecerContrasena(string? idUsuario = null, string? token = null)
+    public async Task<IActionResult> RestablecerContrasena(string? idUsuario = null, string? token = null)
     {
         if (string.IsNullOrEmpty(idUsuario) || string.IsNullOrEmpty(token))
         {
             return RedirectToAction(nameof(RecuperarContrasena));
+        }
+
+        // se revisa el enlace al abrir la pantalla, para no pedir una contraseña que después no se va a poder guardar
+        if (!await _cuentaService.EsEnlaceRestablecimientoValidoAsync(idUsuario, token))
+        {
+            ViewData["EnlaceInvalido"] = true;
+            return View(new RestablecerContrasenaViewModel());
         }
 
         return View(new RestablecerContrasenaViewModel { IdUsuario = idUsuario, Token = token });
