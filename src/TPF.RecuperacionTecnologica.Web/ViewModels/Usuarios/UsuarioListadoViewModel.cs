@@ -8,6 +8,8 @@ public class UsuarioListadoViewModel
 
     public EstadoUsuario? Estado { get; set; }
 
+    public bool Bloqueadas { get; set; }
+
     public IReadOnlyList<UsuarioFilaViewModel> Filas { get; set; } = [];
 
     public string? Orden { get; set; } = "usuario";

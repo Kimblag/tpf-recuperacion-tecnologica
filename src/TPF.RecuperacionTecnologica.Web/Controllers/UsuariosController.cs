@@ -38,9 +38,9 @@ public class UsuariosController : Controller
 
     [HttpGet]
     [Authorize(Policy = "SoloAdministrador")]
-    public async Task<IActionResult> Index(TipoUsuario? tipo, EstadoUsuario? estado, string? orden)
+    public async Task<IActionResult> Index(TipoUsuario? tipo, EstadoUsuario? estado, string? orden, bool bloqueadas = false)
     {
-        return View(await _usuarioService.ListarAsync(tipo, estado, orden));
+        return View(await _usuarioService.ListarAsync(tipo, estado, orden, bloqueadas));
     }
 
     [HttpGet]

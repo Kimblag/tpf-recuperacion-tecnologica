@@ -1,4 +1,5 @@
 @model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Auditoria.AuditoriaFilaViewModel>
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
 @{
     var ocultarPersonal = ViewData["OcultarPersonal"] is true;
 
@@ -11,6 +12,7 @@
         "Asignacion" => ("Asignaciones", "Detalle"),
         "Entrega" => ("Entregas", "Detalle"),
         "Personal" => ("Personal", "Detalle"),
+        "Usuario" => ("Usuarios", "Detalle"),
         _ => null
     };
 }
@@ -22,7 +24,7 @@
                 <th scope="col">Fecha y hora</th>
                 @if (!ocultarPersonal)
                 {
-                    <th scope="col">Personal</th>
+                    <th scope="col">Realizado por</th>
                 }
                 <th scope="col">Operación</th>
                 <th scope="col">Entidad</th>
@@ -34,12 +36,16 @@
             @foreach (var fila in Model)
             {
                 var destino = DestinoDe(fila.Entidad);
+                var detalle = string.IsNullOrWhiteSpace(fila.Detalle)
+                    || string.Equals(fila.Detalle.Trim(), NombreEnum.De(fila.Operacion), StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : fila.Detalle;
 
                 <tr>
                     <td data-label="Fecha y hora"><span class="nowrap">@Reloj.FechaHora(fila.FechaHora)</span></td>
                     @if (!ocultarPersonal)
                     {
-                        <td data-label="Personal">@fila.Personal</td>
+                        <td data-label="Realizado por">@fila.Personal</td>
                     }
                     <td data-label="Operación"><span class="tag">@Html.DisplayFor(m => fila.Operacion)</span></td>
                     <td data-label="Entidad">@fila.EtiquetaEntidad</td>
@@ -53,7 +59,7 @@
                             <span class="mono">@fila.Identificador</span>
                         }
                     </td>
-                    <td data-label="Detalle"><span class="muted">@fila.Detalle</span></td>
+                    <td data-label="Detalle"><span class="muted">@(detalle ?? "—")</span></td>
                 </tr>
             }
         </tbody>

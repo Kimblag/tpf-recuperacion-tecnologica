@@ -23,9 +23,9 @@ public class PersonalController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden)
+    public async Task<IActionResult> Index(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden, bool bloqueadas = false)
     {
-        return View(await _personalService.ListarAsync(busqueda, rol, estado, orden));
+        return View(await _personalService.ListarAsync(busqueda, rol, estado, orden, bloqueadas));
     }
 
     [HttpGet]

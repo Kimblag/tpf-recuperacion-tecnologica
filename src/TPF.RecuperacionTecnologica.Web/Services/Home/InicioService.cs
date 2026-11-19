@@ -477,6 +477,17 @@ public class InicioService : IInicioService
         var usuariosNuevos = await _context.Usuarios.AsNoTracking()
             .CountAsync(u => u.EstadoUsuario == EstadoUsuario.Activo && u.FechaAlta >= inicioDeMes);
 
+        var usuariosInactivos = await _context.Usuarios.AsNoTracking()
+            .CountAsync(u => u.EstadoUsuario == EstadoUsuario.Inactivo);
+
+        var ahora = new DateTimeOffset(_reloj.AhoraUtc, TimeSpan.Zero);
+
+        var usuariosBloqueados = await _context.Usuarios.AsNoTracking()
+            .CountAsync(u => _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora));
+
+        var personalBloqueado = await _context.PersonalInterno.AsNoTracking()
+            .CountAsync(p => _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora));
+
         var personalPorRol = await _context.PersonalInterno.AsNoTracking()
             .Where(p => p.EstadoPersonal == EstadoPersonal.Activo)
             .GroupBy(p => p.RolAsignado)
@@ -502,6 +513,9 @@ public class InicioService : IInicioService
         {
             UsuariosExternos = usuariosExternos,
             UsuariosNuevosDelMes = usuariosNuevos,
+            UsuariosInactivos = usuariosInactivos,
+            UsuariosBloqueados = usuariosBloqueados,
+            PersonalBloqueado = personalBloqueado,
             PersonalActivo = personalPorRol.Sum(p => p.Cantidad),
             PersonalInactivo = personalInactivo,
             Administradores = personalPorRol.Where(p => p.Rol == RolPersonal.Administrador).Sum(p => p.Cantidad),

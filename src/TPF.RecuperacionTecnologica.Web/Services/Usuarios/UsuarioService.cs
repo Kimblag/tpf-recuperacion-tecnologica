@@ -131,9 +131,10 @@ public class UsuarioService : IUsuarioService
             ["estado"] = u => u.EstadoUsuario
         };
 
-    public async Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado, string? orden = null)
+    public async Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado, string? orden = null, bool bloqueadas = false)
     {
         var consulta = _context.Usuarios.AsNoTracking();
+        var ahora = DateTimeOffset.UtcNow;
 
         if (tipo.HasValue)
         {
@@ -143,6 +144,11 @@ public class UsuarioService : IUsuarioService
         if (estado.HasValue)
         {
             consulta = consulta.Where(u => u.EstadoUsuario == estado.Value);
+        }
+
+        if (bloqueadas)
+        {
+            consulta = consulta.Where(u => _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora));
         }
 
         var filas = await consulta
@@ -159,7 +165,8 @@ public class UsuarioService : IUsuarioService
                 CorreoElectronico = u.CorreoElectronico,
                 Telefono = u.Telefono,
                 FechaAlta = u.FechaAlta,
-                EstadoUsuario = u.EstadoUsuario
+                EstadoUsuario = u.EstadoUsuario,
+                EstaBloqueada = _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora)
             })
             .ToListAsync();
 
@@ -167,6 +174,7 @@ public class UsuarioService : IUsuarioService
         {
             Tipo = tipo,
             Estado = estado,
+            Bloqueadas = bloqueadas,
             Orden = orden ?? "usuario",
             Filas = filas,
             Total = filas.Count
@@ -203,6 +211,8 @@ public class UsuarioService : IUsuarioService
 
     public async Task<UsuarioDetalleViewModel?> ObtenerDetalleAsync(int nroUsuario)
     {
+        var ahora = DateTimeOffset.UtcNow;
+
         return await _context.Usuarios
             .AsNoTracking()
             .Where(u => u.NroUsuario == nroUsuario)
@@ -220,6 +230,7 @@ public class UsuarioService : IUsuarioService
                 Direccion = u.Direccion,
                 FechaAlta = u.FechaAlta,
                 EstadoUsuario = u.EstadoUsuario,
+                EstaBloqueada = _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora),
                 FechaBaja = u.FechaBaja,
                 MotivoBaja = u.MotivoBaja
             })

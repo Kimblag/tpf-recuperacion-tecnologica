@@ -22,6 +22,10 @@
             <div class="h-id">
                 <h1 tabindex="-1">@Model.NombreCompleto</h1>
                 <partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" />
+                @if (Model.EstaBloqueada)
+                {
+                    <partial name="_Badge" model='@(("Bloqueada", "warn"))' />
+                }
             </div>
             <p class="page-sub page-sub-id">@Html.DisplayFor(m => m.RolAsignado) · Código @Model.Codigo</p>
         </div>

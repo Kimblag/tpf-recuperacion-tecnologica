@@ -20,12 +20,18 @@ public class AuditoriaFilaViewModel
 
     public string? Detalle { get; set; }
 
-    // sin código de personal, la acción la hizo la propia persona (donación, solicitud, edición o cancelación)
     public string Personal => CodigoPersonal is null
-        ? "Autoservicio"
+        ? ActorSinPersonal
         : string.IsNullOrWhiteSpace(NombrePersonal)
             ? $"PER-{CodigoPersonal:D4}"
             : $"{NombrePersonal} (PER-{CodigoPersonal:D4})";
+
+    private string ActorSinPersonal => Operacion switch
+    {
+        TipoOperacionAuditoria.Liberacion or TipoOperacionAuditoria.BloqueoCuenta => "Sistema",
+        TipoOperacionAuditoria.IntentoFallidoSesion => "Sin identificar",
+        _ => "Usuario externo"
+    };
 
     public string EtiquetaEntidad => AuditoriaListadoViewModel.EtiquetaEntidad(Entidad);
 
@@ -36,6 +42,7 @@ public class AuditoriaFilaViewModel
         "Entrega" => $"ENT-{id:D6}",
         "Diagnostico" => $"DIA-{id:D6}",
         "Personal" => $"PER-{id:D4}",
+        "Usuario" => $"U-{id:D4}",
         _ => id.ToString("D6")
     };
 }

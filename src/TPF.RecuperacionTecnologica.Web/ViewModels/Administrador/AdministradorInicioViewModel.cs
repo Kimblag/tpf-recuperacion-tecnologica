@@ -8,6 +8,12 @@ public class AdministradorInicioViewModel
 
     public int UsuariosNuevosDelMes { get; set; }
 
+    public int UsuariosInactivos { get; set; }
+
+    public int UsuariosBloqueados { get; set; }
+
+    public int PersonalBloqueado { get; set; }
+
     public int PersonalActivo { get; set; }
 
     public int PersonalInactivo { get; set; }
