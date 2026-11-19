@@ -4,6 +4,9 @@
     ViewData["Title"] = "Cambiar contraseña";
 
     var esUsuarioExterno = User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario);
+    var erroresPassword = ViewData.ModelState.TryGetValue(nameof(Model.Password), out var entradaPassword)
+        ? entradaPassword.Errors
+        : null;
 }
 
 @section Migas {
@@ -49,7 +52,26 @@
                         <label class="form-label" for="Password">Contraseña nueva<span class="req-word"> (obligatorio)</span></label>
                         <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
                         <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
-                        <span asp-validation-for="Password"></span>
+                        @if (erroresPassword is { Count: > 1 })
+                        {
+                            @* asp-validation-for muestra solo el primer error: acá se listan todos los requisitos que no se cumplen *@
+                            <span class="field-validation-error" data-valmsg-for="Password" data-valmsg-replace="true">
+                                <span>
+                                    @for (var i = 0; i < erroresPassword.Count; i++)
+                                    {
+                                        if (i > 0)
+                                        {
+                                            <br />
+                                        }
+                                        @erroresPassword[i].ErrorMessage
+                                    }
+                                </span>
+                            </span>
+                        }
+                        else
+                        {
+                            <span asp-validation-for="Password"></span>
+                        }
                     </div>
 
                     <div class="field">
