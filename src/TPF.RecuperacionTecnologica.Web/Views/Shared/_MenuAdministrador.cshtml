@@ -7,6 +7,7 @@
     var esAuditoria = controlador == "Auditoria";
     var esReportes = controlador == "Reportes";
     var esEquipos = controlador == "Equipos";
+    var esDiagnosticos = controlador == "Diagnosticos";
     var esDonaciones = controlador == "Donaciones";
     var esSolicitudes = controlador == "Solicitudes";
     var esAsignaciones = controlador == "Asignaciones";
@@ -51,6 +52,10 @@
         <a class="nav-link d-flex align-items-center gap-2@(esEquipos ? " active" : "")" asp-area="" asp-controller="Equipos" asp-action="Index" aria-current="@(esEquipos ? "page" : null)">
             <span class="nav-dot"></span>
             <partial name="_Icon" model="@("laptop")" />Equipos
+        </a>
+        <a class="nav-link d-flex align-items-center gap-2@(esDiagnosticos ? " active" : "")" asp-area="" asp-controller="Diagnosticos" asp-action="Index" aria-current="@(esDiagnosticos ? "page" : null)">
+            <span class="nav-dot"></span>
+            <partial name="_Icon" model="@("wrench")" />Diagnósticos
         </a>
         <a class="nav-link d-flex align-items-center gap-2@(esDonaciones ? " active" : "")" asp-area="" asp-controller="Donaciones" asp-action="Gestion" aria-current="@(esDonaciones ? "page" : null)">
             <span class="nav-dot"></span>
