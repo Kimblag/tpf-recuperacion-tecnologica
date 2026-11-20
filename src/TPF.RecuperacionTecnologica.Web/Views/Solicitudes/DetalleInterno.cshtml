@@ -25,7 +25,7 @@
 
 @section Migas {
     <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-    <li><a asp-action="Gestion">Solicitudes</a></li>
+    <li><a asp-action="Gestion" data-volver-a="gestion-solicitudes">Solicitudes</a></li>
     <li aria-current="page">Detalle</li>
 }
 
@@ -39,7 +39,7 @@
             <p class="page-sub page-sub-id">@Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
-            <a class="btn btn-secondary" asp-action="Gestion"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
+            <a class="btn btn-secondary" asp-action="Gestion" data-volver-a="gestion-solicitudes"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
             @if (puedeModificarEnNombreDe)
             {
                 <a class="btn btn-secondary" asp-action="EditarInterno" asp-route-id="@Model.NroSolicitud"><partial name="_Icon" model="@("edit")" /><span>Editar solicitud</span></a>

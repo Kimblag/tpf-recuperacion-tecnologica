@@ -9,7 +9,7 @@
 
 @section Migas {
     <li><a asp-controller="Home" asp-action="Index">Inicio</a></li>
-    <li><a asp-action="Gestion">Donaciones</a></li>
+    <li><a asp-action="Gestion" data-volver-a="gestion-donaciones">Donaciones</a></li>
     <li aria-current="page">Detalle</li>
 }
 
@@ -23,6 +23,7 @@
             <p class="page-sub page-sub-id">@Html.DisplayFor(m => m.TipoEquipo) @Model.MarcaYModelo</p>
         </div>
         <div class="page-actions">
+            <a class="btn btn-secondary" asp-action="Gestion" data-volver-a="gestion-donaciones"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
             <a class="btn btn-secondary" asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo"><partial name="_Icon" model="@("laptop")" /><span>Ver equipo</span></a>
         </div>
     </div>
