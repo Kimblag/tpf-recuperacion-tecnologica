@@ -19,6 +19,8 @@ public class PersonalFilaViewModel
 
     public EstadoPersonal EstadoPersonal { get; set; }
 
+    public bool EstaBloqueada { get; set; }
+
     public string Codigo => $"PER-{CodigoPersonal:D4}";
 
     public string NombreCompleto => $"{Nombre} {Apellido}";

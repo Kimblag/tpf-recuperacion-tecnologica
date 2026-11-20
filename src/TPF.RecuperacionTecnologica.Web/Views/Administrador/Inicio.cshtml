@@ -1,12 +1,30 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Administrador.AdministradorInicioViewModel
 @{
     ViewData["Title"] = "Dashboard administrativo";
-    var variacion = Model.VariacionEntregasPorcentaje is { } v
-        ? (v >= 0 ? $"+{v}%" : $"{v}%")
-        : "Sin entregas el mes anterior";
-    var claseVariacion = Model.VariacionEntregasPorcentaje is >= 0 ? "ok" : "";
-    var detalleEntregas = Model.VariacionEntregasPorcentaje is null ? "Sin base de comparación" : "Respecto del mes anterior";
+    var variacion = Model.VariacionEntregasPorcentaje switch
+    {
+        null => "Sin entregas el mes anterior",
+        0 => "Sin cambios",
+        > 0 and var positiva => $"+{positiva}%",
+        var negativa => $"{negativa}%"
+    };
+    var claseVariacion = Model.VariacionEntregasPorcentaje switch
+    {
+        > 0 => "ok",
+        < 0 => "warn",
+        _ => ""
+    };
+    var detalleEntregas = Model.VariacionEntregasPorcentaje is null ? "Entregas del mes en curso" : "Respecto del mes anterior";
     string Cantidad(int n, string singular, string plural) => $"{n} {(n == 1 ? singular : plural)}";
+    var usuariosNuevos = $"+{Model.UsuariosNuevosDelMes} este mes";
+    var claseUsuariosNuevos = Model.UsuariosNuevosDelMes > 0 ? "ok" : "";
+    var usuariosDetalle = $"Cuentas activas · {Cantidad(Model.UsuariosInactivos, "inactiva", "inactivas")}";
+    var cuentasBloqueadas = Model.UsuariosBloqueados + Model.PersonalBloqueado;
+    var bloqueadasDetalle = $"{Cantidad(Model.UsuariosBloqueados, "usuario externo", "usuarios externos")} · {Cantidad(Model.PersonalBloqueado, "del personal", "del personal")}";
+    var enlaceBloqueadas = Model.UsuariosBloqueados == 0 && Model.PersonalBloqueado > 0
+        ? Url.Action("Index", "Personal", new { bloqueadas = true })
+        : Url.Action("Index", "Usuarios", new { bloqueadas = true });
+    ViewDataDictionary ConEnlace(string? url) => new(ViewData) { ["Url"] = url };
     var personalDetalle = $"{Cantidad(Model.Administradores, "Administrador", "Administradores")} · {Cantidad(Model.Coordinadores, "Coordinador", "Coordinadores")} · {Cantidad(Model.Tecnicos, "Técnico", "Técnicos")}";
     var inactivos = Cantidad(Model.PersonalInactivo, "inactivo", "inactivos");
 }
@@ -23,16 +41,19 @@
             <p class="page-sub">Resumen administrativo de la plataforma</p>
         </div>
         <div class="page-actions">
+            <a class="btn btn-secondary" asp-controller="Usuarios" asp-action="Index"><partial name="_Icon" model="@("users")" /><span>Usuarios</span></a>
+            <a class="btn btn-secondary" asp-controller="Parametros" asp-action="Index"><partial name="_Icon" model="@("sliders")" /><span>Parámetros</span></a>
             <a class="btn btn-secondary" asp-controller="Reportes" asp-action="Index"><partial name="_Icon" model="@("file")" /><span>Ver reportes</span></a>
             <a class="btn btn-primary" asp-controller="Personal" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
         </div>
     </div>
 
-    <div class="g-metrics">
-        <partial name="_Metrica" model="@(("Usuarios externos", "users", "i-info", Model.UsuariosExternos.ToString(), $"+{Model.UsuariosNuevosDelMes} este mes", "ok", "Cuentas activas"))" />
-        <partial name="_Metrica" model="@(("Personal activo", "idcard", "i-ok", Model.PersonalActivo.ToString(), inactivos, "", personalDetalle))" />
-        <partial name="_Metrica" model="@(("Equipos registrados", "laptop", "i-ok", Model.EquiposRegistrados.ToString(), "", "", "En todos los estados"))" />
-        <partial name="_Metrica" model="@(("Entregas este mes", "truck", "i-ok", Model.EntregasDelMes.ToString(), variacion, claseVariacion, detalleEntregas))" />
+    <div class="g-metrics g-metrics-auto">
+        <partial name="_Metrica" model="@(("Usuarios externos", "users", "i-info", Model.UsuariosExternos.ToString(), usuariosNuevos, claseUsuariosNuevos, usuariosDetalle))" view-data='ConEnlace(Url.Action("Index", "Usuarios"))' />
+        <partial name="_Metrica" model="@(("Personal activo", "idcard", "i-ok", Model.PersonalActivo.ToString(), inactivos, "", personalDetalle))" view-data='ConEnlace(Url.Action("Index", "Personal"))' />
+        <partial name="_Metrica" model="@(("Equipos registrados", "laptop", "i-ok", Model.EquiposRegistrados.ToString(), "", "", "En todos los estados"))" view-data='ConEnlace(Url.Action("Index", "Equipos"))' />
+        <partial name="_Metrica" model="@(("Entregas este mes", "truck", "i-ok", Model.EntregasDelMes.ToString(), variacion, claseVariacion, detalleEntregas))" view-data='ConEnlace(Url.Action("Index", "Entregas"))' />
+        <partial name="_Metrica" model="@(("Cuentas bloqueadas", "lock", cuentasBloqueadas > 0 ? "i-warn" : "i-ok", cuentasBloqueadas.ToString(), "", "", bloqueadasDetalle))" view-data='ConEnlace(enlaceBloqueadas)' />
     </div>
 
     <section class="card">

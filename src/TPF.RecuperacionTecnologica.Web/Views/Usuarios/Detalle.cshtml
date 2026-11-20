@@ -20,6 +20,10 @@
             <div class="h-id">
                 <h1 tabindex="-1">@Model.NombreVisible</h1>
                 <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
+                @if (Model.EstaBloqueada)
+                {
+                    <partial name="_Badge" model='@(("Bloqueada", "warn"))' />
+                }
             </div>
             <p class="page-sub page-sub-id">Usuario externo @Model.Codigo</p>
         </div>

@@ -10,20 +10,22 @@ public enum TipoOperacionAuditoria
     [Display(Name = "Baja de usuario")]
     BajaUsuario,
 
-    [Display(Name = "Donación")]
+    [Display(Name = "Registro de donación")]
     Donacion,
 
-    [Display(Name = "Diagnóstico")]
+    [Display(Name = "Registro de diagnóstico")]
     Diagnostico,
 
+    [Display(Name = "Registro de solicitud")]
     Solicitud,
 
-    [Display(Name = "Asignación")]
+    [Display(Name = "Asignación de equipo")]
     Asignacion,
 
     [Display(Name = "Liberación")]
     Liberacion,
 
+    [Display(Name = "Registro de entrega")]
     Entrega,
 
     [Display(Name = "Alta de personal")]

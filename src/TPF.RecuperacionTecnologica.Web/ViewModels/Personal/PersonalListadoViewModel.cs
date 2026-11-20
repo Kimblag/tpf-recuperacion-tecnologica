@@ -10,6 +10,8 @@ public class PersonalListadoViewModel
 
     public EstadoPersonal? Estado { get; set; }
 
+    public bool Bloqueadas { get; set; }
+
     public IReadOnlyList<PersonalFilaViewModel> Filas { get; set; } = [];
 
     public string? Orden { get; set; } = "codigo";

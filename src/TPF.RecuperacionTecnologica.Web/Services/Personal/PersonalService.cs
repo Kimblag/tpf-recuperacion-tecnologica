@@ -44,9 +44,15 @@ public class PersonalService : IPersonalService
             ["estado"] = p => p.EstadoPersonal
         };
 
-    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden = null)
+    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden = null, bool bloqueadas = false)
     {
         var consulta = _context.PersonalInterno.AsNoTracking();
+        var ahora = DateTimeOffset.UtcNow;
+
+        if (bloqueadas)
+        {
+            consulta = consulta.Where(p => _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora));
+        }
 
         if (rol.HasValue)
         {
@@ -87,7 +93,8 @@ public class PersonalService : IPersonalService
                 CorreoElectronico = p.CorreoElectronico,
                 RolAsignado = p.RolAsignado,
                 EstadoPersonal = p.EstadoPersonal,
-                EsRaiz = p.EsRaiz
+                EsRaiz = p.EsRaiz,
+                EstaBloqueada = _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora)
             })
             .ToListAsync();
 
@@ -129,6 +136,8 @@ public class PersonalService : IPersonalService
 
     public async Task<PersonalDetalleViewModel?> ObtenerDetalleAsync(int codigoPersonal)
     {
+        var ahora = DateTimeOffset.UtcNow;
+
         return await _context.PersonalInterno
             .AsNoTracking()
             .Where(p => p.CodigoPersonal == codigoPersonal)
@@ -143,6 +152,7 @@ public class PersonalService : IPersonalService
                 RolAsignado = p.RolAsignado,
                 EstadoPersonal = p.EstadoPersonal,
                 EsRaiz = p.EsRaiz,
+                EstaBloqueada = _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora)
             })
             .FirstOrDefaultAsync();
     }
@@ -304,8 +314,8 @@ public class PersonalService : IPersonalService
                 nameof(Models.Personal),
                 personal.CodigoPersonal,
                 rolAnterior == personal.RolAsignado
-                    ? $"Edición de personal ({personal.RolAsignado})"
-                    : $"Edición de personal (cambio de rol: {rolAnterior} -> {personal.RolAsignado})");
+                    ? $"Edición de personal ({NombreEnum.De(personal.RolAsignado)})"
+                    : $"Edición de personal (cambio de rol: {NombreEnum.De(rolAnterior)} -> {NombreEnum.De(personal.RolAsignado)})");
         }
         catch (Exception ex)
         {

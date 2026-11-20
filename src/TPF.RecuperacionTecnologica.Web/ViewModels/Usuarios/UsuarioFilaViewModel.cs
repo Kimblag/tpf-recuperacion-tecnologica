@@ -27,6 +27,8 @@ public class UsuarioFilaViewModel
 
     public EstadoUsuario EstadoUsuario { get; set; }
 
+    public bool EstaBloqueada { get; set; }
+
     public string Codigo => $"U-{NroUsuario:D4}";
 
     public string NombreVisible =>
