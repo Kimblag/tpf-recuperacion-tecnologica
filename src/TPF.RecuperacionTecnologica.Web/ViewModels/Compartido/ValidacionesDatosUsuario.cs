@@ -15,10 +15,18 @@ public static class ValidacionesDatosUsuario
             {
                 yield return new ValidationResult("El nombre es obligatorio.", [prefijoCampos + "Nombre"]);
             }
+            else if (!ValidacionesFormato.NombreValido(nombre))
+            {
+                yield return new ValidationResult("Usá solo letras, espacios, apóstrofo, guion o punto (entre 2 y 100 caracteres).", [prefijoCampos + "Nombre"]);
+            }
 
             if (string.IsNullOrWhiteSpace(apellido))
             {
                 yield return new ValidationResult("El apellido es obligatorio.", [prefijoCampos + "Apellido"]);
+            }
+            else if (!ValidacionesFormato.NombreValido(apellido))
+            {
+                yield return new ValidationResult("Usá solo letras, espacios, apóstrofo, guion o punto (entre 2 y 100 caracteres).", [prefijoCampos + "Apellido"]);
             }
         }
         else if (string.IsNullOrWhiteSpace(razonSocial))

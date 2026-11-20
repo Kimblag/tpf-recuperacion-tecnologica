@@ -38,7 +38,7 @@ public class RegistroUsuarioViewModel : IValidatableObject
 
     [Display(Name = "Correo electrónico")]
     [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
-    [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
+    [CorreoEstricto]
     [StringLength(254, ErrorMessage = "Máximo 254 caracteres.")]
     public string CorreoElectronico { get; set; } = string.Empty;
 

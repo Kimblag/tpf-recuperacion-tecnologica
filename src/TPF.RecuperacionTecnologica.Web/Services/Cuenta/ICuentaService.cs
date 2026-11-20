@@ -32,6 +32,12 @@ public interface ICuentaService
     Task<ResultadoReenvioInvitacion> ReenviarInvitacionAsync(int nroUsuario, Func<string, string, string> construirRuta, string urlBaseSolicitud);
 
     /// <summary>
+    /// Envía a un integrante del Personal un enlace para restablecer su contraseña. Admite un envío cada 2 minutos por cuenta.
+    /// </summary>
+    Task<ResultadoReenvioInvitacion> ReenviarAccesoPersonalAsync(
+        int codigoPersonal, Func<string, string, string> construirRutaRestablecimiento, string urlBaseSolicitud);
+
+    /// <summary>
     /// Restablece la contraseña con el token recibido por correo. Si el enlace no es válido,
     /// devuelve siempre el mismo error. Al restablecer también se levanta el bloqueo por intentos fallidos.
     /// </summary>

@@ -68,5 +68,8 @@ public enum TipoOperacionAuditoria
     CorreccionUsuario,
 
     [Display(Name = "Desbloqueo de cuenta")]
-    DesbloqueoCuenta
+    DesbloqueoCuenta,
+
+    [Display(Name = "Envío de enlace al personal")]
+    EnvioAccesoPersonal
 }

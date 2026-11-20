@@ -51,7 +51,7 @@
                     <div class="field">
                         <label class="form-label" for="Password">Contraseña nueva<span class="req-word"> (obligatorio)</span></label>
                         <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
-                        <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                        <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número. No puede ser una contraseña común ni contener tu correo.</div>
                         @if (erroresPassword is { Count: > 1 })
                         {
                             @* asp-validation-for muestra solo el primer error: acá se listan todos los requisitos que no se cumplen *@

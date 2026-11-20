@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
+
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
 
 public class CorreccionUsuarioViewModel : IValidatableObject
@@ -25,7 +27,7 @@ public class CorreccionUsuarioViewModel : IValidatableObject
 
     [Display(Name = "Correo electrónico")]
     [Required(ErrorMessage = "El correo electrónico es obligatorio.")]
-    [EmailAddress(ErrorMessage = "Ingresá un correo electrónico válido.")]
+    [CorreoEstricto]
     [StringLength(254, ErrorMessage = "Máximo 254 caracteres.")]
     public string CorreoElectronico { get; set; } = string.Empty;
 

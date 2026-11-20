@@ -126,7 +126,7 @@
             </div>
         </div>
 
-        <div class="d-flex flex-column flex-grow-1 min-vw-0">
+        <div class="app-columna d-flex flex-column flex-grow-1 min-vw-0">
             <header class="topbar bg-body border-bottom d-flex align-items-center justify-content-between gap-2 px-3">
                 <div class="d-flex align-items-center gap-2 min-w-0">
                     <button type="button" class="btn btn-surface btn-icon d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas" aria-label="Abrir menú de navegación">
@@ -152,7 +152,7 @@
                 </div>
             </header>
 
-            <main id="main-content" class="flex-grow-1 p-4" tabindex="-1">
+            <main id="main-content" class="app-contenido flex-grow-1 p-4" tabindex="-1">
                 @if (TempData["Mensaje"] is string mensaje)
                 {
                     <div class="alert alert-success" role="status">

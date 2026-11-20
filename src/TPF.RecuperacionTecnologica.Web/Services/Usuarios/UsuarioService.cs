@@ -40,7 +40,7 @@ public class UsuarioService : IUsuarioService
 
     public async Task<IdentityResult> RegistrarAsync(RegistroUsuarioViewModel modelo)
     {
-        var correo = modelo.CorreoElectronico.Trim();
+        var correo = modelo.CorreoElectronico.Trim().ToLowerInvariant();
 
         // 1. validar que el documento sea único
         var documentoExiste = await _context.Usuarios.AnyAsync(u => u.NroDocumento == modelo.NroDocumento);
@@ -196,11 +196,13 @@ public class UsuarioService : IUsuarioService
             var textoCodigo = termino.StartsWith("U-", StringComparison.OrdinalIgnoreCase) ? termino[2..] : termino;
             int? codigo = int.TryParse(textoCodigo, out var numero) ? numero : null;
 
+            var patron = BusquedaTexto.Patron(termino);
+
             consulta = consulta.Where(u =>
-                (u.Nombre + " " + u.Apellido).Contains(termino)
-                || (u.Apellido + " " + u.Nombre).Contains(termino)
-                || (u.RazonSocial != null && u.RazonSocial.Contains(termino))
-                || u.CorreoElectronico.Contains(termino)
+                EF.Functions.Like(EF.Functions.Collate(u.Nombre + " " + u.Apellido, BusquedaTexto.Colacion), patron)
+                || EF.Functions.Like(EF.Functions.Collate(u.Apellido + " " + u.Nombre, BusquedaTexto.Colacion), patron)
+                || (u.RazonSocial != null && EF.Functions.Like(EF.Functions.Collate(u.RazonSocial, BusquedaTexto.Colacion), patron))
+                || EF.Functions.Like(EF.Functions.Collate(u.CorreoElectronico, BusquedaTexto.Colacion), patron)
                 || (buscaDocumento && u.NroDocumento.Contains(documento))
                 || (codigo != null && u.NroUsuario == codigo));
         }
@@ -524,7 +526,7 @@ public class UsuarioService : IUsuarioService
 
     public async Task<ResultadoAltaAsistida> AltaAsistidaAsync(SelectorUsuarioViewModel datos)
     {
-        var correo = datos.CorreoElectronico!.Trim();
+        var correo = datos.CorreoElectronico!.Trim().ToLowerInvariant();
 
         var existeFicha = await _context.Usuarios
             .AnyAsync(u => u.NroDocumento == datos.NroDocumento || u.CorreoElectronico == correo);

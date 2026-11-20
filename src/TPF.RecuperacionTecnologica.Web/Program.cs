@@ -104,6 +104,7 @@ builder.Services
     .AddClaimsPrincipalFactory<FabricaClaimsUsuario>()
     .AddDefaultTokenProviders()
     .AddTokenProvider<ProveedorTokenInvitacion>(ProveedorTokenInvitacion.Nombre)
+    .AddPasswordValidator<ValidadorContrasenaComun>()
     .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 // el enlace de recuperación de pass vence en 1 hora

@@ -22,7 +22,7 @@
             <div class="h-id">
                 <h1 tabindex="-1">@Model.NombreCompleto</h1>
                 <partial name="_EstadoPersonalBadge" model="Model.EstadoPersonal" />
-                @if (Model.EstaBloqueada)
+                @if (Model.EstaBloqueada && estaActivo)
                 {
                     <partial name="_Badge" model='@(("Bloqueada", "warn"))' />
                 }
@@ -30,13 +30,23 @@
             <p class="page-sub page-sub-id">@Html.DisplayFor(m => m.RolAsignado) · Código @Model.Codigo</p>
         </div>
         <div class="page-actions">
-            @if (Model.EsRaiz)
+            @if (Model.EsRaiz || Model.EsCuentaPropia)
             {
                 <button type="button" class="btn btn-secondary" disabled><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></button>
             }
             else
             {
                 <a class="btn btn-secondary" asp-action="Editar" asp-route-id="@Model.CodigoPersonal"><partial name="_Icon" model="@("edit")" /><span>Editar personal</span></a>
+            }
+            @if (estaActivo && !Model.EsCuentaPropia)
+            {
+                <form asp-action="EnviarAcceso" asp-route-id="@Model.CodigoPersonal" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("refresh")" /><span>Restablecer contraseña</span></button>
+                </form>
+            }
+            @if (Model.EstaBloqueada && estaActivo && !Model.EsCuentaPropia)
+            {
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-desbloquear"><partial name="_Icon" model="@("lock")" /><span>Desbloquear</span></button>
             }
             @if (puedeInactivar)
             {
@@ -79,7 +89,7 @@
     {
         <div class="alert alert-info" role="status">
             <partial name="_Icon" model="@("info")" />
-            <div class="alert-body"><div>Esta es la cuenta con la que se inició sesión. No se puede inactivar a sí misma: otro Administrador debe hacerlo.</div></div>
+            <div class="alert-body"><div>Esta es la cuenta con la que se inició sesión. No se puede editar ni inactivar a sí misma: otro Administrador debe hacerlo.</div></div>
         </div>
     }
 
@@ -134,6 +144,11 @@
         </div>
     </section>
 </div>
+
+@if (Model.EstaBloqueada && estaActivo && !Model.EsCuentaPropia)
+{
+    <partial name="_ModalDesbloquear" model="@((Model.CodigoPersonal, Model.NombreCompleto, Model.Codigo))" />
+}
 
 @if (estaActivo && puedeInactivar)
 {
