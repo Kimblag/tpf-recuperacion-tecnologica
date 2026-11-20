@@ -55,9 +55,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Cerrar menú"></button>
             </div>
             <div class="offcanvas-body d-flex flex-column">
-                <div class="d-flex align-items-center gap-2 mb-4">
-                    <span class="d-inline-flex align-items-center justify-content-center brand-mark fw-semibold" style="width:28px;height:28px;">@ViewData["InicialOrganizacion"]</span>
-                    <span class="fw-semibold" style="font-family:var(--app-font-brand)">@ViewData["NombreOrganizacion"]</span>
+                <div class="mb-4">
+                    <partial name="_MarcaApp" />
                 </div>
                 @if (User.HasClaim(c => c.Type == ClaimsSesion.TipoUsuario))
                 {
@@ -178,8 +177,8 @@
             </main>
 
             <footer class="app-footer px-4">
-                <span>@ViewData["NombreOrganizacion"]</span>
-                <span>Plataforma para la Recuperación y Redistribución de Equipos Tecnológicos</span>
+                <span>@ViewData["NombreOrganizacion"] · Plataforma para la Recuperación y Redistribución de Equipos Tecnológicos</span>
+                <span class="firma-dev">Desarrollado por <strong>Pepino Devs</strong></span>
             </footer>
         </div>
     </div>

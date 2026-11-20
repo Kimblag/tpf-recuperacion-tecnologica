@@ -45,8 +45,7 @@
             <partial name="_ThemeToggle" />
         </div>
         <div class="auth-brand">
-            <span class="brand-mark" aria-hidden="true">@ViewData["InicialOrganizacion"]</span>
-            <span class="brand-name">@ViewData["NombreOrganizacion"]</span>
+            <partial name="_MarcaApp" />
         </div>
         <main id="main" class="auth-main" tabindex="-1">
             @if (TempData["Mensaje"] is string mensaje)
@@ -61,6 +60,7 @@
             @RenderBody()
         </main>
         <p class="auth-foot">Plataforma para la Recuperación y Redistribución de Equipos Tecnológicos</p>
+        <p class="auth-foot firma-dev">Desarrollado por <strong>Pepino Devs</strong></p>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
