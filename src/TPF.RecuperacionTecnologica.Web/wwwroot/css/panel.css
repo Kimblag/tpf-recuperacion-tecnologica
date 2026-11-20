@@ -207,31 +207,6 @@ a.metric {
     background-color: var(--app-surface);
 }
 
-    .preview-brand .brand-mark {
-        width: 28px;
-        height: 28px;
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--app-font-brand);
-        font-weight: 600;
-        font-size: calc(14px * var(--fs));
-    }
-
-.preview-name {
-    font-family: var(--app-font-brand);
-    font-weight: 600;
-    font-size: calc(13px * var(--fs));
-    line-height: 1.2;
-    letter-spacing: -.01em;
-}
-
-.preview-sub {
-    font-size: calc(11px * var(--fs));
-    color: var(--bs-secondary-color);
-}
-
 .rep-card {
     display: block;
     color: inherit;

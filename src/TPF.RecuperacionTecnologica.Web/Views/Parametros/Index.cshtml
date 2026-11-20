@@ -90,11 +90,14 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="preview-brand">
-                        <span class="brand-mark" aria-hidden="true" id="vista-previa-inicial">@(string.IsNullOrEmpty(Model.NombreOrganizacion) ? "—" : Model.NombreOrganizacion[..1])</span>
-                        <div>
-                            <div class="preview-name" id="vista-previa-nombre">@(string.IsNullOrEmpty(Model.NombreOrganizacion) ? "—" : Model.NombreOrganizacion)</div>
-                            <div class="preview-sub">Área Administrador</div>
+                    @* misma marca que _MarcaApp, con el nombre que se está editando *@
+                    <div class="preview-brand marca-app">
+                        <img class="marca-icono logo-claro" src="~/img/reciclar-icono-claro.svg" alt="" />
+                        <img class="marca-icono logo-oscuro" src="~/img/reciclar-icono-oscuro.svg" alt="" />
+                        <div class="marca-texto">
+                            <img class="marca-palabra logo-claro" src="~/img/reciclar-palabra-claro.svg" alt="recicl.ar" />
+                            <img class="marca-palabra logo-oscuro" src="~/img/reciclar-palabra-oscuro.svg" alt="recicl.ar" />
+                            <span class="marca-org" id="vista-previa-nombre">@(string.IsNullOrEmpty(Model.NombreOrganizacion) ? "—" : Model.NombreOrganizacion)</span>
                         </div>
                     </div>
                 </div>
@@ -150,11 +153,8 @@
 
         var campo = document.getElementById('NombreOrganizacion');
         var nombre = document.getElementById('vista-previa-nombre');
-        var inicial = document.getElementById('vista-previa-inicial');
         campo.addEventListener('input', function () {
-            var valor = campo.value.trim();
-            nombre.textContent = valor || '—';
-            inicial.textContent = valor ? valor.charAt(0).toUpperCase() : '—';
+            nombre.textContent = campo.value.trim() || '—';
         });
     </script>
 }

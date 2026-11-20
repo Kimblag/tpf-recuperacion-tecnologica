@@ -89,6 +89,49 @@
     color: var(--bs-body-bg);
 }
 
+/* marca del producto (recicl.ar): ícono, palabra y nombre de la organización */
+.marca-app {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.marca-icono {
+    width: calc(32px * var(--fs));
+    height: calc(32px * var(--fs));
+    flex: none;
+}
+
+.marca-texto {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+}
+
+.marca-palabra {
+    height: calc(18px * var(--fs));
+    width: auto;
+}
+
+.marca-org {
+    font-size: calc(12px * var(--fs));
+    line-height: 1.2;
+    color: var(--bs-secondary-color);
+}
+
+/* cada logo tiene una versión para fondo claro y otra para fondo oscuro */
+[data-bs-theme="light"] .logo-oscuro,
+[data-bs-theme="dark"] .logo-claro {
+    display: none;
+}
+
+/* firma de la empresa desarrolladora */
+.firma-dev strong {
+    font-weight: 600;
+}
+
 .ic {
     width: calc(16px * var(--fs));
     height: calc(16px * var(--fs));

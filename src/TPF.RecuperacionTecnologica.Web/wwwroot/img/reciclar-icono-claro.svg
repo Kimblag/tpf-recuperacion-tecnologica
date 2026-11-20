@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-302 -302 604 604" width="604" height="604">
+<defs><linearGradient id="glight" gradientUnits="userSpaceOnUse" x1="-220" y1="-60" x2="220" y2="60">
+<stop offset="0" stop-color="#1FB89A"/><stop offset="1" stop-color="#3DB04F"/></linearGradient></defs>
+<g fill="none" stroke="url(#glight)" stroke-linecap="round" stroke-linejoin="round">
+ <g stroke-width="24">
+  <path d="M-179.7,10.0 A180,180 0 0 1 137.9,-115.7"/>
+  <path d="M-221.7,-32.0 L-179.7,10.0 L-137.7,-32.0"/>
+  <path d="M-160.4,81.7 A180,180 0 0 0 170.2,-58.6"/>
+  <path d="M128.2,-16.6 L170.2,-58.6 L212.2,-16.6"/>
+ </g>
+ <g stroke-width="11">
+  <path d="M-78,162 V56 L-31,9"/>
+  <path d="M-25,176 V66 L30,11 V-66"/>
+  <path d="M15,178 V82 L75,22 V0"/>
+  <circle cx="-21" cy="-1" r="13"/>
+  <circle cx="30" cy="-80" r="13"/>
+  <circle cx="75" cy="-14" r="13"/>
+ </g>
+</g></svg>
