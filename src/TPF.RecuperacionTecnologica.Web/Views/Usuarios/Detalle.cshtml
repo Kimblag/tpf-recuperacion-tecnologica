@@ -20,7 +20,7 @@
             <div class="h-id">
                 <h1 tabindex="-1">@Model.NombreVisible</h1>
                 <partial name="_EstadoUsuarioBadge" model="Model.EstadoUsuario" />
-                @if (Model.EstaBloqueada)
+                @if (Model.EstaBloqueada && estaActivo)
                 {
                     <partial name="_Badge" model='@(("Bloqueada", "warn"))' />
                 }
@@ -39,11 +39,9 @@
                     <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("refresh")" /><span>Reenviar invitación</span></button>
                 </form>
             }
-            @if (Model.EstaBloqueada)
+            @if (Model.EstaBloqueada && estaActivo)
             {
-                <form asp-action="Desbloquear" asp-route-id="@Model.NroUsuario" method="post" class="d-inline" onsubmit="return confirm('¿Desbloquear la cuenta de @Model.NombreVisible? Podrá volver a iniciar sesión de inmediato.');">
-                    <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("lock")" /><span>Desbloquear</span></button>
-                </form>
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modal-desbloquear"><partial name="_Icon" model="@("lock")" /><span>Desbloquear</span></button>
             }
             @if (estaActivo)
             {
@@ -130,6 +128,11 @@
 
     <partial name="_DonacionesUsuario" model="Model.Donaciones" />
 </div>
+
+@if (Model.EstaBloqueada && estaActivo)
+{
+    <partial name="_ModalDesbloquear" model="new InactivarUsuarioViewModel { NroUsuario = Model.NroUsuario, NombreCompleto = Model.NombreVisible, Codigo = Model.Codigo }" />
+}
 
 @if (estaActivo)
 {
