@@ -103,7 +103,7 @@ public class CuentaController : Controller
 
             case ResultadoInicioSesion.CuentaInactiva:
                 ModelState.AddModelError(string.Empty,
-                    "Tu cuenta no está habilitada para ingresar. Comunicate con la organización.");
+                    "Esta cuenta fue dada de baja. Si creés que es un error, comunicate con la organización.");
                 break;
 
             default:

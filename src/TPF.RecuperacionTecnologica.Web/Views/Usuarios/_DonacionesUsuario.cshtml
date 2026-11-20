@@ -1,0 +1,51 @@
+@model IReadOnlyList<TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones.DonacionGestionFilaViewModel>
+
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">Donaciones</h2>
+            <p class="card-sub">Las últimas 10, de la más reciente a la más antigua</p>
+        </div>
+    </div>
+    <div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <div class="state">
+                <span class="state-ic"><partial name="_Icon" model="@("gift")" /></span>
+                <h3>Sin donaciones</h3>
+                <p>Esta persona todavía no donó ningún equipo.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="table table-stack">
+                    <caption class="visually-hidden">Donaciones de la persona</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Número</th>
+                            <th scope="col">Equipo</th>
+                            <th scope="col">Registro</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col" class="col-actions">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var fila in Model)
+                        {
+                            <tr>
+                                <td data-label="Número"><span class="mono">@fila.CodigoEquipo</span></td>
+                                <td data-label="Equipo">@fila.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="fila.TipoEquipo" /></div></td>
+                                <td data-label="Registro">@Reloj.Fecha(fila.FechaRegistro)</td>
+                                <td data-label="Estado"><partial name="_EstadoEquipoBadge" model="fila.EstadoEquipo" /></td>
+                                <td class="col-actions" data-label="Acciones">
+                                    <a class="btn btn-ghost btn-sm" asp-controller="Donaciones" asp-action="DetalleInterno" asp-route-id="@fila.NroEquipo" aria-label="Ver donación del equipo @fila.CodigoEquipo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

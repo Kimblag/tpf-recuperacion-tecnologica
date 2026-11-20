@@ -24,10 +24,27 @@
                 {
                     <partial name="_Badge" model='@(("Bloqueada", "warn"))' />
                 }
+                @if (Model.PendienteActivacion)
+                {
+                    <partial name="_Badge" model='@(("Pendiente de activación", "warn"))' />
+                }
             </div>
             <p class="page-sub page-sub-id">Usuario externo @Model.Codigo</p>
         </div>
         <div class="page-actions">
+            @if (Model.PendienteActivacion)
+            {
+                <a class="btn btn-secondary" asp-action="Corregir" asp-route-id="@Model.NroUsuario"><partial name="_Icon" model="@("edit")" /><span>Corregir datos</span></a>
+                <form asp-action="ReenviarInvitacion" asp-route-id="@Model.NroUsuario" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("refresh")" /><span>Reenviar invitación</span></button>
+                </form>
+            }
+            @if (Model.EstaBloqueada)
+            {
+                <form asp-action="Desbloquear" asp-route-id="@Model.NroUsuario" method="post" class="d-inline" onsubmit="return confirm('¿Desbloquear la cuenta de @Model.NombreVisible? Podrá volver a iniciar sesión de inmediato.');">
+                    <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("lock")" /><span>Desbloquear</span></button>
+                </form>
+            }
             @if (estaActivo)
             {
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-inactivar"><partial name="_Icon" model="@("ban")" /><span>Inactivar</span></button>
@@ -35,6 +52,25 @@
             <a class="btn btn-secondary" asp-action="Index"><partial name="_Icon" model="@("arrow-left")" /><span>Volver</span></a>
         </div>
     </div>
+
+    @if (TempData["AvisoInvitacion"] is string avisoInvitacion)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">@avisoInvitacion</div>
+        </div>
+    }
+
+    @if (Model.PendienteActivacion)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">
+                <div class="alert-title">La cuenta todavía no activó su contraseña</div>
+                <div>La persona recibió una invitación por correo y aún no la usó para ingresar.</div>
+            </div>
+        </div>
+    }
 
     @if (!estaActivo)
     {
@@ -89,11 +125,24 @@
             </div>
         </section>
     </div>
+
+    <partial name="_SolicitudesUsuario" model="Model.Solicitudes" />
+
+    <partial name="_DonacionesUsuario" model="Model.Donaciones" />
 </div>
 
 @if (estaActivo)
 {
-    <partial name="_ModalInactivar" model="new InactivarUsuarioViewModel { NroUsuario = Model.NroUsuario, NombreCompleto = Model.NombreVisible, Codigo = Model.Codigo }" />
+    <partial name="_ModalInactivar" model="new InactivarUsuarioViewModel
+    {
+        NroUsuario = Model.NroUsuario,
+        NombreCompleto = Model.NombreVisible,
+        Codigo = Model.Codigo,
+        SolicitudesPendientes = Model.SolicitudesPendientes,
+        SolicitudesAsignadas = Model.SolicitudesAsignadas,
+        DonacionesPendientes = Model.DonacionesPendientes,
+        EquiposDonadosEnCurso = Model.EquiposDonadosEnCurso
+    }" />
 }
 
 @section Scripts {

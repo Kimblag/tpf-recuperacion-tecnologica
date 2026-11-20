@@ -14,4 +14,12 @@ public class InactivarUsuarioViewModel
     public string? NombreCompleto { get; set; }
 
     public string? Codigo { get; set; }
+
+    public int SolicitudesPendientes { get; set; }
+
+    public int SolicitudesAsignadas { get; set; }
+
+    public int DonacionesPendientes { get; set; }
+
+    public int EquiposDonadosEnCurso { get; set; }
 }

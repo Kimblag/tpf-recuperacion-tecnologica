@@ -10,6 +10,20 @@
             </div>
             <div class="modal-body">
                 <p>Vas a inactivar a <b>@Model.NombreCompleto</b> (<span class="mono">@Model.Codigo</span>).</p>
+                @if (Model.SolicitudesAsignadas > 0)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <partial name="_Icon" model="@("alert")" />
+                        <div class="alert-body">
+                            <div>Tiene @Model.SolicitudesAsignadas @(Model.SolicitudesAsignadas == 1 ? "solicitud con un equipo asignado" : "solicitudes con equipo asignado"). Primero hay que liberar esa asignación desde Asignaciones; si no, no se puede inactivar.</div>
+                        </div>
+                    </div>
+                }
+                <ul class="list-unstyled" aria-label="Qué pasa con sus registros">
+                    <li>Solicitudes pendientes que se cancelan: <b>@Model.SolicitudesPendientes</b></li>
+                    <li>Donaciones sin recibir que se cancelan: <b>@Model.DonacionesPendientes</b></li>
+                    <li>Equipos donados ya recibidos que se conservan: <b>@Model.EquiposDonadosEnCurso</b></li>
+                </ul>
                 <div class="alert alert-warning" role="note">
                     <partial name="_Icon" model="@("alert")" />
                     <div class="alert-body">
