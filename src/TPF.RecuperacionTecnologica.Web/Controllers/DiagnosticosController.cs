@@ -194,9 +194,19 @@ public class DiagnosticosController : Controller
 
         var redireccion = RedirigirSiCorresponde(nroEquipo, equipo.EstadoEquipo, tipo, out var bloqueo);
 
-        if (redireccion is not null || bloqueo is not null)
+        if (redireccion is not null)
         {
-            return redireccion ?? View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo!, DonacionCancelada = equipo.EstadoEquipo == EstadoEquipo.Cancelado });
+            // el equipo cambió de estado mientras se completaba el formulario (por ejemplo, otra pestaña ya lo guardó)
+            TempData["MensajeError"] = tipo == TipoDiagnostico.Inicial
+                ? "El equipo ya tiene un diagnóstico inicial. Lo que cargaste no se guardó."
+                : "El estado del equipo cambió mientras completabas el diagnóstico. Lo que cargaste no se guardó.";
+
+            return redireccion;
+        }
+
+        if (bloqueo is not null)
+        {
+            return View("NoDisponible", new NoDisponibleViewModel { NroEquipo = nroEquipo, Mensaje = bloqueo, DonacionCancelada = equipo.EstadoEquipo == EstadoEquipo.Cancelado });
         }
 
         var conFallas = formulario.DictamenTecnico is DictamenTecnico.NecesitaReparacion or DictamenTecnico.NoRecuperable;

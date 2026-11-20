@@ -71,6 +71,9 @@
         }
         else if (Model.Candidatas.Count == 0)
         {
+            @* si la asignación falló porque la solicitud se canceló mientras tanto, el motivo se muestra acá *@
+            <partial name="_ResumenErrores" />
+
             <div class="alert alert-warning" role="status">
                 <partial name="_Icon" model="@("alert")" />
                 <div class="alert-body">
