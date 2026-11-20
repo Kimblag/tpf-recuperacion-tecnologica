@@ -23,7 +23,7 @@
     var bloqueadasDetalle = $"{Cantidad(Model.UsuariosBloqueados, "usuario externo", "usuarios externos")} · {Cantidad(Model.PersonalBloqueado, "del personal", "del personal")}";
     var enlaceBloqueadas = Model.UsuariosBloqueados == 0 && Model.PersonalBloqueado > 0
         ? Url.Action("Index", "Personal", new { bloqueadas = true })
-        : Url.Action("Index", "Usuarios", new { bloqueadas = true });
+        : Url.Action("Index", "Usuarios", new { acceso = "bloqueadas" });
     ViewDataDictionary ConEnlace(string? url) => new(ViewData) { ["Url"] = url };
     var personalDetalle = $"{Cantidad(Model.Administradores, "Administrador", "Administradores")} · {Cantidad(Model.Coordinadores, "Coordinador", "Coordinadores")} · {Cantidad(Model.Tecnicos, "Técnico", "Técnicos")}";
     var inactivos = Cantidad(Model.PersonalInactivo, "inactivo", "inactivos");

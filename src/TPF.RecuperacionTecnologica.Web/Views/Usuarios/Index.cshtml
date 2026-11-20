@@ -2,6 +2,16 @@
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
     ViewData["Title"] = "Usuarios";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Tipo = Model.Tipo,
+        Estado = Model.Estado,
+        Acceso = Model.Acceso,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
 }
 
 @section Migas {
@@ -17,9 +27,21 @@
         </div>
     </div>
 
+    @if (Model.FiltroInvalido)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">Alguno de los filtros indicados no es válido y se ignoró.</div>
+        </div>
+    }
+
     <section class="card overflow" aria-label="Usuarios">
         <form class="filters" role="search" method="get" asp-action="Index">
             <input type="hidden" asp-for="Orden" />
+            <div class="filter grow">
+                <label for="Busqueda">Buscar</label>
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, razón social, documento o correo" maxlength="60" />
+            </div>
             <div class="filter">
                 <label for="Tipo">Tipo</label>
                 <div class="select">
@@ -39,11 +61,12 @@
                 </div>
             </div>
             <div class="filter">
-                <label for="Bloqueadas">Acceso</label>
+                <label for="Acceso">Acceso</label>
                 <div class="select">
-                    <select id="Bloqueadas" name="bloqueadas" class="form-select sm">
-                        <option value="false" selected="@(!Model.Bloqueadas)">Todos</option>
-                        <option value="true" selected="@Model.Bloqueadas">Solo bloqueadas</option>
+                    <select id="Acceso" name="acceso" class="form-select sm">
+                        <option value="">Todos</option>
+                        <option value="bloqueadas" selected="@(Model.Acceso == "bloqueadas")">Bloqueadas</option>
+                        <option value="pendientes" selected="@(Model.Acceso == "pendientes")">Pendientes de activación</option>
                     </select>
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
@@ -62,7 +85,7 @@
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("users")" /></span>
                     <h3>No se encontraron usuarios</h3>
-                    <p>Probá con otro tipo o estado.</p>
+                    <p>Probá con otra búsqueda o con otros filtros.</p>
                 </div>
             }
             else
@@ -92,7 +115,7 @@
                                     <td data-label="Correo"><span class="muted">@fila.CorreoElectronico</span></td>
                                     <td data-label="Teléfono">@fila.Telefono</td>
                                     <td data-label="Alta">@Reloj.Fecha(fila.FechaAlta)</td>
-                                    <td data-label="Estado"><partial name="_EstadoUsuarioBadge" model="fila.EstadoUsuario" />@if (fila.EstaBloqueada) { <partial name="_Badge" model='@(("Bloqueada", "warn"))' /> }</td>
+                                    <td data-label="Estado"><partial name="_EstadoUsuarioBadge" model="fila.EstadoUsuario" />@if (fila.EstaBloqueada) { <partial name="_Badge" model='@(("Bloqueada", "warn"))' /> }@if (fila.PendienteActivacion) { <partial name="_Badge" model='@(("Pendiente de activación", "warn"))' /> }</td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.NroUsuario" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
                                     </td>
@@ -102,16 +125,7 @@
                     </table>
                 </div>
 
-                <div class="card-foot">
-                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
-                    <nav aria-label="Paginación">
-                        <div class="pagination">
-                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
-                            <button type="button" class="page-btn" aria-current="page">1</button>
-                            <button type="button" class="page-btn" aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
-                        </div>
-                    </nav>
-                </div>
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
     </section>

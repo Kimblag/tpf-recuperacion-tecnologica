@@ -1,0 +1,20 @@
+@model TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios.InactivarUsuarioViewModel
+
+<div class="modal fade" id="modal-desbloquear" tabindex="-1" aria-labelledby="modal-desbloquear-titulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" asp-action="Desbloquear" asp-route-id="@Model.NroUsuario" method="post">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-desbloquear-titulo"><partial name="_Icon" model="@("lock")" />Desbloquear cuenta</h2>
+                <button type="button" class="btn btn-ghost btn-icon btn-sm" data-bs-dismiss="modal" aria-label="Cerrar"><partial name="_Icon" model="@("x")" /></button>
+            </div>
+            <div class="modal-body">
+                <p>Vas a desbloquear la cuenta de <b>@Model.NombreCompleto</b> (<span class="mono">@Model.Codigo</span>).</p>
+                <p>Podrá volver a iniciar sesión de inmediato y se reinicia el contador de intentos fallidos. La acción queda registrada en la auditoría.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver</button>
+                <button type="submit" class="btn btn-primary">Desbloquear cuenta</button>
+            </div>
+        </form>
+    </div>
+</div>

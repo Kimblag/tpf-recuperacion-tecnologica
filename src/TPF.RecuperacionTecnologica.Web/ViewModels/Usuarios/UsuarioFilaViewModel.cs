@@ -29,6 +29,8 @@ public class UsuarioFilaViewModel
 
     public bool EstaBloqueada { get; set; }
 
+    public bool PendienteActivacion { get; set; }
+
     public string Codigo => $"U-{NroUsuario:D4}";
 
     public string NombreVisible =>
