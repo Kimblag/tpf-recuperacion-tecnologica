@@ -131,10 +131,40 @@ public class UsuarioService : IUsuarioService
             ["estado"] = u => u.EstadoUsuario
         };
 
-    public async Task<UsuarioListadoViewModel> ListarAsync(TipoUsuario? tipo, EstadoUsuario? estado, string? orden = null, bool bloqueadas = false)
+    public const string AccesoBloqueadas = "bloqueadas";
+
+    public const string AccesoPendientes = "pendientes";
+
+    public async Task<UsuarioListadoViewModel> ListarAsync(string? busqueda, TipoUsuario? tipo, EstadoUsuario? estado, string? acceso, string? orden, int pagina, bool filtroInvalido = false)
     {
         var consulta = _context.Usuarios.AsNoTracking();
         var ahora = DateTimeOffset.UtcNow;
+
+        if (tipo.HasValue && !Enum.IsDefined(tipo.Value))
+        {
+            tipo = null;
+            filtroInvalido = true;
+        }
+
+        if (estado.HasValue && !Enum.IsDefined(estado.Value))
+        {
+            estado = null;
+            filtroInvalido = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(acceso) && acceso != AccesoBloqueadas && acceso != AccesoPendientes)
+        {
+            acceso = null;
+            filtroInvalido = true;
+        }
+
+        var (columna, descendente) = OrdenListado.Interpretar(orden);
+
+        if (!string.IsNullOrWhiteSpace(orden) && !ColumnasOrden.ContainsKey(columna))
+        {
+            orden = null;
+            filtroInvalido = true;
+        }
 
         if (tipo.HasValue)
         {
@@ -146,13 +176,55 @@ public class UsuarioService : IUsuarioService
             consulta = consulta.Where(u => u.EstadoUsuario == estado.Value);
         }
 
-        if (bloqueadas)
+        if (acceso == AccesoBloqueadas)
         {
             consulta = consulta.Where(u => _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora));
         }
+        else if (acceso == AccesoPendientes)
+        {
+            consulta = consulta.Where(u => u.EstadoUsuario == EstadoUsuario.Activo
+                && _context.Users.Any(i => i.Id == u.IdentityUserId && i.PasswordHash == null));
+        }
 
-        var filas = await consulta
-            .Ordenar(orden, ColumnasOrden, u => u.NroUsuario, c => c.OrderBy(u => u.NroUsuario))
+        var termino = busqueda?.Trim();
+
+        if (!string.IsNullOrEmpty(termino))
+        {
+            var documento = termino.Replace(".", "").Replace("-", "");
+            var buscaDocumento = documento.Length > 0 && documento.All(char.IsDigit);
+
+            var textoCodigo = termino.StartsWith("U-", StringComparison.OrdinalIgnoreCase) ? termino[2..] : termino;
+            int? codigo = int.TryParse(textoCodigo, out var numero) ? numero : null;
+
+            consulta = consulta.Where(u =>
+                (u.Nombre + " " + u.Apellido).Contains(termino)
+                || (u.Apellido + " " + u.Nombre).Contains(termino)
+                || (u.RazonSocial != null && u.RazonSocial.Contains(termino))
+                || u.CorreoElectronico.Contains(termino)
+                || (buscaDocumento && u.NroDocumento.Contains(documento))
+                || (codigo != null && u.NroUsuario == codigo));
+        }
+
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)UsuarioListadoViewModel.TamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+        IQueryable<Usuario> ordenada;
+
+        if (columna == "documento")
+        {
+            ordenada = descendente
+                ? consulta.OrderByDescending(u => u.TipoDocumento).ThenByDescending(u => u.NroDocumento).ThenBy(u => u.NroUsuario)
+                : consulta.OrderBy(u => u.TipoDocumento).ThenBy(u => u.NroDocumento).ThenBy(u => u.NroUsuario);
+        }
+        else
+        {
+            ordenada = consulta.Ordenar(orden, ColumnasOrden, u => u.NroUsuario, c => c.OrderBy(u => u.NroUsuario));
+        }
+
+        var filas = await ordenada
+            .Skip((pagina - 1) * UsuarioListadoViewModel.TamanoPagina)
+            .Take(UsuarioListadoViewModel.TamanoPagina)
             .Select(u => new UsuarioFilaViewModel
             {
                 NroUsuario = u.NroUsuario,
@@ -166,19 +238,68 @@ public class UsuarioService : IUsuarioService
                 Telefono = u.Telefono,
                 FechaAlta = u.FechaAlta,
                 EstadoUsuario = u.EstadoUsuario,
-                EstaBloqueada = _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora)
+                EstaBloqueada = _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora),
+                PendienteActivacion = u.EstadoUsuario == EstadoUsuario.Activo
+                    && _context.Users.Any(i => i.Id == u.IdentityUserId && i.PasswordHash == null)
             })
             .ToListAsync();
 
         return new UsuarioListadoViewModel
         {
+            Busqueda = busqueda,
             Tipo = tipo,
             Estado = estado,
-            Bloqueadas = bloqueadas,
+            Acceso = acceso,
+            FiltroInvalido = filtroInvalido,
             Orden = orden ?? "usuario",
             Filas = filas,
-            Total = filas.Count
+            Total = total,
+            Pagina = pagina
         };
+    }
+
+    public async Task<IdentityResult> DesbloquearAsync(int nroUsuario, int codigoAdministrador)
+    {
+        var identityUserId = await _context.Usuarios
+            .Where(u => u.NroUsuario == nroUsuario)
+            .Select(u => u.IdentityUserId)
+            .FirstOrDefaultAsync();
+
+        var identityUser = identityUserId is null ? null : await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "UsuarioNoEncontrado",
+                Description = "No se encontró el usuario especificado."
+            });
+        }
+
+        if (!await _userManager.IsLockedOutAsync(identityUser))
+        {
+            return IdentityResult.Failed(new IdentityError
+            {
+                Code = "NoBloqueada",
+                Description = "La cuenta no está bloqueada."
+            });
+        }
+
+        await _userManager.SetLockoutEndDateAsync(identityUser, null);
+        await _userManager.ResetAccessFailedCountAsync(identityUser);
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.DesbloqueoCuenta, codigoAdministrador, nameof(Usuario), nroUsuario,
+                "Desbloqueo de cuenta realizado por un Administrador");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar el desbloqueo del Usuario {NroUsuario}", nroUsuario);
+        }
+
+        return IdentityResult.Success;
     }
 
     public async Task<UsuarioListadoViewModel> ListarPendientesActivacionAsync()
@@ -231,8 +352,17 @@ public class UsuarioService : IUsuarioService
                 FechaAlta = u.FechaAlta,
                 EstadoUsuario = u.EstadoUsuario,
                 EstaBloqueada = _context.Users.Any(i => i.Id == u.IdentityUserId && i.LockoutEnd > ahora),
+                PendienteActivacion = u.EstadoUsuario == EstadoUsuario.Activo
+                    && _context.Users.Any(i => i.Id == u.IdentityUserId && i.PasswordHash == null),
                 FechaBaja = u.FechaBaja,
-                MotivoBaja = u.MotivoBaja
+                MotivoBaja = u.MotivoBaja,
+                SolicitudesPendientes = _context.Solicitudes.Count(s => s.NroUsuario == u.NroUsuario && s.EstadoSolicitud == EstadoSolicitud.Pendiente),
+                SolicitudesAsignadas = _context.Solicitudes.Count(s => s.NroUsuario == u.NroUsuario && s.EstadoSolicitud == EstadoSolicitud.Asignada),
+                DonacionesPendientes = _context.Equipos.Count(e => e.NroUsuarioDonante == u.NroUsuario && e.EstadoEquipo == EstadoEquipo.PendienteRecepcion),
+                EquiposDonadosEnCurso = _context.Equipos.Count(e => e.NroUsuarioDonante == u.NroUsuario
+                    && (e.EstadoEquipo == EstadoEquipo.Disponible
+                        || e.EstadoEquipo == EstadoEquipo.EnReparacion
+                        || e.EstadoEquipo == EstadoEquipo.Asignado))
             })
             .FirstOrDefaultAsync();
     }

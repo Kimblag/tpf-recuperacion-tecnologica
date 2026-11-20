@@ -65,5 +65,8 @@ public enum TipoOperacionAuditoria
     IngresoSinRegistro,
 
     [Display(Name = "Corrección de datos de usuario")]
-    CorreccionUsuario
+    CorreccionUsuario,
+
+    [Display(Name = "Desbloqueo de cuenta")]
+    DesbloqueoCuenta
 }

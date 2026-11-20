@@ -38,9 +38,9 @@ public class UsuariosController : Controller
 
     [HttpGet]
     [Authorize(Policy = "SoloAdministrador")]
-    public async Task<IActionResult> Index(TipoUsuario? tipo, EstadoUsuario? estado, string? orden, bool bloqueadas = false)
+    public async Task<IActionResult> Index(string? busqueda, TipoUsuario? tipo, EstadoUsuario? estado, string? acceso, string? orden, int pagina = 1)
     {
-        return View(await _usuarioService.ListarAsync(tipo, estado, orden, bloqueadas));
+        return View(await _usuarioService.ListarAsync(busqueda, tipo, estado, acceso, orden, pagina, !ModelState.IsValid));
     }
 
     [HttpGet]
@@ -56,7 +56,50 @@ public class UsuariosController : Controller
     {
         var usuario = await _usuarioService.ObtenerDetalleAsync(id);
 
-        return usuario is null ? NotFound() : View(usuario);
+        if (usuario is null)
+        {
+            return NotFound();
+        }
+
+        var solicitudes = await _solicitudConsultaService.ListarTodasAsync(
+            null, null, null, null, 1, CantidadEnFicha, nroUsuario: id);
+        var donaciones = await _donacionService.ListarTodasAsync(
+            null, null, null, 1, CantidadEnFicha, nroUsuario: id);
+
+        usuario.Solicitudes = solicitudes.Elementos;
+        usuario.Donaciones = donaciones.Elementos;
+
+        return View(usuario);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Policy = "SoloAdministrador")]
+    public async Task<IActionResult> Desbloquear(int id)
+    {
+        var identityUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var codigoAdministrador = identityUserId is null
+            ? null
+            : await _personalService.ObtenerCodigoPersonalAsync(identityUserId);
+
+        if (codigoAdministrador is null)
+        {
+            return Forbid();
+        }
+
+        var resultado = await _usuarioService.DesbloquearAsync(id, codigoAdministrador.Value);
+
+        if (!resultado.Succeeded && resultado.Errors.First().Code == "UsuarioNoEncontrado")
+        {
+            return NotFound();
+        }
+
+        TempData[resultado.Succeeded ? "Mensaje" : "MensajeError"] = resultado.Succeeded
+            ? "La cuenta se desbloqueó. El usuario ya puede iniciar sesión."
+            : resultado.Errors.First().Description;
+
+        return RedirectToAction(nameof(Detalle), new { id });
     }
 
     [HttpPost]
@@ -64,6 +107,11 @@ public class UsuariosController : Controller
     [Authorize(Policy = "SoloAdministrador")]
     public async Task<IActionResult> Inactivar(InactivarUsuarioViewModel modelo)
     {
+        if (await _usuarioService.ObtenerDetalleAsync(modelo.NroUsuario) is null)
+        {
+            return NotFound();
+        }
+
         if (!ModelState.IsValid)
         {
             TempData["MensajeError"] = "El motivo de inactivación es obligatorio.";
@@ -124,7 +172,7 @@ public class UsuariosController : Controller
         if (modelo is null)
         {
             TempData["AvisoInvitacion"] = "Esta cuenta ya no se puede corregir: la persona activó su cuenta o está dada de baja.";
-            return RedirectToAction(nameof(Ficha), new { id });
+            return VolverAlUsuario(id);
         }
 
         return View(modelo);
@@ -171,8 +219,13 @@ public class UsuariosController : Controller
             ? "Los datos se corrigieron y se envió una nueva invitación al correo actualizado."
             : "Los datos se corrigieron.";
 
-        return RedirectToAction(nameof(Ficha), new { id = modelo.NroUsuario });
+        return VolverAlUsuario(modelo.NroUsuario);
     }
+
+    private IActionResult VolverAlUsuario(int id) =>
+        User.IsInRole(nameof(RolPersonal.Administrador))
+            ? RedirectToAction(nameof(Detalle), new { id })
+            : RedirectToAction(nameof(Ficha), new { id });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -200,7 +253,7 @@ public class UsuariosController : Controller
         // solo el envío correcto usa el mensaje verde; los demás se muestran como aviso en la ficha
         TempData[resultado == ResultadoReenvioInvitacion.Enviada ? "Mensaje" : "AvisoInvitacion"] = mensaje;
 
-        return RedirectToAction(nameof(Ficha), new { id });
+        return VolverAlUsuario(id);
     }
 
 
