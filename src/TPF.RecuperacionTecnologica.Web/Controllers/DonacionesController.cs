@@ -73,6 +73,8 @@ public class DonacionesController : Controller
             return Challenge();
         }
 
+        ModelState.AgregarErroresDeValidate(formulario);
+
         if (ModelState.IsValid)
         {
             var resultado = await _donacionService.RegistrarAsistidaAsync(

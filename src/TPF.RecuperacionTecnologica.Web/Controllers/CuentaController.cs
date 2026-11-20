@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TPF.RecuperacionTecnologica.Web.Services.Cuenta;
 using TPF.RecuperacionTecnologica.Web.Services.Personal;
 using TPF.RecuperacionTecnologica.Web.Services.Usuarios;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Cuenta;
 
 namespace TPF.RecuperacionTecnologica.Web.Controllers;
@@ -40,6 +41,8 @@ public class CuentaController : Controller
     [EnableRateLimiting("cuenta")]
     public async Task<IActionResult> Registrar(RegistroUsuarioViewModel modelo)
     {
+        ModelState.AgregarErroresDeValidate(modelo);
+
         if (!ModelState.IsValid)
         {
             return View(modelo);

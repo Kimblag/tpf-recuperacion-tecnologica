@@ -523,6 +523,8 @@ public class SolicitudesController : Controller
             return Challenge();
         }
 
+        ModelState.AgregarErroresDeValidate(formulario);
+
         if (ModelState.IsValid)
         {
             var resultado = await _solicitudService.RegistrarAsistidaAsync(
