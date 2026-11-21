@@ -59,7 +59,7 @@
                 </div>
             </div>
             <div class="filter">
-                <label asp-for="CodigoPersonal">Código de personal</label>
+                <label asp-for="CodigoPersonal">Realizado por</label>
                 <input asp-for="CodigoPersonal" class="form-control sm" placeholder="Ej.: PER-0002" maxlength="20" />
             </div>
             <div class="filter">
@@ -73,7 +73,7 @@
             </div>
             <div class="filter">
                 <label asp-for="Identificador">Identificador</label>
-                <input asp-for="Identificador" class="form-control sm" placeholder="Ej.: SOL-000030" maxlength="20" />
+                <input asp-for="Identificador" class="form-control sm" placeholder="Ej.: SOL-000030" title="Es el código que aparece en la columna Identificador de la tabla. Si escribís solo el número, elegí también la entidad." maxlength="20" />
             </div>
             <div class="filter" style="min-width:0">
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Filtrar</span></button>

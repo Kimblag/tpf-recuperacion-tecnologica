@@ -35,7 +35,7 @@ public class AuditoriaListadoViewModel : IValidatableObject
 
     public TipoOperacionAuditoria? Operacion { get; set; }
 
-    [Display(Name = "Código de personal")]
+    [Display(Name = "Realizado por")]
     [StringLength(20)]
     public string? CodigoPersonal { get; set; }
 
@@ -151,7 +151,7 @@ public class AuditoriaListadoViewModel : IValidatableObject
 
         if (!string.IsNullOrWhiteSpace(CodigoPersonal))
         {
-            filtros.Add($"personal {CodigoPersonal.Trim()}");
+            filtros.Add($"realizado por {CodigoPersonal.Trim()}");
         }
 
         if (!string.IsNullOrWhiteSpace(Entidad))
