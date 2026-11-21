@@ -47,9 +47,12 @@ public class EquipoConsultaService : IEquipoConsultaService
 
         if (!string.IsNullOrEmpty(texto))
         {
+            var patron = BusquedaTexto.Patron(texto);
+
             consulta = int.TryParse(texto, out var nroEquipo)
                 ? consulta.Where(e => e.NroEquipo == nroEquipo)
-                : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
+                : consulta.Where(e => EF.Functions.Like(EF.Functions.Collate(e.Marca, BusquedaTexto.Colacion), patron)
+                    || EF.Functions.Like(EF.Functions.Collate(e.Modelo, BusquedaTexto.Colacion), patron));
         }
 
         var total = await consulta.CountAsync();

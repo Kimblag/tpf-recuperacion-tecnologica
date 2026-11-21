@@ -187,10 +187,12 @@ public class DonacionesController : Controller
     [Authorize(Policy = "Coordinacion")]
     public async Task<IActionResult> Gestion(DonacionListadoViewModel filtros)
     {
+        filtros.FiltroInvalido = !ModelState.IsValid || !DonacionService.OrdenGestionValido(filtros.Orden);
+
         try
         {
             var resultado = await _donacionService.ListarTodasAsync(
-                filtros.Busqueda, filtros.Donante, filtros.Estado, filtros.Pagina, DonacionListadoViewModel.TamanoPagina, orden: filtros.Orden);
+                filtros.Busqueda, filtros.Estado, filtros.Pagina, DonacionListadoViewModel.TamanoPagina, orden: filtros.Orden);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;
