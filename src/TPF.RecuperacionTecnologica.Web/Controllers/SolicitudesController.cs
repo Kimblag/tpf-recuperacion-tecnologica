@@ -337,6 +337,12 @@ public class SolicitudesController : Controller
     [Authorize(Policy = "Coordinacion")]
     public async Task<IActionResult> Gestion(SolicitudListadoViewModel filtros)
     {
+        filtros.FiltroInvalido = !ModelState.IsValid
+            || !SolicitudConsultaService.OrdenValido(filtros.Orden)
+            || (filtros.Tipo is { } tipo && !Enum.IsDefined(tipo))
+            || (filtros.Origen is { } origen && !Enum.IsDefined(origen))
+            || (filtros.Estado is { } estado && !Enum.IsDefined(estado));
+
         try
         {
             var resultado = await _consultaService.ListarTodasAsync(

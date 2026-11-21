@@ -29,6 +29,9 @@ public class SolicitudConsultaService : ISolicitudConsultaService
         _reloj = reloj;
     }
 
+    public static bool OrdenValido(string? orden) =>
+        string.IsNullOrWhiteSpace(orden) || ColumnasOrden.ContainsKey(OrdenListado.Interpretar(orden).Columna);
+
     private static readonly IReadOnlyDictionary<string, Expression<Func<Solicitud, object>>> ColumnasOrden =
         new Dictionary<string, Expression<Func<Solicitud, object>>>
         {
@@ -101,17 +104,27 @@ public class SolicitudConsultaService : ISolicitudConsultaService
             return consulta;
         }
 
+        int? nroSolicitud = null;
+
+        if (texto.StartsWith("SOL-", StringComparison.OrdinalIgnoreCase)
+            && int.TryParse(texto[4..], out var numeroSolicitud))
+        {
+            nroSolicitud = numeroSolicitud;
+        }
+
         if (incluirSolicitante)
         {
             return consulta.Where(s =>
-                ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
+                (nroSolicitud != null && s.NroSolicitud == nroSolicitud)
+                || ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
                 || (1000000 + s.NroEquipoRequerido).ToString().Substring(1).Contains(texto)
                 || (s.EquipoRequerido.Marca + " " + s.EquipoRequerido.Modelo).Contains(texto)
                 || (s.Usuario.RazonSocial ?? (s.Usuario.Nombre + " " + s.Usuario.Apellido)).Contains(texto));
         }
 
         return consulta.Where(s =>
-            ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
+            (nroSolicitud != null && s.NroSolicitud == nroSolicitud)
+            || ("SOL-" + (1000000 + s.NroSolicitud).ToString().Substring(1)).Contains(texto)
             || (1000000 + s.NroEquipoRequerido).ToString().Substring(1).Contains(texto)
             || (s.EquipoRequerido.Marca + " " + s.EquipoRequerido.Modelo).Contains(texto));
     }
