@@ -54,6 +54,9 @@ public class PersonalConfiguration : IEntityTypeConfiguration<Personal>
             .IsUnique()
             .HasFilter("[EsRaiz] = 1");
 
+        builder.Property(p => p.RowVersion)
+            .IsRowVersion();
+
         builder.Property(p => p.FechaAlta)
             .HasDefaultValueSql("SYSUTCDATETIME()");
     }

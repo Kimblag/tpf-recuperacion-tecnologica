@@ -23,6 +23,7 @@
 
     <form class="card" asp-action="Editar" method="post" id="f-personal-editar" novalidate aria-labelledby="f-personal-titulo">
         <input type="hidden" asp-for="CodigoPersonal" />
+        <input type="hidden" asp-for="RowVersion" />
         <div class="card-header">
             <div><h2 class="card-title" id="f-personal-titulo">Datos del personal</h2></div>
         </div>
@@ -36,8 +37,9 @@
                     <h3 class="span-2 sec-title">Datos de personal</h3>
 
                     <div class="field">
-                        <label class="form-label" for="Dni">DNI <span class="lock muted"><partial name="_Icon" model="@("lock")" /><span class="visually-hidden">campo no editable</span></span></label>
-                        <input asp-for="Dni" class="form-control" readonly />
+                        <label class="form-label" for="Dni">DNI<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+                        <input asp-for="Dni" class="form-control" inputmode="numeric" maxlength="8" />
+                        <span asp-validation-for="Dni"></span>
                     </div>
                     <div class="field">
                         <label class="form-label" for="CodigoVisible">Código de personal</label>
@@ -56,13 +58,15 @@
                     </div>
                     <div class="field">
                         <label class="form-label" for="Telefono">Teléfono</label>
-                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="11 5555-0000" />
+                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="11 5555-0000" />
                         <span asp-validation-for="Telefono"></span>
                     </div>
                     <div class="field">
                         <label class="form-label" for="RolAsignado">Rol<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <div class="select">
-                            <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)"></select>
+                            <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)">
+                                <option value="">Seleccionar…</option>
+                            </select>
                             <partial name="_Icon" model="@("chevron-down")" />
                         </div>
                         <span asp-validation-for="RolAsignado"></span>

@@ -8,6 +8,8 @@ public class PersonalDetalleViewModel : PersonalFilaViewModel
 
     public bool EsCuentaPropia { get; set; }
 
+    public byte[] RowVersion { get; set; } = [];
+
     public IReadOnlyList<AuditoriaFilaViewModel> Actividad { get; set; } = [];
 
     public int TotalActividad { get; set; }

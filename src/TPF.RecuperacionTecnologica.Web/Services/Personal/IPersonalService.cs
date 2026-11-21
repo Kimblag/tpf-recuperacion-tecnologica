@@ -19,13 +19,15 @@ public interface IPersonalService
     /// </returns>
     Task<IdentityResult> AltaAsync(AltaPersonalViewModel modelo, int codigoAdministrador);
 
+    Task<IdentityResult> DesbloquearAsync(int codigoPersonal, int codigoAdministrador);
+
     /// <summary>
     /// Lista el Personal registrado, ordenado por código, con filtros opcionales.
     /// </summary>
     /// <param name="busqueda">Texto a buscar en nombre y apellido, DNI o código (por ejemplo "PER-0002" o "2").</param>
     /// <param name="rol">Si se indica, solo el Personal con ese rol.</param>
     /// <param name="estado">Si se indica, solo el Personal en ese estado.</param>
-    Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden = null, bool bloqueadas = false);
+    Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? acceso, string? orden, int pagina, bool filtroInvalido = false);
 
     /// <summary>
     /// Devuelve el código de Personal asociado a una cuenta de Identity, o null si no corresponde a Personal.

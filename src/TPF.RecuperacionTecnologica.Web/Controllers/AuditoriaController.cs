@@ -41,7 +41,7 @@ public class AuditoriaController : Controller
         {
             var resultado = await _auditoriaService.ConsultarAsync(
                 filtros.FechaDesde, filtros.FechaHasta, filtros.Operacion, filtros.NumeroCodigoPersonal,
-                filtros.Entidad, filtros.NumeroIdentificador, filtros.Pagina, AuditoriaListadoViewModel.TamanoPagina);
+                filtros.EntidadEfectiva, filtros.NumeroIdentificador, filtros.Pagina, AuditoriaListadoViewModel.TamanoPagina);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;
@@ -68,7 +68,7 @@ public class AuditoriaController : Controller
         {
             var resultado = await _auditoriaService.ConsultarAsync(
                 filtros.FechaDesde, filtros.FechaHasta, filtros.Operacion, filtros.NumeroCodigoPersonal,
-                filtros.Entidad, filtros.NumeroIdentificador, 1, AuditoriaListadoViewModel.LimiteExportacion);
+                filtros.EntidadEfectiva, filtros.NumeroIdentificador, 1, AuditoriaListadoViewModel.LimiteExportacion);
 
             filtros.Filas = resultado.Elementos;
             filtros.Total = resultado.Total;

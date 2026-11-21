@@ -676,6 +676,12 @@ namespace TPF.RecuperacionTecnologica.Web.Migrations
                     b.Property<int>("RolAsignado")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");

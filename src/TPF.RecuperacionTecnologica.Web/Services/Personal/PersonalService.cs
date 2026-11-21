@@ -30,6 +30,8 @@ public class PersonalService : IPersonalService
         _logger = logger;
     }
 
+    private const string MensajeConcurrencia = "Los datos cambiaron mientras los editabas. Volvé a abrir la ficha e intentá nuevamente.";
+
     private static IdentityResult Error(string codigo, string descripcion) =>
         IdentityResult.Failed(new IdentityError { Code = codigo, Description = descripcion });
 
@@ -44,12 +46,38 @@ public class PersonalService : IPersonalService
             ["estado"] = p => p.EstadoPersonal
         };
 
-    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? orden = null, bool bloqueadas = false)
+    public const string AccesoBloqueadas = "bloqueadas";
+
+    public async Task<PersonalListadoViewModel> ListarAsync(string? busqueda, RolPersonal? rol, EstadoPersonal? estado, string? acceso, string? orden, int pagina, bool filtroInvalido = false)
     {
         var consulta = _context.PersonalInterno.AsNoTracking();
         var ahora = DateTimeOffset.UtcNow;
 
-        if (bloqueadas)
+        if (rol.HasValue && !Enum.IsDefined(rol.Value))
+        {
+            rol = null;
+            filtroInvalido = true;
+        }
+
+        if (estado.HasValue && !Enum.IsDefined(estado.Value))
+        {
+            estado = null;
+            filtroInvalido = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(acceso) && acceso != AccesoBloqueadas)
+        {
+            acceso = null;
+            filtroInvalido = true;
+        }
+
+        if (!string.IsNullOrWhiteSpace(orden) && !ColumnasOrden.ContainsKey(OrdenListado.Interpretar(orden).Columna))
+        {
+            orden = null;
+            filtroInvalido = true;
+        }
+
+        if (acceso == AccesoBloqueadas)
         {
             consulta = consulta.Where(p => _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora));
         }
@@ -68,22 +96,30 @@ public class PersonalService : IPersonalService
 
         if (!string.IsNullOrEmpty(termino))
         {
-            // el DNI se muestra con puntos (27.884.310), así que se acepta escrito así
             var dni = termino.Replace(".", "");
-            var buscaDni = dni.Length > 0;
+            var buscaDni = dni.Length > 0 && dni.All(char.IsAsciiDigit);
 
-            // el código se muestra como PER-0002, y también se acepta solo el número
             var textoCodigo = termino.StartsWith("PER-", StringComparison.OrdinalIgnoreCase) ? termino[4..] : termino;
-            int? codigo = int.TryParse(textoCodigo, out var numero) ? numero : null;
+            int? codigo = textoCodigo.All(char.IsAsciiDigit) && int.TryParse(textoCodigo, out var numero) ? numero : null;
+
+            var patron = BusquedaTexto.Patron(termino);
 
             consulta = consulta.Where(p =>
-                (p.Nombre + " " + p.Apellido).Contains(termino)
+                EF.Functions.Like(EF.Functions.Collate(p.Nombre + " " + p.Apellido, BusquedaTexto.Colacion), patron)
+                || EF.Functions.Like(EF.Functions.Collate(p.Apellido + " " + p.Nombre, BusquedaTexto.Colacion), patron)
                 || (buscaDni && p.Dni.Contains(dni))
                 || (codigo != null && p.CodigoPersonal == codigo));
         }
 
+        var hayPersonal = await _context.PersonalInterno.AnyAsync();
+        var total = await consulta.CountAsync();
+        var totalPaginas = Math.Max(1, (int)Math.Ceiling(total / (double)PersonalListadoViewModel.TamanoPagina));
+        pagina = Math.Clamp(pagina, 1, totalPaginas);
+
         var filas = await consulta
             .Ordenar(orden, ColumnasOrden, p => p.CodigoPersonal, c => c.OrderBy(p => p.CodigoPersonal))
+            .Skip((pagina - 1) * PersonalListadoViewModel.TamanoPagina)
+            .Take(PersonalListadoViewModel.TamanoPagina)
             .Select(p => new PersonalFilaViewModel
             {
                 CodigoPersonal = p.CodigoPersonal,
@@ -103,10 +139,55 @@ public class PersonalService : IPersonalService
             Busqueda = busqueda,
             Rol = rol,
             Estado = estado,
+            Acceso = acceso,
+            FiltroInvalido = filtroInvalido,
+            HayPersonal = hayPersonal,
             Orden = orden ?? "codigo",
             Filas = filas,
-            Total = filas.Count
+            Total = total,
+            Pagina = pagina
         };
+    }
+
+    public async Task<IdentityResult> DesbloquearAsync(int codigoPersonal, int codigoAdministrador)
+    {
+        var identityUserId = await _context.PersonalInterno
+            .Where(p => p.CodigoPersonal == codigoPersonal)
+            .Select(p => p.IdentityUserId)
+            .FirstOrDefaultAsync();
+
+        var identityUser = identityUserId is null ? null : await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return Error("PersonalNoEncontrado", "No se encontró el personal especificado.");
+        }
+
+        if (codigoPersonal == codigoAdministrador)
+        {
+            return Error("CuentaPropia", "No se puede desbloquear la propia cuenta. Otro Administrador debe hacerlo.");
+        }
+
+        if (!await _userManager.IsLockedOutAsync(identityUser))
+        {
+            return Error("NoBloqueada", "La cuenta no está bloqueada.");
+        }
+
+        await _userManager.SetLockoutEndDateAsync(identityUser, null);
+        await _userManager.ResetAccessFailedCountAsync(identityUser);
+
+        try
+        {
+            await _auditoriaService.RegistrarEventoAsync(
+                TipoOperacionAuditoria.DesbloqueoCuenta, codigoAdministrador, nameof(Models.Personal), codigoPersonal,
+                "Desbloqueo de cuenta realizado por un Administrador");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "No se pudo auditar el desbloqueo del Personal {CodigoPersonal}", codigoPersonal);
+        }
+
+        return IdentityResult.Success;
     }
 
     public async Task<int?> ObtenerCodigoPersonalAsync(string identityUserId)
@@ -152,7 +233,8 @@ public class PersonalService : IPersonalService
                 RolAsignado = p.RolAsignado,
                 EstadoPersonal = p.EstadoPersonal,
                 EsRaiz = p.EsRaiz,
-                EstaBloqueada = _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora)
+                EstaBloqueada = _context.Users.Any(i => i.Id == p.IdentityUserId && i.LockoutEnd > ahora),
+                RowVersion = p.RowVersion
             })
             .FirstOrDefaultAsync();
     }
@@ -161,10 +243,12 @@ public class PersonalService : IPersonalService
         EdicionPersonalViewModel modelo,
         int codigoAdministrador)
     {
-        if (!Enum.IsDefined(typeof(RolPersonal), modelo.RolAsignado))
+        if (modelo.RolAsignado is null || !Enum.IsDefined(modelo.RolAsignado.Value))
         {
             return Error("RolInvalido", "El rol asignado no es válido.");
         }
+
+        var rolNuevo = modelo.RolAsignado.Value;
 
         var personal = await _context.PersonalInterno
             .FirstOrDefaultAsync(p => p.CodigoPersonal == modelo.CodigoPersonal);
@@ -175,13 +259,32 @@ public class PersonalService : IPersonalService
                 "No se encontró el personal especificado.");
         }
 
+        if (personal.CodigoPersonal == codigoAdministrador)
+        {
+            return Error("CuentaPropia",
+                "No se puede editar la propia cuenta. Otro Administrador debe hacerlo.");
+        }
+
         if (personal.EsRaiz)
         {
             return Error("AdministradorPrincipal",
                 "No se puede editar al Administrador principal.");
         }
 
-        var correo = modelo.CorreoElectronico.Trim();
+        if (modelo.RowVersion.Length > 0 && !personal.RowVersion.SequenceEqual(modelo.RowVersion))
+        {
+            return Error("DatosModificados", MensajeConcurrencia);
+        }
+
+        var correo = modelo.CorreoElectronico.Trim().ToLowerInvariant();
+        var dni = modelo.Dni.Trim();
+
+        if (await _context.PersonalInterno.AnyAsync(p =>
+            p.CodigoPersonal != modelo.CodigoPersonal && p.Dni == dni))
+        {
+            return Error("DniDuplicado",
+                "Ya existe un integrante del Personal con ese DNI.");
+        }
 
         if (await _context.PersonalInterno.AnyAsync(p =>
             p.CodigoPersonal != modelo.CodigoPersonal &&
@@ -191,11 +294,19 @@ public class PersonalService : IPersonalService
                 "Ya existe un integrante del Personal con ese correo electrónico.");
         }
 
-        var rolAnterior = personal.RolAsignado;
+        var cuentaConEseCorreo = await _userManager.FindByEmailAsync(correo);
 
-        // no se puede dejar al sistema sin ningún Administrador activo
+        if (cuentaConEseCorreo is not null && cuentaConEseCorreo.Id != personal.IdentityUserId)
+        {
+            return Error("CorreoEnUso",
+                "Ese correo ya está en uso por otra cuenta del sistema.");
+        }
+
+        var rolAnterior = personal.RolAsignado;
+        var dniAnterior = personal.Dni;
+
         if (rolAnterior == RolPersonal.Administrador
-            && modelo.RolAsignado != RolPersonal.Administrador
+            && rolNuevo != RolPersonal.Administrador
             && personal.EstadoPersonal == EstadoPersonal.Activo
             && !await _context.PersonalInterno.AnyAsync(p =>
                 p.CodigoPersonal != personal.CodigoPersonal
@@ -214,7 +325,7 @@ public class PersonalService : IPersonalService
                 "No se encontró la cuenta de acceso asociada al personal.");
         }
 
-        var nuevoRol = modelo.RolAsignado.ToString();
+        var nuevoRol = rolNuevo.ToString();
 
         await using var transaction =
             await _context.Database.BeginTransactionAsync();
@@ -277,17 +388,28 @@ public class PersonalService : IPersonalService
                 }
             }
 
+            personal.Dni = dni;
             personal.Nombre = modelo.Nombre.Trim();
             personal.Apellido = modelo.Apellido.Trim();
             personal.Telefono = string.IsNullOrWhiteSpace(modelo.Telefono)
                 ? null
                 : modelo.Telefono.Trim();
             personal.CorreoElectronico = correo;
-            personal.RolAsignado = modelo.RolAsignado;
+            personal.RolAsignado = rolNuevo;
             personal.FechaUltimaModificacion = DateTime.UtcNow;
+
+            if (modelo.RowVersion.Length > 0)
+            {
+                _context.Entry(personal).Property(p => p.RowVersion).OriginalValue = modelo.RowVersion;
+            }
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await transaction.RollbackAsync();
+            return Error("DatosModificados", MensajeConcurrencia);
         }
         catch (Exception ex)
         {
@@ -306,6 +428,18 @@ public class PersonalService : IPersonalService
             await _userManager.UpdateSecurityStampAsync(identityUser);
         }
 
+        var cambios = new List<string>();
+
+        if (rolAnterior != personal.RolAsignado)
+        {
+            cambios.Add($"cambio de rol: {NombreEnum.De(rolAnterior)} -> {NombreEnum.De(personal.RolAsignado)}");
+        }
+
+        if (dniAnterior != personal.Dni)
+        {
+            cambios.Add($"cambio de DNI: {dniAnterior} -> {personal.Dni}");
+        }
+
         try
         {
             await _auditoriaService.RegistrarEventoAsync(
@@ -313,9 +447,9 @@ public class PersonalService : IPersonalService
                 codigoAdministrador,
                 nameof(Models.Personal),
                 personal.CodigoPersonal,
-                rolAnterior == personal.RolAsignado
+                cambios.Count == 0
                     ? $"Edición de personal ({NombreEnum.De(personal.RolAsignado)})"
-                    : $"Edición de personal (cambio de rol: {NombreEnum.De(rolAnterior)} -> {NombreEnum.De(personal.RolAsignado)})");
+                    : $"Edición de personal ({string.Join("; ", cambios)})");
         }
         catch (Exception ex)
         {
@@ -424,10 +558,15 @@ public class PersonalService : IPersonalService
 
     public async Task<IdentityResult> AltaAsync(AltaPersonalViewModel modelo, int codigoAdministrador)
     {
-        var dni = modelo.Dni.Trim();
-        var correo = modelo.CorreoElectronico.Trim();
+        if (modelo.RolAsignado is null || !Enum.IsDefined(modelo.RolAsignado.Value))
+        {
+            return Error("RolInvalido", "El rol asignado no es válido.");
+        }
 
-        // 1. DNI y correo únicos en Personal; quien llama es Administrador, así que se informa cuál está repetido
+        var rol = modelo.RolAsignado.Value;
+        var dni = modelo.Dni.Trim();
+        var correo = modelo.CorreoElectronico.Trim().ToLowerInvariant();
+
         var errores = new List<IdentityError>();
 
         if (await _context.PersonalInterno.AnyAsync(p => p.Dni == dni))
@@ -439,13 +578,16 @@ public class PersonalService : IPersonalService
         {
             errores.Add(new IdentityError { Code = "CorreoDuplicado", Description = "Ya existe un integrante del Personal con ese correo electrónico." });
         }
+        else if (await _userManager.FindByEmailAsync(correo) is not null)
+        {
+            errores.Add(new IdentityError { Code = "CorreoEnUso", Description = "Ese correo ya está en uso por otra cuenta del sistema." });
+        }
 
         if (errores.Count > 0)
         {
             return IdentityResult.Failed(errores.ToArray());
         }
 
-        // 2. cuenta de Identity (si el correo ya lo usa la cuenta de un Usuario, Identity lo informa)
         var identityUser = new IdentityUser { UserName = correo, Email = correo };
         var resultado = await _userManager.CreateAsync(identityUser, modelo.Password);
 
@@ -455,7 +597,7 @@ public class PersonalService : IPersonalService
         }
 
         // 3. rol de Identity igual al rol asignado; si falla se elimina la cuenta
-        var nombreRol = modelo.RolAsignado.ToString();
+        var nombreRol = rol.ToString();
 
         try
         {
@@ -485,7 +627,7 @@ public class PersonalService : IPersonalService
             Apellido = modelo.Apellido.Trim(),
             Telefono = string.IsNullOrWhiteSpace(modelo.Telefono) ? null : modelo.Telefono.Trim(),
             CorreoElectronico = correo,
-            RolAsignado = modelo.RolAsignado,
+            RolAsignado = rol,
             EstadoPersonal = EstadoPersonal.Activo,
             FechaAlta = DateTime.UtcNow
         };

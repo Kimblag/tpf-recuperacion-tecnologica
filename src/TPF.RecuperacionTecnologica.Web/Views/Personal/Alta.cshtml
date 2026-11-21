@@ -33,7 +33,7 @@
 
                     <div class="field">
                         <label class="form-label" for="Dni">DNI<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
-                        <input asp-for="Dni" class="form-control" inputmode="numeric" placeholder="12345678" />
+                        <input asp-for="Dni" class="form-control" inputmode="numeric" maxlength="8" placeholder="12345678" />
                         <span asp-validation-for="Dni"></span>
                     </div>
                     <div class="field">
@@ -53,13 +53,15 @@
                     </div>
                     <div class="field">
                         <label class="form-label" for="Telefono">Teléfono</label>
-                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" placeholder="11 5555-0000" />
+                        <input asp-for="Telefono" type="tel" class="form-control" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="11 5555-0000" />
                         <span asp-validation-for="Telefono"></span>
                     </div>
                     <div class="field">
                         <label class="form-label" for="RolAsignado">Rol<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <div class="select">
-                            <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)"></select>
+                            <select asp-for="RolAsignado" class="form-select" asp-items="Html.GetEnumSelectList<RolPersonal>().OrderByDescending(i => i.Value)">
+                                <option value="">Seleccionar…</option>
+                            </select>
                             <partial name="_Icon" model="@("chevron-down")" />
                         </div>
                         <span asp-validation-for="RolAsignado"></span>
@@ -75,7 +77,7 @@
                     <div class="field">
                         <label class="form-label" for="Password">Contraseña inicial<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
-                        <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                        <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número. No puede ser una contraseña común ni contener el correo.</div>
                         <span asp-validation-for="Password"></span>
                     </div>
                     <div class="field">

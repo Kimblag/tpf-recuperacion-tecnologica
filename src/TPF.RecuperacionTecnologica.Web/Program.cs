@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using TPF.RecuperacionTecnologica.Web.Infraestructura;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -29,6 +30,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews(options =>
 {
+    options.ModelBinderProviders.Insert(0, new ProveedorBinderTextoNormalizado());
+
     var mensajes = options.ModelBindingMessageProvider;
 
     mensajes.SetValueMustNotBeNullAccessor(_ => "Este campo es obligatorio.");
@@ -104,6 +107,7 @@ builder.Services
     .AddClaimsPrincipalFactory<FabricaClaimsUsuario>()
     .AddDefaultTokenProviders()
     .AddTokenProvider<ProveedorTokenInvitacion>(ProveedorTokenInvitacion.Nombre)
+    .AddPasswordValidator<ValidadorContrasenaComun>()
     .AddErrorDescriber<IdentityErrorDescriberEs>();
 
 // el enlace de recuperación de pass vence en 1 hora

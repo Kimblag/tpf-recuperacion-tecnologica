@@ -288,6 +288,36 @@ public class CuentaService : ICuentaService
         return ResultadoReenvioInvitacion.Enviada;
     }
 
+    public async Task<ResultadoReenvioInvitacion> ReenviarAccesoPersonalAsync(
+        int codigoPersonal, Func<string, string, string> construirRutaRestablecimiento, string urlBaseSolicitud)
+    {
+        var identityUserId = await _context.PersonalInterno
+            .Where(p => p.CodigoPersonal == codigoPersonal)
+            .Select(p => p.IdentityUserId)
+            .SingleOrDefaultAsync();
+
+        var identityUser = identityUserId is null ? null : await _userManager.FindByIdAsync(identityUserId);
+
+        if (identityUser is null)
+        {
+            return ResultadoReenvioInvitacion.NoExiste;
+        }
+
+        if (!await EstaHabilitadaAsync(identityUser.Id))
+        {
+            return ResultadoReenvioInvitacion.CuentaInactiva;
+        }
+
+        if (_cache.TryGetValue($"recuperacion:{identityUser.Id}", out _))
+        {
+            return ResultadoReenvioInvitacion.Espera;
+        }
+
+        await SolicitarRestablecimientoAsync(identityUser.Email!, construirRutaRestablecimiento, urlBaseSolicitud);
+
+        return ResultadoReenvioInvitacion.Enviada;
+    }
+
     public async Task<bool> EsEnlaceRestablecimientoValidoAsync(string idUsuario, string token)
     {
         var identityUser = await _userManager.FindByIdAsync(idUsuario);

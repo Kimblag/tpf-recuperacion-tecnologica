@@ -1015,8 +1015,8 @@ th[aria-sort] .orden-link {
 @media (min-width: 992px) {
     .col-fija {
         position: sticky;
-        top: 72px;
-        max-height: calc(100vh - 88px);
+        top: 0;
+        max-height: calc(100vh - 150px);
         overflow-y: auto;
     }
 }

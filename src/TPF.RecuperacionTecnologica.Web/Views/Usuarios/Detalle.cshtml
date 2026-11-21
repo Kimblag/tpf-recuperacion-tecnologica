@@ -131,7 +131,7 @@
 
 @if (Model.EstaBloqueada && estaActivo)
 {
-    <partial name="_ModalDesbloquear" model="new InactivarUsuarioViewModel { NroUsuario = Model.NroUsuario, NombreCompleto = Model.NombreVisible, Codigo = Model.Codigo }" />
+    <partial name="_ModalDesbloquear" model="@((Model.NroUsuario, Model.NombreVisible, Model.Codigo))" />
 }
 
 @if (estaActivo)

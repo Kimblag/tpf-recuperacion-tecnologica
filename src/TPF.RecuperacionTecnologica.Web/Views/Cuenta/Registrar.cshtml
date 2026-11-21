@@ -116,7 +116,7 @@
                 <div class="field">
                     <label class="form-label" for="Password">Contraseña<span class="req-word"> (obligatorio)</span></label>
                     <input asp-for="Password" class="form-control" autocomplete="new-password" aria-describedby="Password-hint" />
-                    <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número.</div>
+                    <div class="form-text" id="Password-hint">Mínimo 8 caracteres, con mayúscula, minúscula y número. No puede ser una contraseña común ni contener tu correo.</div>
                     <span asp-validation-for="Password"></span>
                 </div>
                 <div class="field">

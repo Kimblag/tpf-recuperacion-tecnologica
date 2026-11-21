@@ -110,13 +110,13 @@
                 <div class="card-body">
                     <dl class="dl">
                         <dt>Zona de cobertura</dt>
-                        <dd>@Model.ZonaCobertura</dd>
+                        <dd>@Model.VigenteZonaCobertura</dd>
                         <dt>Retiro</dt>
-                        <dd>@Model.DiasLimiteRetiro días</dd>
+                        <dd>@Model.VigenteDiasLimiteRetiro días</dd>
                         <dt>Máximo de solicitudes pendientes</dt>
-                        <dd>@Model.MaximoSolicitudesPendientes por persona</dd>
+                        <dd>@Model.VigenteMaximoSolicitudesPendientes por persona</dd>
                         <dt>Aviso de vencimiento</dt>
-                        <dd>@Model.DiasAvisoVencimiento días antes</dd>
+                        <dd>@Model.VigenteDiasAvisoVencimiento días antes</dd>
                         <dt>Última modificación</dt>
                         <dd>@(Model.FechaUltimaModificacion is { } ultima ? $"{Reloj.Fecha(ultima)} · PER-{Model.CodigoAdministrador:D4}" : "—")</dd>
                     </dl>
@@ -148,6 +148,19 @@
                 });
                 avisoErrores.hidden = false;
                 setTimeout(function () { avisoErrores.focus(); }, 0);
+            });
+        }
+
+        if (window.jQuery && window.jQuery.validator) {
+            var $ = window.jQuery;
+            $.validator.addMethod('avisomenorretiro', function (valor) {
+                var aviso = parseInt(valor, 10);
+                var retiro = parseInt($('#DiasLimiteRetiro').val(), 10);
+                return isNaN(aviso) || isNaN(retiro) || aviso <= retiro;
+            }, 'No puede superar los días límite de retiro.');
+            $('#DiasAvisoVencimiento').rules('add', { avisomenorretiro: true });
+            $('#DiasLimiteRetiro').on('change input', function () {
+                if ($('#DiasAvisoVencimiento').val() !== '') $('#DiasAvisoVencimiento').valid();
             });
         }
 

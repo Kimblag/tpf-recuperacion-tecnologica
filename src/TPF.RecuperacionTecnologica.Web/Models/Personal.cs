@@ -30,4 +30,6 @@ public class Personal
 
     public string? MotivoInactivacion { get; set; }
     public bool EsRaiz { get; set; }
+
+    public byte[] RowVersion { get; set; } = [];
 }

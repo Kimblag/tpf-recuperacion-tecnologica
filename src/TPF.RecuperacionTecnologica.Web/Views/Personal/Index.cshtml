@@ -2,6 +2,16 @@
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
 @{
     ViewData["Title"] = "Personal";
+
+    Func<int, string?> enlacePagina = pagina => Url.Action("Index", new
+    {
+        Busqueda = Model.Busqueda,
+        Rol = Model.Rol,
+        Estado = Model.Estado,
+        Acceso = Model.Acceso,
+        Orden = Model.Orden,
+        Pagina = pagina
+    });
 }
 
 @section Migas {
@@ -15,20 +25,25 @@
             <div class="h-id"><h1 tabindex="-1">Personal</h1></div>
             <p class="page-sub">Personal interno con acceso a la plataforma</p>
         </div>
-        @if (Model.Filas.Count > 0)
-        {
-            <div class="page-actions">
-                <a class="btn btn-primary" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
-            </div>
-        }
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
+        </div>
     </div>
+
+    @if (Model.FiltroInvalido)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">Alguno de los filtros indicados no es válido y se ignoró.</div>
+        </div>
+    }
 
     <section class="card overflow" aria-label="Personal">
         <form class="filters" role="search" method="get" asp-action="Index">
             <input type="hidden" asp-for="Orden" />
             <div class="filter grow">
                 <label for="Busqueda">Buscar</label>
-                <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, código o DNI" />
+                <input asp-for="Busqueda" class="form-control sm" placeholder="Nombre, código o DNI" maxlength="60" />
             </div>
             <div class="filter">
                 <label for="Rol">Rol</label>
@@ -49,11 +64,11 @@
                 </div>
             </div>
             <div class="filter">
-                <label for="Bloqueadas">Acceso</label>
+                <label for="Acceso">Acceso</label>
                 <div class="select">
-                    <select id="Bloqueadas" name="bloqueadas" class="form-select sm">
-                        <option value="false" selected="@(!Model.Bloqueadas)">Todos</option>
-                        <option value="true" selected="@Model.Bloqueadas">Solo bloqueadas</option>
+                    <select id="Acceso" name="acceso" class="form-select sm">
+                        <option value="">Todos</option>
+                        <option value="bloqueadas" selected="@(Model.Acceso == "bloqueadas")">Bloqueadas</option>
                     </select>
                     <partial name="_Icon" model="@("chevron-down")" />
                 </div>
@@ -67,13 +82,22 @@
         </form>
 
         <div class="card-body flush">
-            @if (Model.Filas.Count == 0)
+            @if (Model.Filas.Count == 0 && !Model.HayPersonal)
             {
                 <div class="state">
                     <span class="state-ic"><partial name="_Icon" model="@("idcard")" /></span>
                     <h3>No hay personal cargado</h3>
-                    <p>Dé de alta al primer integrante del personal.</p>
+                    <p>Registrá al primer integrante del personal.</p>
                     <a class="btn btn-primary" asp-action="Alta"><partial name="_Icon" model="@("plus")" /><span>Alta de personal</span></a>
+                </div>
+            }
+            else if (Model.Filas.Count == 0)
+            {
+                <div class="state">
+                    <span class="state-ic"><partial name="_Icon" model="@("idcard")" /></span>
+                    <h3>No se encontró personal con esos filtros</h3>
+                    <p>Probá con otra búsqueda.</p>
+                    <a class="btn btn-secondary" asp-action="Index">Limpiar</a>
                 </div>
             }
             else
@@ -104,7 +128,7 @@
                                     <td data-label="Estado"><partial name="_EstadoPersonalBadge" model="fila.EstadoPersonal" />@if (fila.EstaBloqueada) { <partial name="_Badge" model='@(("Bloqueada", "warn"))' /> }</td>
                                     <td class="col-actions" data-label="Acciones">
                                         <a class="btn btn-ghost btn-sm" asp-action="Detalle" asp-route-id="@fila.CodigoPersonal" aria-label="Ver @fila.Codigo"><partial name="_Icon" model="@("eye")" /><span>Ver</span></a>
-                                        @if (!fila.EsRaiz)
+                                        @if (!fila.EsRaiz && fila.CodigoPersonal != Model.CodigoActual)
                                         {
                                             <a class="btn btn-ghost btn-sm btn-icon" asp-action="Editar" asp-route-id="@fila.CodigoPersonal" aria-label="Editar @fila.Codigo"><partial name="_Icon" model="@("edit")" /></a>
                                         }
@@ -115,17 +139,7 @@
                     </table>
                 </div>
 
-                @* pendiente: la paginación real la implementa el backend; hoy es solo la maqueta *@
-                <div class="card-foot">
-                    <span>Mostrando 1–@Model.Filas.Count de @Model.Total</span>
-                    <nav aria-label="Paginación">
-                        <div class="pagination">
-                            <button type="button" class="page-btn" disabled aria-label="Página anterior"><partial name="_Icon" model="@("chevron-left")" /></button>
-                            <button type="button" class="page-btn" aria-current="page">1</button>
-                            <button type="button" class="page-btn" disabled aria-label="Página siguiente"><partial name="_Icon" model="@("chevron-right")" /></button>
-                        </div>
-                    </nav>
-                </div>
+                <partial name="_Paginador" model="@((Model.Pagina, Model.TotalPaginas, Model.Desde, Model.Hasta, Model.Total, enlacePagina))" />
             }
         </div>
     </section>
