@@ -35,6 +35,22 @@ public static class ValidacionesFormato
     public static bool NombreValido(string? texto) =>
         !string.IsNullOrWhiteSpace(texto) && PatronNombre.IsMatch(texto.Trim());
 
+    private static readonly Regex PatronTextoInstitucional = new(
+        @"^[\p{L}\p{N}\s.,;:'’""&()/°#!¡?¿+_\-–]+$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    public static bool TextoInstitucionalValido(string? texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+        {
+            return false;
+        }
+
+        var valor = texto.Trim();
+
+        return valor.Any(char.IsLetter) && PatronTextoInstitucional.IsMatch(valor);
+    }
+
     public static bool TelefonoValido(string? texto)
     {
         if (string.IsNullOrWhiteSpace(texto))
@@ -79,4 +95,15 @@ public sealed class TelefonoContactoAttribute : ValidationAttribute
 
     public override bool IsValid(object? value) =>
         value is null or "" || ValidacionesFormato.TelefonoValido(value as string);
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class TextoInstitucionalAttribute : ValidationAttribute
+{
+    public TextoInstitucionalAttribute() : base("Ingresá un texto válido: debe tener al menos una letra y solo puede incluir letras, números, espacios y signos comunes (. , - ' & ( ) /).")
+    {
+    }
+
+    public override bool IsValid(object? value) =>
+        value is null or "" || ValidacionesFormato.TextoInstitucionalValido(value as string);
 }
