@@ -35,6 +35,10 @@ public class DiagnosticosController : Controller
     [Authorize(Policy = "TecnicoOAdministrador")]
     public async Task<IActionResult> Index(DiagnosticoListadoViewModel filtros)
     {
+        filtros.FiltroInvalido = !ModelState.IsValid
+            || (filtros.Tipo is { } tipo && !Enum.IsDefined(tipo))
+            || (filtros.Dictamen is { } dictamen && !Enum.IsDefined(dictamen));
+
         try
         {
             var resultado = await _diagnosticoService.ListarAsync(
