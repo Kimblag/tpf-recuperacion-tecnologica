@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 using TPF.RecuperacionTecnologica.Web.Services.Reloj;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
@@ -45,9 +46,12 @@ public class AuditoriaListadoViewModel : IValidatableObject
     public string? Identificador { get; set; }
 
     // el código de personal se muestra como PER-0002 y el identificador como SOL-000030; también se acepta solo el número
-    public int? NumeroCodigoPersonal => LeerNumero(CodigoPersonal);
+    public int? NumeroCodigoPersonal => LeerCodigoPersonal(CodigoPersonal);
 
-    public int? NumeroIdentificador => LeerNumero(Identificador);
+    public int? NumeroIdentificador => LeerIdentificador().Numero;
+
+    public string? EntidadEfectiva => LeerIdentificador().Entidad
+        ?? (string.IsNullOrWhiteSpace(Entidad) ? null : Entidad.Trim());
 
     public IReadOnlyList<AuditoriaFilaViewModel> Filas { get; set; } = [];
 
@@ -75,6 +79,19 @@ public class AuditoriaListadoViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        var fechaMaxima = DateTime.UtcNow.Date.AddYears(1);
+        var mensajeRango = $"La fecha debe estar entre {FechaMinima:dd/MM/yyyy} y {fechaMaxima:dd/MM/yyyy}.";
+
+        if (FechaDesde is not null && (FechaDesde.Value.Date < FechaMinima || FechaDesde.Value.Date > fechaMaxima))
+        {
+            yield return new ValidationResult(mensajeRango, [nameof(FechaDesde)]);
+        }
+
+        if (FechaHasta is not null && (FechaHasta.Value.Date < FechaMinima || FechaHasta.Value.Date > fechaMaxima))
+        {
+            yield return new ValidationResult(mensajeRango, [nameof(FechaHasta)]);
+        }
+
         if (FechaDesde is not null && FechaHasta is not null && FechaDesde.Value.Date > FechaHasta.Value.Date)
         {
             yield return new ValidationResult(
@@ -87,10 +104,27 @@ public class AuditoriaListadoViewModel : IValidatableObject
                 "El código de personal debe ser un número o un código como PER-0002.", [nameof(CodigoPersonal)]);
         }
 
-        if (!string.IsNullOrWhiteSpace(Identificador) && NumeroIdentificador is null)
+        if (!string.IsNullOrWhiteSpace(Identificador))
         {
-            yield return new ValidationResult(
-                "El identificador debe ser un número o un código como SOL-000030.", [nameof(Identificador)]);
+            var (entidadPrefijo, numero, prefijoValido) = LeerIdentificador();
+
+            if (numero is null)
+            {
+                yield return new ValidationResult(
+                    "El identificador debe ser un número o un código como SOL-000030.", [nameof(Identificador)]);
+            }
+            else if (!prefijoValido)
+            {
+                yield return new ValidationResult(
+                    "El prefijo no es válido. Usá SOL, ASG, ENT, DIA, PER o U, o solo el número.", [nameof(Identificador)]);
+            }
+            else if (entidadPrefijo is not null
+                && !string.IsNullOrWhiteSpace(Entidad)
+                && !string.Equals(Entidad.Trim(), entidadPrefijo, StringComparison.Ordinal))
+            {
+                yield return new ValidationResult(
+                    $"El identificador corresponde a {EtiquetaEntidad(entidadPrefijo)}, pero filtraste por otra entidad.", [nameof(Identificador)]);
+            }
         }
     }
 
@@ -166,22 +200,55 @@ public class AuditoriaListadoViewModel : IValidatableObject
             .ToList()
     };
 
-    private static int? LeerNumero(string? texto)
+    private static readonly Dictionary<string, string> EntidadPorPrefijo = new(StringComparer.OrdinalIgnoreCase)
     {
-        var termino = texto?.Trim();
+        ["SOL"] = "Solicitud",
+        ["ASG"] = "Asignacion",
+        ["ENT"] = "Entrega",
+        ["DIA"] = "Diagnostico",
+        ["PER"] = "Personal",
+        ["U"] = "Usuario"
+    };
 
-        if (string.IsNullOrEmpty(termino))
+    private static readonly Regex PatronIdentificador = new(
+        @"^(?:(?<prefijo>[A-Za-z]+)-)?(?<numero>[0-9]{1,9})$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex PatronCodigoPersonal = new(
+        @"^(?:PER-)?(?<numero>[0-9]{1,9})$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
+    private static readonly DateTime FechaMinima = new(2000, 1, 1);
+
+    private static int? LeerCodigoPersonal(string? texto)
+    {
+        var coincidencia = PatronCodigoPersonal.Match(texto?.Trim() ?? string.Empty);
+
+        return coincidencia.Success && int.TryParse(coincidencia.Groups["numero"].Value, out var numero) && numero > 0
+            ? numero
+            : null;
+    }
+
+    private (string? Entidad, int? Numero, bool PrefijoValido) LeerIdentificador()
+    {
+        var coincidencia = PatronIdentificador.Match(Identificador?.Trim() ?? string.Empty);
+
+        if (!coincidencia.Success
+            || !int.TryParse(coincidencia.Groups["numero"].Value, out var numero)
+            || numero <= 0)
         {
-            return null;
+            return (null, null, true);
         }
 
-        var guion = termino.IndexOf('-');
+        var prefijo = coincidencia.Groups["prefijo"];
 
-        if (guion >= 0)
+        if (!prefijo.Success)
         {
-            termino = termino[(guion + 1)..];
+            return (null, numero, true);
         }
 
-        return int.TryParse(termino, out var numero) && numero > 0 ? numero : null;
+        return EntidadPorPrefijo.TryGetValue(prefijo.Value, out var entidad)
+            ? (entidad, numero, true)
+            : (null, numero, false);
     }
 }

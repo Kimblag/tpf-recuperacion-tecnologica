@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using TPF.RecuperacionTecnologica.Web.Models;
 using TPF.RecuperacionTecnologica.Web.Services.Configuracion;
 using TPF.RecuperacionTecnologica.Web.ViewModels.Parametros;
 
@@ -26,17 +27,19 @@ public class ParametrosController : Controller
             return NotFound();
         }
 
-        return View(new ParametrosViewModel
+        var modelo = new ParametrosViewModel
         {
             NombreOrganizacion = configuracion.NombreOrganizacion,
             ZonaCobertura = configuracion.ZonaCobertura,
             DiasLimiteRetiro = configuracion.DiasLimiteRetiro,
             MaximoSolicitudesPendientes = configuracion.MaximoSolicitudesPendientes,
             DiasAvisoVencimiento = configuracion.DiasAvisoVencimiento,
-            CodigoAdministrador = configuracion.CodigoAdministrador,
-            FechaUltimaModificacion = configuracion.FechaUltimaModificacion,
             RowVersion = configuracion.RowVersion
-        });
+        };
+
+        CargarVigentes(modelo, configuracion);
+
+        return View(modelo);
     }
 
     [HttpPost]
@@ -67,11 +70,23 @@ public class ParametrosController : Controller
             }
         }
 
-        // la última modificación no viaja en el formulario: se vuelve a leer la guardada
         var actual = await _configuracionService.ObtenerAsync();
-        modelo.CodigoAdministrador = actual?.CodigoAdministrador;
-        modelo.FechaUltimaModificacion = actual?.FechaUltimaModificacion;
+
+        if (actual is not null)
+        {
+            CargarVigentes(modelo, actual);
+        }
 
         return View(modelo);
+    }
+
+    private static void CargarVigentes(ParametrosViewModel modelo, ConfiguracionInstitucional actual)
+    {
+        modelo.VigenteZonaCobertura = actual.ZonaCobertura;
+        modelo.VigenteDiasLimiteRetiro = actual.DiasLimiteRetiro;
+        modelo.VigenteMaximoSolicitudesPendientes = actual.MaximoSolicitudesPendientes;
+        modelo.VigenteDiasAvisoVencimiento = actual.DiasAvisoVencimiento;
+        modelo.CodigoAdministrador = actual.CodigoAdministrador;
+        modelo.FechaUltimaModificacion = actual.FechaUltimaModificacion;
     }
 }

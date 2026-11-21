@@ -1,17 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Parametros;
 
-public class ParametrosViewModel
+public class ParametrosViewModel : IValidatableObject
 {
     [Display(Name = "Nombre de la organización")]
     [Required(ErrorMessage = "Ingresá el nombre de la organización.")]
     [StringLength(120, ErrorMessage = "El nombre no puede superar los 120 caracteres.")]
+    [TextoInstitucional]
     public string NombreOrganizacion { get; set; } = string.Empty;
 
     [Display(Name = "Zona de cobertura")]
     [Required(ErrorMessage = "Ingresá la zona de cobertura.")]
     [StringLength(150, ErrorMessage = "La zona no puede superar los 150 caracteres.")]
+    [TextoInstitucional]
     public string ZonaCobertura { get; set; } = string.Empty;
 
     [Display(Name = "Días límite de retiro")]
@@ -32,7 +35,25 @@ public class ParametrosViewModel
 
     public byte[] RowVersion { get; set; } = [];
 
+    public int? VigenteDiasLimiteRetiro { get; set; }
+
+    public int? VigenteMaximoSolicitudesPendientes { get; set; }
+
+    public int? VigenteDiasAvisoVencimiento { get; set; }
+
+    public string VigenteZonaCobertura { get; set; } = string.Empty;
+
     public int? CodigoAdministrador { get; set; }
 
     public DateTime? FechaUltimaModificacion { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext contexto)
+    {
+        if (DiasAvisoVencimiento > DiasLimiteRetiro)
+        {
+            yield return new ValidationResult(
+                "No puede superar los días límite de retiro.",
+                [nameof(DiasAvisoVencimiento)]);
+        }
+    }
 }
