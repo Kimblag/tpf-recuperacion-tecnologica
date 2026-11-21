@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Reportes;
 
@@ -20,6 +21,16 @@ public class GenerarReporteViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (Desde is not null && !RangoFechasPermitido.EstaDentro(Desde.Value))
+        {
+            yield return new ValidationResult(RangoFechasPermitido.Mensaje(), [nameof(Desde)]);
+        }
+
+        if (Hasta is not null && !RangoFechasPermitido.EstaDentro(Hasta.Value))
+        {
+            yield return new ValidationResult(RangoFechasPermitido.Mensaje(), [nameof(Hasta)]);
+        }
+
         if (Desde is not null && Hasta is not null && Desde > Hasta)
         {
             yield return new ValidationResult(
