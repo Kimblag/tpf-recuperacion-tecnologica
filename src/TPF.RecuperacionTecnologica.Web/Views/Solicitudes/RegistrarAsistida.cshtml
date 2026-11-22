@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "Nueva solicitud asistida";
     ViewData["FormularioId"] = "f-solicitud-asistida";
+    ViewData["OrdenResumen"] = new[] { "NroEquipo", "Usuario", "TipoSolicitante", "MotivoSolicitud" };
 
     var origenAsistida = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)OrigenSolicitud.Asistida).ToString()).Text;
 
@@ -42,6 +43,8 @@
             <div>Queda registrada con origen Asistida y a nombre de la persona coordinadora. Si la persona todavía no tiene cuenta, se abre una en el momento con sus datos completos y se le envía una invitación por correo para que defina su contraseña.</div>
         </div>
     </div>
+
+    <partial name="_ResumenErrores" />
 
     <section class="card" aria-labelledby="titulo-equipo" id="NroEquipo" tabindex="-1">
         <div class="card-header">
@@ -110,8 +113,6 @@
         </div>
         <div class="card-body">
             <div class="stack" style="gap:16px">
-                <partial name="_ResumenErrores" />
-
                 <p class="form-note"><span class="req" aria-hidden="true">*</span> Campo obligatorio</p>
 
                 <div class="form-grid">
@@ -152,7 +153,3 @@
     </form>
     }
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
