@@ -487,7 +487,8 @@ public class UsuarioService : IUsuarioService
             Nombre = u.RazonSocial ?? (u.Nombre + " " + u.Apellido),
             Documento = u.NroDocumento,
             CorreoElectronico = u.CorreoElectronico,
-            EstadoUsuario = u.EstadoUsuario
+            EstadoUsuario = u.EstadoUsuario,
+            TipoUsuario = u.TipoUsuario
         });
 
     public async Task<UsuarioEncontradoViewModel?> BuscarPorDocumentoOCorreoAsync(string texto)

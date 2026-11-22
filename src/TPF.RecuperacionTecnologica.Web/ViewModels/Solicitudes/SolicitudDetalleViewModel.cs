@@ -15,6 +15,8 @@ public class SolicitudDetalleViewModel
 
     public string MarcaYModelo { get; set; } = string.Empty;
 
+    public EstadoEquipo EstadoEquipo { get; set; }
+
     public string Solicitante { get; set; } = string.Empty;
 
     public TipoUsuario TipoCuenta { get; set; }

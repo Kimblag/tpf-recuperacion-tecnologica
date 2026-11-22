@@ -20,6 +20,8 @@ public class UsuarioEncontradoViewModel
     public string CorreoElectronico { get; set; } = string.Empty;
 
     public EstadoUsuario EstadoUsuario { get; set; }
+
+    public TipoUsuario TipoUsuario { get; set; }
 }
 
 public class SelectorUsuarioViewModel

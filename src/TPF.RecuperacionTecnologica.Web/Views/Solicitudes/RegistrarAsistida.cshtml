@@ -1,11 +1,24 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.RegistroSolicitudAsistidaViewModel
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
 @{
     ViewData["Title"] = "Nueva solicitud asistida";
     ViewData["FormularioId"] = "f-solicitud-asistida";
 
     var origenAsistida = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)OrigenSolicitud.Asistida).ToString()).Text;
+
+    TipoUsuario? tipoDeCuenta = Model.Usuario.Modo == ModoUsuarioAsistido.Nuevo
+        ? Model.Usuario.TipoUsuario
+        : Model.Usuario.Encontrado?.TipoUsuario;
+
+    var tiposSolicitante = Html.GetEnumSelectList<TipoSolicitante>().ToList();
+
+    if (tipoDeCuenta is not null)
+    {
+        var permitidos = TiposSolicitantePermitidos.Para(tipoDeCuenta.Value).Select(t => ((int)t).ToString()).ToList();
+        tiposSolicitante = tiposSolicitante.Where(i => permitidos.Contains(i.Value)).ToList();
+    }
 }
 
 @section Migas {
@@ -30,7 +43,7 @@
         </div>
     </div>
 
-    <section class="card" aria-labelledby="titulo-equipo">
+    <section class="card" aria-labelledby="titulo-equipo" id="NroEquipo" tabindex="-1">
         <div class="card-header">
             <div>
                 <h2 class="card-title" id="titulo-equipo">Equipo solicitado</h2>
@@ -47,6 +60,7 @@
                 };
             }
             <partial name="_SelectorEquipo" for="Equipo" />
+            <span asp-validation-for="NroEquipo"></span>
         </div>
     </section>
 
@@ -89,7 +103,7 @@
         <input type="hidden" asp-for="Usuario.Modo" />
         <input type="hidden" asp-for="Usuario.TipoUsuario" />
         <input type="hidden" asp-for="Usuario.NroUsuario" />
-        <input type="hidden" asp-for="NroEquipo" />
+        <input type="hidden" asp-for="NroEquipo" id="NroEquipoElegido" />
 
         <div class="card-header">
             <div><h2 class="card-title" id="titulo-datos">Datos de la solicitud</h2></div>
@@ -104,7 +118,7 @@
                     <div class="field">
                         <label class="form-label" for="TipoSolicitante">Tipo de solicitante<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
                         <div class="select">
-                            <select asp-for="TipoSolicitante" class="form-select" asp-items="Html.GetEnumSelectList<TipoSolicitante>()">
+                            <select asp-for="TipoSolicitante" class="form-select" asp-items="tiposSolicitante">
                                 <option value="">Seleccioná…</option>
                             </select>
                             <partial name="_Icon" model="@("chevron-down")" />
