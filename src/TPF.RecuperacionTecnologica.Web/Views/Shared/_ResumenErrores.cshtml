@@ -3,17 +3,24 @@
     var secciones = ViewData["OrdenResumen"] as string[] ?? [];
     var propiedades = ViewData.ModelMetadata.Properties.ToList();
 
-    (int Seccion, int Posicion) Orden(string clave)
+    (int Seccion, int Posicion, int Subposicion) Orden(string clave)
     {
-        var primera = clave.Split('.')[0];
-        var seccion = Array.IndexOf(secciones, primera);
+        var partes = clave.Split('.');
+        var seccion = Array.IndexOf(secciones, partes[0]);
+        var principal = propiedades.FindIndex(p => p.Name == partes[0]);
+        var subposicion = 0;
 
-        return (seccion < 0 ? secciones.Length : seccion, propiedades.FindIndex(p => p.Name == primera));
+        if (partes.Length > 1 && principal >= 0)
+        {
+            subposicion = propiedades[principal].Properties.ToList().FindIndex(p => p.Name == partes[1]);
+        }
+
+        return (seccion < 0 ? secciones.Length : seccion, principal, subposicion);
     }
 
     var campos = ViewData.ModelState
         .Where(e => e.Value is { Errors.Count: > 0 })
-        .OrderBy(e => string.IsNullOrEmpty(e.Key) ? (-1, 0) : Orden(e.Key))
+        .OrderBy(e => string.IsNullOrEmpty(e.Key) ? (-1, 0, 0) : Orden(e.Key))
         .ToList();
     var soloGenerales = campos.All(c => string.IsNullOrEmpty(c.Key));
 
