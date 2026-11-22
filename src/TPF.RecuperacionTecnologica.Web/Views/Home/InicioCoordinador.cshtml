@@ -118,6 +118,10 @@
                                         <td data-label="Equipo">
                                             <div>@solicitud.MarcaYModelo</div>
                                             <div class="card-sub"><partial name="_TipoEquipo" model="solicitud.TipoEquipo" /> · <span class="mono">@solicitud.CodigoEquipo</span></div>
+                                            @if (solicitud.AvisoEquipo is not null)
+                                            {
+                                                <partial name="_Badge" model="@((solicitud.AvisoEquipo, solicitud.AvisoEquipoTemporal ? "warn" : "danger"))" />
+                                            }
                                         </td>
                                         <td data-label="Fecha">@Reloj.Fecha(solicitud.FechaSolicitud)</td>
                                         <td class="col-actions" data-label="Acciones">
@@ -181,7 +185,7 @@
                                                 {
                                                     <partial name="_Badge" model="@(("Vence hoy", "warn"))" />
                                                 }
-                                                else if (asignacion.DiasRestantes <= 3)
+                                                else if (asignacion.PorVencer)
                                                 {
                                                     <partial name="_Badge" model="@((asignacion.DiasRestantes == 1 ? "Vence mañana" : $"Vence en {asignacion.DiasRestantes} días", "warn"))" />
                                                 }

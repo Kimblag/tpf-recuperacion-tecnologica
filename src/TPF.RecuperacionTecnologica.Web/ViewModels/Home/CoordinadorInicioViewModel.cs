@@ -1,4 +1,5 @@
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Home;
 
@@ -21,6 +22,12 @@ public class SolicitudPrioritariaViewModel
     public string Codigo => $"SOL-{NroSolicitud:D6}";
 
     public string CodigoEquipo => NroEquipo.ToString("D6");
+
+    public EstadoEquipo EstadoEquipo { get; set; }
+
+    public string? AvisoEquipo => DisponibilidadEquipoSolicitud.Etiqueta(EstadoEquipo);
+
+    public bool AvisoEquipoTemporal => DisponibilidadEquipoSolicitud.EsTemporal(EstadoEquipo);
 }
 
 public class AsignacionConPlazoViewModel
@@ -36,6 +43,8 @@ public class AsignacionConPlazoViewModel
     public int DiasRestantes { get; set; }
 
     public bool PlazoVencido => DiasRestantes < 0;
+
+    public bool PorVencer { get; set; }
 
     public string Codigo => $"ASG-{NroAsignacion:D6}";
 }

@@ -342,6 +342,7 @@ public class InicioService : IInicioService
                 s.FechaSolicitud,
                 s.NroEquipoRequerido,
                 s.EquipoRequerido.TipoEquipo,
+                s.EquipoRequerido.EstadoEquipo,
                 s.EquipoRequerido.Marca,
                 s.EquipoRequerido.Modelo,
                 s.Usuario.RazonSocial,
@@ -401,6 +402,7 @@ public class InicioService : IInicioService
                 Solicitante = NombreDe(s.RazonSocial, s.Nombre, s.Apellido),
                 TipoSolicitante = s.TipoSolicitante,
                 TipoEquipo = s.TipoEquipo,
+                EstadoEquipo = s.EstadoEquipo,
                 NroEquipo = s.NroEquipoRequerido,
                 MarcaYModelo = $"{s.Marca} {s.Modelo}",
                 FechaSolicitud = s.FechaSolicitud
@@ -411,7 +413,8 @@ public class InicioService : IInicioService
                 Solicitante = NombreDe(a.RazonSocial, a.Nombre, a.Apellido),
                 MarcaYModelo = $"{a.Marca} {a.Modelo}",
                 FechaLimiteRetiro = a.FechaLimiteRetiro,
-                DiasRestantes = (_reloj.FechaLocal(a.FechaLimiteRetiro) - hoy).Days
+                DiasRestantes = (_reloj.FechaLocal(a.FechaLimiteRetiro) - hoy).Days,
+                PorVencer = a.FechaLimiteRetiro >= inicioHoy && a.FechaLimiteRetiro < finAviso
             }).ToList(),
             ActividadReciente = registros.Select(r => EventoDeAuditoria(
                 r.TipoOperacion, r.EntidadAfectada, r.IdEntidadAfectada, r.Detalle, r.FechaHora)).ToList()
@@ -441,8 +444,26 @@ public class InicioService : IInicioService
             _ => id.ToString("D6")
         };
 
-        return Evento(icono, $"{detalle ?? "Movimiento registrado"} ", codigo, "", fecha,
+        var evento = Evento(icono, $"{detalle ?? "Movimiento registrado"} ", codigo, "", fecha,
             exito: tipo != TipoOperacionAuditoria.Liberacion);
+
+        var destino = entidad switch
+        {
+            "Solicitud" => ("Solicitudes", "DetalleInterno"),
+            "Asignacion" => ("Asignaciones", "Detalle"),
+            "Entrega" => ("Entregas", "Detalle"),
+            "Equipo" => ("Donaciones", "DetalleInterno"),
+            _ => (null, (string?)null)
+        };
+
+        if (destino.Item1 is not null)
+        {
+            evento.Controlador = destino.Item1;
+            evento.Accion = destino.Item2;
+            evento.IdRuta = id;
+        }
+
+        return evento;
     }
 
     private static string CodigoEquipo(int nroEquipo) => nroEquipo.ToString("D6");
