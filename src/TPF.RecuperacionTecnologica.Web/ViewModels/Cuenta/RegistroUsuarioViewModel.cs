@@ -34,6 +34,7 @@ public class RegistroUsuarioViewModel : IValidatableObject
 
     [Display(Name = "Teléfono")]
     [StringLength(20, ErrorMessage = "Máximo 20 caracteres.")]
+    [TelefonoContacto]
     public string? Telefono { get; set; }
 
     [Display(Name = "Correo electrónico")]

@@ -7,6 +7,8 @@
     var formularioId = ViewData["FormularioId"]?.ToString();
     var esExistente = Model.Modo == ModoUsuarioAsistido.Existente;
     var esPersona = Model.TipoUsuario == TipoUsuario.Persona;
+    var operacion = ViewData["Operacion"]?.ToString() ?? "solicitud";
+    var idBusqueda = Html.IdFor(m => m.Busqueda);
     var valoresExtra = (ViewData["ValoresRuta"] as IDictionary<string, string?> ?? new Dictionary<string, string?>())
         .Where(par => !string.IsNullOrEmpty(par.Value))
         .ToList();
@@ -26,7 +28,7 @@
 
 <div class="stack" style="gap:16px">
     <div>
-        <span class="form-label" id="selector-modo-etiqueta">¿De quién es la solicitud?</span>
+        <span class="form-label" id="selector-modo-etiqueta">¿De quién es la @operacion?</span>
         <nav aria-labelledby="selector-modo-etiqueta">
             <ul class="chips list-unstyled m-0">
                 <li><a class="chip" href="@Enlace(new { modo = ModoUsuarioAsistido.Existente })" aria-current="@(esExistente ? "true" : null)">Usuario existente</a></li>
@@ -43,12 +45,13 @@
             {
                 <input type="hidden" name="@par.Key" value="@par.Value" />
             }
-            <label class="form-label" for="busqueda">DNI o correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
+            <label class="form-label" for="@idBusqueda">DNI o correo electrónico<span class="req" aria-hidden="true">*</span><span class="visually-hidden"> (obligatorio)</span></label>
             <div class="d-flex flex-wrap gap-2">
-                <input id="busqueda" name="busqueda" value="@Model.Busqueda" class="form-control flex-grow-1" style="min-width:220px;width:auto" autocomplete="off" maxlength="254" aria-describedby="busqueda-ayuda" />
+                <input id="@idBusqueda" name="busqueda" value="@Model.Busqueda" class="form-control flex-grow-1" style="min-width:220px;width:auto" autocomplete="off" maxlength="254" aria-describedby="busqueda-ayuda" />
                 <button type="submit" class="btn btn-secondary"><partial name="_Icon" model="@("filter")" /><span>Buscar</span></button>
             </div>
             <div class="form-text" id="busqueda-ayuda">Se busca entre los usuarios externos ya registrados.</div>
+            <span asp-validation-for="Busqueda"></span>
         </form>
 
         @if (Model.BusquedaRealizada)
@@ -70,7 +73,7 @@
                         <partial name="_Icon" model="@("x-circle")" />
                         <div class="alert-body">
                             <div class="alert-title">Este usuario está inactivo</div>
-                            <div>@Model.Encontrado.Nombre (DNI @Model.Encontrado.Documento) dio de baja su cuenta. No se puede registrar una solicitud a su nombre.</div>
+                            <div>@Model.Encontrado.Nombre (DNI @Model.Encontrado.Documento) dio de baja su cuenta. No se puede registrar una @operacion a su nombre.</div>
                         </div>
                     </div>
                 }

@@ -33,6 +33,10 @@ public static class ValidacionesDatosUsuario
         {
             yield return new ValidationResult("La razón social es obligatoria.", [prefijoCampos + "RazonSocial"]);
         }
+        else if (!ValidacionesFormato.TextoInstitucionalValido(razonSocial))
+        {
+            yield return new ValidationResult("La razón social no es válida. Usá letras y, si hace falta, números y signos comunes.", [prefijoCampos + "RazonSocial"]);
+        }
 
         var largoEsperado = tipoUsuario == TipoUsuario.Persona ? 8 : 11;
 
@@ -40,6 +44,12 @@ public static class ValidacionesDatosUsuario
         {
             yield return new ValidationResult(
                 $"El documento debe tener {largoEsperado} dígitos numéricos.",
+                [prefijoCampos + "NroDocumento"]);
+        }
+        else if (nroDocumento.All(c => c == '0'))
+        {
+            yield return new ValidationResult(
+                "El documento no puede estar formado solo por ceros.",
                 [prefijoCampos + "NroDocumento"]);
         }
     }

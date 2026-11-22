@@ -54,7 +54,10 @@
                 <div class="card-header">
                     <div>
                         <h2 class="card-title">Características técnicas</h2>
-                        <p class="card-sub">@(Model.EspecificacionesVerificadas ? "Verificadas por el técnico en el diagnóstico" : "Declaradas por el donante; se verificarán en el diagnóstico")</p>
+                        @if (Model.TieneEspecificaciones)
+                        {
+                            <p class="card-sub">@(Model.EspecificacionesVerificadas ? "Verificadas por el técnico en el diagnóstico" : "Declaradas por el donante; se verificarán en el diagnóstico")</p>
+                        }
                     </div>
                 </div>
                 <div class="card-body">
@@ -95,7 +98,7 @@
                     }
                     else
                     {
-                        <p class="muted">No se declararon características técnicas.</p>
+                        <p class="muted">Sin características registradas.</p>
                     }
                 </div>
             </section>

@@ -1,7 +1,40 @@
 @* Resumen de errores de validación del formulario actual. Lee el ModelState de la vista que lo incluye. *@
 @{
-    var campos = ViewData.ModelState.Where(e => e.Value is { Errors.Count: > 0 }).ToList();
+    var secciones = ViewData["OrdenResumen"] as string[] ?? [];
+    var propiedades = ViewData.ModelMetadata.Properties.ToList();
+
+    (int Seccion, int Posicion) Orden(string clave)
+    {
+        var primera = clave.Split('.')[0];
+        var seccion = Array.IndexOf(secciones, primera);
+
+        return (seccion < 0 ? secciones.Length : seccion, propiedades.FindIndex(p => p.Name == primera));
+    }
+
+    var campos = ViewData.ModelState
+        .Where(e => e.Value is { Errors.Count: > 0 })
+        .OrderBy(e => string.IsNullOrEmpty(e.Key) ? (-1, 0) : Orden(e.Key))
+        .ToList();
     var soloGenerales = campos.All(c => string.IsNullOrEmpty(c.Key));
+
+    string NombreDelCampo(string clave)
+    {
+        var metadata = ViewData.ModelMetadata;
+
+        foreach (var parte in clave.Split('.'))
+        {
+            var propiedad = metadata.Properties.FirstOrDefault(p => p.Name == parte);
+
+            if (propiedad is null)
+            {
+                return clave;
+            }
+
+            metadata = propiedad;
+        }
+
+        return metadata.DisplayName ?? metadata.Name ?? clave;
+    }
 }
 @if (campos.Count > 0)
 {
@@ -18,8 +51,7 @@
                     }
                     else
                     {
-                        var nombre = ViewData.ModelMetadata.Properties.FirstOrDefault(p => p.Name == campo.Key)?.DisplayName ?? campo.Key;
-                        <li><a href="#@campo.Key">@nombre</a></li>
+                        <li><a href="#@Html.GenerateIdFromName(campo.Key)">@NombreDelCampo(campo.Key)</a></li>
                     }
                 }
             </ul>
