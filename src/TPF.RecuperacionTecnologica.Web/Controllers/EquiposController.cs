@@ -61,7 +61,7 @@ public class EquiposController : Controller
     }
 
     [HttpGet]
-    [Authorize(Policy = "PersonalInterno")]
+    [Authorize(Policy = "TecnicoOAdministrador")]
     public async Task<IActionResult> Historial(int id)
     {
         var historial = await _equipoConsultaService.ObtenerHistorialAsync(id);
