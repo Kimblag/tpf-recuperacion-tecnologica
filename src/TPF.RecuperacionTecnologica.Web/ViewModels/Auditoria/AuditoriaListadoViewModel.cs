@@ -79,17 +79,14 @@ public class AuditoriaListadoViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
-        var fechaMaxima = DateTime.UtcNow.Date.AddYears(1);
-        var mensajeRango = $"La fecha debe estar entre {FechaMinima:dd/MM/yyyy} y {fechaMaxima:dd/MM/yyyy}.";
-
-        if (FechaDesde is not null && (FechaDesde.Value.Date < FechaMinima || FechaDesde.Value.Date > fechaMaxima))
+        if (FechaDesde is not null && !RangoFechasPermitido.EstaDentro(FechaDesde.Value))
         {
-            yield return new ValidationResult(mensajeRango, [nameof(FechaDesde)]);
+            yield return new ValidationResult(RangoFechasPermitido.Mensaje(), [nameof(FechaDesde)]);
         }
 
-        if (FechaHasta is not null && (FechaHasta.Value.Date < FechaMinima || FechaHasta.Value.Date > fechaMaxima))
+        if (FechaHasta is not null && !RangoFechasPermitido.EstaDentro(FechaHasta.Value))
         {
-            yield return new ValidationResult(mensajeRango, [nameof(FechaHasta)]);
+            yield return new ValidationResult(RangoFechasPermitido.Mensaje(), [nameof(FechaHasta)]);
         }
 
         if (FechaDesde is not null && FechaHasta is not null && FechaDesde.Value.Date > FechaHasta.Value.Date)
@@ -217,8 +214,6 @@ public class AuditoriaListadoViewModel : IValidatableObject
     private static readonly Regex PatronCodigoPersonal = new(
         @"^(?:PER-)?(?<numero>[0-9]{1,9})$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-
-    private static readonly DateTime FechaMinima = new(2000, 1, 1);
 
     private static int? LeerCodigoPersonal(string? texto)
     {
