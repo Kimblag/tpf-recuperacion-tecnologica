@@ -20,6 +20,7 @@ public class SolicitudService : ISolicitudService
 
     private const string MensajeUsuarioNoHabilitado = "La cuenta no está habilitada para registrar solicitudes.";
     private const string MensajeSolicitudDuplicada = "Esta cuenta ya tiene una solicitud pendiente para este equipo. Su estado se puede ver en Mis solicitudes.";
+    private const string MensajeSolicitudDuplicadaAsistida = "Esta cuenta ya tiene una solicitud pendiente para este equipo.";
     private const string MotivoCancelacionSolicitante = "Cancelada por la persona solicitante.";
 
     private static IdentityResult Fallo(string codigo, string descripcion) =>
@@ -48,10 +49,10 @@ public class SolicitudService : ISolicitudService
         _logger = logger;
     }
 
+    private const string MensajeTipoIncoherente = "El tipo de solicitante no corresponde al tipo de cuenta.";
+
     private static bool TipoCoherente(TipoUsuario tipoUsuario, TipoSolicitante tipoSolicitante) =>
-        tipoUsuario == TipoUsuario.Persona
-            ? tipoSolicitante == TipoSolicitante.Particular
-            : tipoSolicitante is TipoSolicitante.Escuela or TipoSolicitante.OrganizacionSocial;
+        TiposSolicitantePermitidos.EsCoherente(tipoUsuario, tipoSolicitante);
 
     private static bool EsViolacionDeUnicidad(DbUpdateException ex) =>
         ex.InnerException is SqlException { Number: 2601 or 2627 };
@@ -65,7 +66,7 @@ public class SolicitudService : ISolicitudService
         return usuario is not null && usuario.EstadoUsuario == EstadoUsuario.Activo ? usuario : null;
     }
 
-    private async Task<ImpedimentoSolicitud?> EvaluarAsync(Usuario? usuario, int nroEquipo)
+    private async Task<ImpedimentoSolicitud?> EvaluarAsync(Usuario? usuario, int nroEquipo, bool asistida = false)
     {
         var equipo = await _context.Equipos
             .AsNoTracking()
@@ -101,7 +102,8 @@ public class SolicitudService : ISolicitudService
         if (existente is not null)
         {
             return new ImpedimentoSolicitud(
-                ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicada, existente.NroSolicitud);
+                ErrorRegistroSolicitud.SolicitudDuplicada,
+                asistida ? MensajeSolicitudDuplicadaAsistida : MensajeSolicitudDuplicada, existente.NroSolicitud);
         }
 
         var maximoPendientes = (await _configuracionService.ObtenerAsync())?.MaximoSolicitudesPendientes
@@ -110,7 +112,9 @@ public class SolicitudService : ISolicitudService
         if (pendientes.Count >= maximoPendientes)
         {
             return new ImpedimentoSolicitud(ErrorRegistroSolicitud.LimiteAlcanzado,
-                $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Esperá a que alguna se resuelva o cancelá una para pedir otro equipo.");
+                asistida
+                    ? $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Hasta que se resuelva o se cancele alguna, no puede pedir otro equipo."
+                    : $"Esta cuenta ya tiene {maximoPendientes} solicitudes pendientes, que es el máximo. Esperá a que alguna se resuelva o cancelá una para pedir otro equipo.");
         }
 
         return null;
@@ -128,7 +132,7 @@ public class SolicitudService : ISolicitudService
                 "El usuario no existe o no está activo, por eso no se puede registrar una solicitud a su nombre.");
         }
 
-        return await EvaluarAsync(usuario, nroEquipo);
+        return await EvaluarAsync(usuario, nroEquipo, asistida: true);
     }
 
     public async Task<ImpedimentoSolicitud?> ObtenerImpedimentoAsync(string identityUserId, int nroEquipo)
@@ -155,7 +159,7 @@ public class SolicitudService : ISolicitudService
         if (modelo.TipoSolicitante is null || !TipoCoherente(usuario.TipoUsuario, modelo.TipoSolicitante.Value))
         {
             return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.TipoSolicitanteInvalido,
-                "El tipo de solicitante no corresponde al tipo de cuenta.");
+                MensajeTipoIncoherente);
         }
 
         var impedimento = await EvaluarAsync(usuario, modelo.NroEquipo);
@@ -527,7 +531,12 @@ public class SolicitudService : ISolicitudService
                 "El usuario no existe o no está activo, por eso no se puede registrar una solicitud a su nombre.");
         }
 
-        var impedimento = await EvaluarAsync(usuario, modelo.NroEquipo!.Value);
+        if (!TipoCoherente(usuario.TipoUsuario, modelo.TipoSolicitante!.Value))
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.TipoSolicitanteInvalido, MensajeTipoIncoherente);
+        }
+
+        var impedimento = await EvaluarAsync(usuario, modelo.NroEquipo!.Value, asistida: true);
 
         if (impedimento is not null)
         {
@@ -543,7 +552,7 @@ public class SolicitudService : ISolicitudService
         }
         catch (DbUpdateException ex) when (EsViolacionDeUnicidad(ex))
         {
-            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicada);
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.SolicitudDuplicada, MensajeSolicitudDuplicadaAsistida);
         }
         catch (Exception ex)
         {
@@ -562,7 +571,12 @@ public class SolicitudService : ISolicitudService
         int codigoCoordinador, RegistroSolicitudAsistidaViewModel modelo,
         Func<string, string, string> construirRutaInvitacion, string urlBaseSolicitud)
     {
-        var impedimento = await EvaluarAsync(null, modelo.NroEquipo!.Value);
+        if (!TipoCoherente(modelo.Usuario.TipoUsuario, modelo.TipoSolicitante!.Value))
+        {
+            return ResultadoRegistroSolicitud.Fallo(ErrorRegistroSolicitud.TipoSolicitanteInvalido, MensajeTipoIncoherente);
+        }
+
+        var impedimento = await EvaluarAsync(null, modelo.NroEquipo!.Value, asistida: true);
 
         if (impedimento is not null)
         {

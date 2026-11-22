@@ -1,5 +1,6 @@
 @model TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes.SolicitudDetalleViewModel
 @using TPF.RecuperacionTecnologica.Web.Models.Enums
+@using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido
 @{
     ViewData["Title"] = "Detalle de solicitud";
 
@@ -13,10 +14,13 @@
     // el Administrador va a su detalle de usuario; el Coordinador, a la ficha sin el documento
     var esAdministrador = User.IsInRole(nameof(RolPersonal.Administrador));
 
+    var avisoEquipo = Model.PuedeModificarse ? DisponibilidadEquipoSolicitud.Mensaje(Model.EstadoEquipo) : null;
+    var puedeAsignar = Model.PuedeModificarse && DisponibilidadEquipoSolicitud.EstaDisponible(Model.EstadoEquipo);
+
     var explicacionEstado = Model.EstadoSolicitud switch
     {
         EstadoSolicitud.Pendiente => "Se está esperando poder asignar el equipo.",
-        EstadoSolicitud.Asignada => "Se asignó el equipo. Tenés que retirarlo hasta la fecha indicada.",
+        EstadoSolicitud.Asignada => "Se asignó el equipo. La persona debe retirarlo hasta la fecha límite indicada.",
         EstadoSolicitud.Completada => "El equipo ya se retiró.",
         EstadoSolicitud.Cerrada => Model.MotivoCierre ?? "La solicitud se cerró.",
         _ => "La solicitud se canceló."
@@ -47,9 +51,9 @@
             }
             @if (esCoordinador)
             {
-                if (Model.PuedeModificarse)
+                if (puedeAsignar)
                 {
-                    <a class="btn btn-primary" asp-controller="Asignaciones" asp-action="Asignar"><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></a>
+                    <a class="btn btn-primary" asp-controller="Asignaciones" asp-action="Asignar" asp-route-nroEquipo="@Model.NroEquipo"><partial name="_Icon" model="@("swap")" /><span>Asignar equipo</span></a>
                 }
                 else
                 {
@@ -61,6 +65,16 @@
 
     <partial name="_ResumenErrores" />
 
+    @if (esCoordinador && avisoEquipo is not null)
+    {
+        <div class="alert alert-warning" role="note">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">
+                <div>@avisoEquipo</div>
+            </div>
+        </div>
+    }
+
     <div class="grid-3-1">
         <section class="card" aria-labelledby="titulo-datos">
             <div class="card-header">
@@ -69,7 +83,7 @@
             <div class="card-body">
                 <dl class="dl">
                     <dt>Equipo solicitado</dt>
-                    <dd>@Model.MarcaYModelo<div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
+                    <dd><a asp-controller="Equipos" asp-action="Detalle" asp-route-id="@Model.NroEquipo">@Model.MarcaYModelo</a><div class="card-sub"><partial name="_TipoEquipo" model="Model.TipoEquipo" /> · <span class="mono">@Model.CodigoEquipo</span></div></dd>
                     <dt>Solicitante</dt>
                     <dd><a asp-controller="Usuarios" asp-action="@(esAdministrador ? "Detalle" : "Ficha")" asp-route-id="@Model.NroUsuario">@Model.Solicitante</a><div class="card-sub">@Html.DisplayFor(m => m.TipoCuenta) · @Model.CorreoSolicitante</div></dd>
                     <dt>Tipo de solicitante</dt>

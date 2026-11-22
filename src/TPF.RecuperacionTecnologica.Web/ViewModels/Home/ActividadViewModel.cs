@@ -13,4 +13,10 @@ public class ActividadViewModel
     public string Detalle { get; set; } = string.Empty;
 
     public bool EsExito { get; set; }
+
+    public string? Controlador { get; set; }
+
+    public string? Accion { get; set; }
+
+    public int? IdRuta { get; set; }
 }

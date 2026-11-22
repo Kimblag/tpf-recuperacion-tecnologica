@@ -48,6 +48,13 @@ public class RegistroSolicitudAsistidaViewModel : IValidatableObject
             yield break;
         }
 
+        if (TipoSolicitante is not null && !TiposSolicitantePermitidos.EsCoherente(Usuario.TipoUsuario, TipoSolicitante.Value))
+        {
+            yield return new ValidationResult(
+                "El tipo de solicitante no corresponde al tipo de cuenta.",
+                [nameof(TipoSolicitante)]);
+        }
+
         var correo = Usuario.CorreoElectronico?.Trim();
 
         if (string.IsNullOrEmpty(correo))
