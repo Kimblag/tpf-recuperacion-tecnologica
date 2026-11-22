@@ -33,6 +33,7 @@ public class AuditoriaListadoViewModel : IValidatableObject
     [DataType(DataType.Date)]
     public DateTime? FechaHasta { get; set; }
 
+    [Display(Name = "Tipo de operación")]
     public TipoOperacionAuditoria? Operacion { get; set; }
 
     [Display(Name = "Realizado por")]
