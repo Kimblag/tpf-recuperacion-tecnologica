@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TPF.RecuperacionTecnologica.Web.Services.Exportacion;
@@ -313,16 +314,45 @@ public class ReportesController : Controller
         return File(archivo.Contenido, archivo.TipoContenido, archivo.NombreArchivo);
     }
 
-    // un rango invertido escrito a mano en la dirección vuelve al formulario con el mismo mensaje que su validación
+    // un rango inválido escrito a mano en la dirección vuelve al formulario con el mismo mensaje que su validación
     private ViewResult? RangoInvertido(DateTime? desde, DateTime? hasta, TipoReporte tipo)
     {
-        if (desde is null || hasta is null || desde.Value.Date <= hasta.Value.Date)
+        var desdeIlegible = ModelState.TryGetValue("desde", out var entradaDesde) && entradaDesde.Errors.Count > 0;
+        var hastaIlegible = ModelState.TryGetValue("hasta", out var entradaHasta) && entradaHasta.Errors.Count > 0;
+
+        if (desdeIlegible || hastaIlegible)
+        {
+            ModelState.Clear();
+
+            if (desdeIlegible)
+            {
+                ModelState.AddModelError(nameof(GenerarReporteViewModel.Desde), "Ingresá una fecha válida.");
+            }
+
+            if (hastaIlegible)
+            {
+                ModelState.AddModelError(nameof(GenerarReporteViewModel.Hasta), "Ingresá una fecha válida.");
+            }
+
+            return View(nameof(Index), new GenerarReporteViewModel { Tipo = tipo });
+        }
+
+        var formulario = new GenerarReporteViewModel { Desde = desde, Hasta = hasta, Tipo = tipo };
+        var errores = formulario.Validate(new ValidationContext(formulario)).ToList();
+
+        if (errores.Count == 0)
         {
             return null;
         }
 
-        ModelState.AddModelError(nameof(GenerarReporteViewModel.Hasta), "La fecha hasta no puede ser anterior a la fecha desde.");
+        foreach (var error in errores)
+        {
+            foreach (var campo in error.MemberNames)
+            {
+                ModelState.AddModelError(campo, error.ErrorMessage ?? string.Empty);
+            }
+        }
 
-        return View(nameof(Index), new GenerarReporteViewModel { Desde = desde, Hasta = hasta, Tipo = tipo });
+        return View(nameof(Index), formulario);
     }
 }

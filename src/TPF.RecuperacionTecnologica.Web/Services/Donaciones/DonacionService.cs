@@ -484,6 +484,9 @@ public class DonacionService : IDonacionService
         };
     }
 
+    public static bool OrdenGestionValido(string? orden) =>
+        string.IsNullOrWhiteSpace(orden) || ColumnasOrdenGestion.ContainsKey(OrdenListado.Interpretar(orden).Columna);
+
     private static readonly IReadOnlyDictionary<string, Expression<Func<Equipo, object>>> ColumnasOrdenGestion =
         new Dictionary<string, Expression<Func<Equipo, object>>>
         {
@@ -502,7 +505,7 @@ public class DonacionService : IDonacionService
         };
 
     public async Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
-        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null)
+        string? busqueda, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null)
     {
         var consulta = _context.Equipos.AsNoTracking();
 
@@ -520,19 +523,16 @@ public class DonacionService : IDonacionService
 
         if (!string.IsNullOrEmpty(texto))
         {
+            var patron = BusquedaTexto.Patron(texto);
+
             consulta = int.TryParse(texto, out var nroEquipo)
                 ? consulta.Where(e => e.NroEquipo == nroEquipo)
-                : consulta.Where(e => e.Marca.Contains(texto) || e.Modelo.Contains(texto));
-        }
-
-        var textoDonante = donante?.Trim();
-
-        if (!string.IsNullOrEmpty(textoDonante))
-        {
-            consulta = consulta.Where(e =>
-                (e.UsuarioDonante.Nombre + " " + e.UsuarioDonante.Apellido).Contains(textoDonante)
-                || e.UsuarioDonante.RazonSocial!.Contains(textoDonante)
-                || e.UsuarioDonante.CorreoElectronico.Contains(textoDonante));
+                : consulta.Where(e => EF.Functions.Like(EF.Functions.Collate(e.Marca, BusquedaTexto.Colacion), patron)
+                    || EF.Functions.Like(EF.Functions.Collate(e.Modelo, BusquedaTexto.Colacion), patron)
+                    || EF.Functions.Like(EF.Functions.Collate(e.UsuarioDonante.Nombre + " " + e.UsuarioDonante.Apellido, BusquedaTexto.Colacion), patron)
+                    || EF.Functions.Like(EF.Functions.Collate(e.UsuarioDonante.Apellido + " " + e.UsuarioDonante.Nombre, BusquedaTexto.Colacion), patron)
+                    || EF.Functions.Like(EF.Functions.Collate(e.UsuarioDonante.RazonSocial!, BusquedaTexto.Colacion), patron)
+                    || EF.Functions.Like(EF.Functions.Collate(e.UsuarioDonante.CorreoElectronico, BusquedaTexto.Colacion), patron));
         }
 
         var total = await consulta.CountAsync();

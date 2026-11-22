@@ -5,18 +5,11 @@ namespace TPF.RecuperacionTecnologica.Web.ViewModels.Donaciones;
 public class DonacionListadoViewModel
 {
     private string? _busqueda;
-    private string? _donante;
 
     public string? Busqueda
     {
         get => _busqueda;
         set => _busqueda = value is { Length: > 60 } ? value[..60] : value;
-    }
-
-    public string? Donante
-    {
-        get => _donante;
-        set => _donante = value is { Length: > 60 } ? value[..60] : value;
     }
 
     public EstadoEquipo? Estado { get; set; }
@@ -39,8 +32,9 @@ public class DonacionListadoViewModel
 
     public bool ErrorAlCargar { get; set; }
 
+    public bool FiltroInvalido { get; set; }
+
     public bool HayFiltros =>
         !string.IsNullOrWhiteSpace(Busqueda)
-        || !string.IsNullOrWhiteSpace(Donante)
         || Estado is not null;
 }

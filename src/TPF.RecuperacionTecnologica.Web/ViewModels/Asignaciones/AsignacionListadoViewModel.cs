@@ -35,6 +35,8 @@ public class AsignacionListadoViewModel
 
     public bool ErrorAlCargar { get; set; }
 
+    public bool FiltroInvalido { get; set; }
+
     public bool HayFiltros =>
         !string.IsNullOrWhiteSpace(Busqueda)
         || Estado is not null

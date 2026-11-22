@@ -58,14 +58,14 @@ public interface IDonacionService
 
     /// <summary>
     /// Lista las donaciones de todos los Usuarios para el personal interno, de la más reciente a la más antigua,
-    /// con filtros opcionales de búsqueda (número, marca o modelo), donante (nombre, razón social o correo) y estado de equipo.
+    /// con filtros opcionales de búsqueda (número, marca, modelo o donante: nombre, razón social o correo) y estado de equipo.
     /// </summary>
     /// <param name="nroUsuario">Si se indica, solo las donaciones de ese Usuario.</param>
     /// <returns>
     /// La página pedida, ajustada al rango válido, o vacía si ninguna donación cumple los filtros.
     /// </returns>
     Task<ResultadoPaginado<DonacionGestionFilaViewModel>> ListarTodasAsync(
-        string? busqueda, string? donante, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null);
+        string? busqueda, EstadoEquipo? estado, int pagina, int tamanoPagina, int? nroUsuario = null, string? orden = null);
 
     /// <summary>
     /// Devuelve los datos de una donación de cualquier Usuario, en cualquier estado, para consulta del personal interno.

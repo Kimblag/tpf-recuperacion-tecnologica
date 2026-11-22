@@ -64,7 +64,7 @@ public class UsuariosController : Controller
         var solicitudes = await _solicitudConsultaService.ListarTodasAsync(
             null, null, null, null, 1, CantidadEnFicha, nroUsuario: id);
         var donaciones = await _donacionService.ListarTodasAsync(
-            null, null, null, 1, CantidadEnFicha, nroUsuario: id);
+            null, null, 1, CantidadEnFicha, nroUsuario: id);
 
         usuario.Solicitudes = solicitudes.Elementos;
         usuario.Donaciones = donaciones.Elementos;
@@ -155,7 +155,7 @@ public class UsuariosController : Controller
         var solicitudes = await _solicitudConsultaService.ListarTodasAsync(
             null, null, null, null, 1, CantidadEnFicha, nroUsuario: id);
         var donaciones = await _donacionService.ListarTodasAsync(
-            null, null, null, 1, CantidadEnFicha, nroUsuario: id);
+            null, null, 1, CantidadEnFicha, nroUsuario: id);
 
         ficha.Solicitudes = solicitudes.Elementos;
         ficha.Donaciones = donaciones.Elementos;

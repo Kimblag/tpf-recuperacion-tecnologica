@@ -31,6 +31,7 @@ public class EquiposController : Controller
     [Authorize(Policy = "PersonalInterno")]
     public async Task<IActionResult> Index(EquipoListadoViewModel filtros)
     {
+        filtros.FiltroInvalido = !ModelState.IsValid;
         filtros.Orden ??= OrdenEquipo.RegistroDesc;
 
         await CargarListadoAsync(filtros, soloPendientesDeDiagnostico: false);
@@ -42,6 +43,7 @@ public class EquiposController : Controller
     [Authorize(Policy = "SoloTecnico")]
     public async Task<IActionResult> Pendientes(EquipoListadoViewModel filtros)
     {
+        filtros.FiltroInvalido = !ModelState.IsValid;
         filtros.Orden ??= OrdenEquipo.RegistroAsc;
 
         await CargarListadoAsync(filtros, soloPendientesDeDiagnostico: true);

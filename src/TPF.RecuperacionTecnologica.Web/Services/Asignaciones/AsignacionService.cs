@@ -163,6 +163,9 @@ public class AsignacionService : IAsignacionService
             || (a.Solicitud.Usuario.RazonSocial ?? (a.Solicitud.Usuario.Nombre + " " + a.Solicitud.Usuario.Apellido)).Contains(texto));
     }
 
+    public static bool OrdenValido(string? orden) =>
+        string.IsNullOrWhiteSpace(orden) || ColumnasOrden.ContainsKey(OrdenListado.Interpretar(orden).Columna);
+
     private static readonly IReadOnlyDictionary<string, Expression<Func<Asignacion, object>>> ColumnasOrden =
         new Dictionary<string, Expression<Func<Asignacion, object>>>
         {

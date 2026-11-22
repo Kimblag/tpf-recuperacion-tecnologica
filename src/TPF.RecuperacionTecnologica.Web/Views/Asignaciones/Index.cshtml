@@ -35,6 +35,14 @@
         }
     </div>
 
+    @if (Model.FiltroInvalido)
+    {
+        <div class="alert alert-warning" role="status">
+            <partial name="_Icon" model="@("alert")" />
+            <div class="alert-body">Alguno de los filtros indicados no es válido y se ignoró.</div>
+        </div>
+    }
+
     <section class="card overflow" aria-label="Asignaciones" data-listado data-filas-carga="5" data-lista-guardar="gestion-asignaciones">
         <partial name="_AyudaEstadosAsignacion" />
 
