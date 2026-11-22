@@ -44,9 +44,20 @@ public class AsignacionesController : Controller
     [Authorize(Policy = "Coordinacion")]
     public async Task<IActionResult> Index(AsignacionListadoViewModel filtros)
     {
+        filtros.FiltroInvalido = !ModelState.IsValid
+            || !AsignacionService.OrdenValido(filtros.Orden)
+            || (filtros.Estado is { } estadoElegido && !Enum.IsDefined(estadoElegido))
+            || (filtros.Plazo is { } plazoElegido && !Enum.IsDefined(plazoElegido));
+
         if (!Request.Query.ContainsKey(nameof(AsignacionListadoViewModel.Estado)))
         {
             filtros.Estado = EstadoAsignacion.Vigente;
+        }
+
+        if (filtros.Plazo is not null)
+        {
+            filtros.Estado = EstadoAsignacion.Vigente;
+            ModelState.Remove(nameof(AsignacionListadoViewModel.Estado));
         }
 
         try
