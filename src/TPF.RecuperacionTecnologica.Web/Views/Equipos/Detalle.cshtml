@@ -113,21 +113,26 @@
                 </div>
             </section>
 
+            @{
+                var verificado = Model.DiagnosticoVigente;
+                var hayVerificadas = verificado is not null
+                    && new[] { verificado.Procesador, verificado.MemoriaRam, verificado.Almacenamiento, verificado.TamanoPantalla, verificado.EstadoBateria, verificado.Otros }
+                        .Any(texto => !string.IsNullOrWhiteSpace(texto));
+            }
+
             <section class="card">
                 <div class="card-header">
                     <div>
                         <h2 class="card-title">Características técnicas</h2>
-                        <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
+                        @if (hayVerificadas)
+                        {
+                            <p class="card-sub">Verificadas por el técnico en el diagnóstico</p>
+                        }
                     </div>
                 </div>
                 <div class="card-body">
-                    @if (Model.DiagnosticoVigente is { } verificado)
+                    @if (hayVerificadas)
                     {
-                        var hayVerificadas = new[] { verificado.Procesador, verificado.MemoriaRam, verificado.Almacenamiento, verificado.TamanoPantalla, verificado.EstadoBateria, verificado.Otros }
-                            .Any(texto => !string.IsNullOrWhiteSpace(texto));
-
-                        if (hayVerificadas)
-                        {
                             <dl class="dl">
                                 @if (!string.IsNullOrWhiteSpace(verificado.Procesador))
                                 {
@@ -160,15 +165,10 @@
                                     <dd>@verificado.Otros</dd>
                                 }
                             </dl>
-                        }
-                        else
-                        {
-                            <p class="muted">No se verificaron características técnicas.</p>
-                        }
                     }
                     else
                     {
-                        <p class="muted">Todavía no hay características verificadas.</p>
+                        <p class="muted">Sin características verificadas.</p>
                     }
                 </div>
             </section>
