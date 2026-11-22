@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
@@ -30,6 +31,7 @@ public class EdicionUsuarioViewModel : IValidatableObject
 
     [Display(Name = "Teléfono")]
     [StringLength(20, ErrorMessage = "Máximo 20 caracteres.")]
+    [TelefonoContacto]
     public string? Telefono { get; set; }
 
     [Display(Name = "Correo electrónico")]

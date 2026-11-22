@@ -39,6 +39,49 @@
         }, 0);
     });
 
+    function actualizarResumen() {
+        var aviso = document.getElementById('resumen-errores');
+        if (!aviso) return;
+
+        var lista = aviso.querySelector('ul');
+        if (!lista) return;
+
+        lista.innerHTML = '';
+
+        document.querySelectorAll('[data-valmsg-for]').forEach(function (mensaje) {
+            if (!mensaje.textContent.trim()) return;
+
+            var contenedor = mensaje.closest('.field') || mensaje.closest('form') || document;
+            var etiqueta = contenedor.querySelector('label');
+            var control = contenedor.querySelector('input:not([type="hidden"]), select, textarea');
+            var item = document.createElement('li');
+            var enlace = document.createElement('a');
+
+            enlace.textContent = etiqueta ? etiqueta.firstChild.textContent.trim() : mensaje.getAttribute('data-valmsg-for');
+            if (control && control.id) enlace.href = '#' + control.id;
+            item.appendChild(enlace);
+            lista.appendChild(item);
+        });
+
+        var titulo = aviso.querySelector('.alert-title');
+        if (titulo) titulo.textContent = 'Revisá los campos marcados';
+
+        aviso.hidden = false;
+        setTimeout(function () { aviso.focus(); }, 0);
+    }
+
+    if (window.jQuery) {
+        window.jQuery(formulario).on('invalid-form.validate', function () {
+            if (formulario.hasAttribute('data-resumen-servidor')) {
+                boton.disabled = true;
+                formulario.submit();
+                return;
+            }
+
+            setTimeout(actualizarResumen, 0);
+        });
+    }
+
     window.addEventListener('pageshow', function () {
         boton.disabled = false;
     });

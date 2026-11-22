@@ -56,7 +56,7 @@ public class RegistroSolicitudAsistidaViewModel : IValidatableObject
                 "El correo electrónico es obligatorio.",
                 [$"{nameof(Usuario)}.{nameof(Usuario.CorreoElectronico)}"]);
         }
-        else if (!new EmailAddressAttribute().IsValid(correo))
+        else if (!ValidacionesFormato.CorreoValido(correo))
         {
             yield return new ValidationResult(
                 "El correo electrónico no es válido.",

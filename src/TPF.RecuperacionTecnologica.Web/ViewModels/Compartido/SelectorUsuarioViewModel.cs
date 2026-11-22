@@ -49,7 +49,7 @@ public class SelectorUsuarioViewModel
     [StringLength(150, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
     public string? RazonSocial { get; set; }
 
-    [Display(Name = "Número de documento")]
+    [Display(Name = "DNI o CUIT")]
     [StringLength(11, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
     public string? NroDocumento { get; set; }
 
@@ -59,6 +59,7 @@ public class SelectorUsuarioViewModel
 
     [Display(Name = "Teléfono")]
     [StringLength(20, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    [TelefonoContacto]
     public string? Telefono { get; set; }
 
     [Display(Name = "Correo electrónico")]
