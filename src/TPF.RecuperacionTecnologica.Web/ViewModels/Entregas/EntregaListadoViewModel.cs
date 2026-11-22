@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Entregas;
 
@@ -43,6 +44,16 @@ public class EntregaListadoViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (FechaDesde is not null && !RangoFechasPermitido.EstaDentro(FechaDesde.Value))
+        {
+            yield return new ValidationResult(RangoFechasPermitido.Mensaje(), [nameof(FechaDesde)]);
+        }
+
+        if (FechaHasta is not null && !RangoFechasPermitido.EstaDentro(FechaHasta.Value))
+        {
+            yield return new ValidationResult(RangoFechasPermitido.Mensaje(), [nameof(FechaHasta)]);
+        }
+
         if (FechaDesde is not null && FechaHasta is not null && FechaDesde.Value.Date > FechaHasta.Value.Date)
         {
             yield return new ValidationResult(
