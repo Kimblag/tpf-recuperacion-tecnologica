@@ -25,6 +25,8 @@ public class EntregaListadoViewModel : IValidatableObject
 
     public int Total { get; set; }
 
+    public bool FiltroInvalido { get; set; }
+
     public const int TamanoPagina = 10;
 
     public int Pagina { get; set; } = 1;

@@ -35,6 +35,9 @@ public class DiagnosticoService : IDiagnosticoService
         _logger = logger;
     }
 
+    public static bool OrdenValido(string? orden) =>
+        string.IsNullOrWhiteSpace(orden) || ColumnasOrden.ContainsKey(OrdenListado.Interpretar(orden).Columna);
+
     private static readonly IReadOnlyDictionary<string, Expression<Func<Diagnostico, object>>> ColumnasOrden =
         new Dictionary<string, Expression<Func<Diagnostico, object>>>
         {
