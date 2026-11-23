@@ -7,12 +7,12 @@
     {
         var partes = clave.Split('.');
         var seccion = Array.IndexOf(secciones, partes[0]);
-        var principal = propiedades.FindIndex(p => p.Name == partes[0]);
+        var principal = propiedades.FindIndex(p => string.Equals(p.Name, partes[0], StringComparison.OrdinalIgnoreCase));
         var subposicion = 0;
 
         if (partes.Length > 1 && principal >= 0)
         {
-            subposicion = propiedades[principal].Properties.ToList().FindIndex(p => p.Name == partes[1]);
+            subposicion = propiedades[principal].Properties.ToList().FindIndex(p => string.Equals(p.Name, partes[1], StringComparison.OrdinalIgnoreCase));
         }
 
         return (seccion < 0 ? secciones.Length : seccion, principal, subposicion);
@@ -24,13 +24,40 @@
         .ToList();
     var soloGenerales = campos.All(c => string.IsNullOrEmpty(c.Key));
 
+    string ClaveCanonica(string clave)
+    {
+        var metadata = ViewData.ModelMetadata;
+        var partes = new List<string>();
+
+        foreach (var parte in clave.Split('.'))
+        {
+            var propiedad = metadata.Properties.FirstOrDefault(p => string.Equals(p.Name, parte, StringComparison.OrdinalIgnoreCase));
+
+            partes.Add(propiedad?.Name ?? parte);
+
+            if (propiedad is null)
+            {
+                continue;
+            }
+
+            metadata = propiedad;
+        }
+
+        return string.Join('.', partes);
+    }
+
     string NombreDelCampo(string clave)
     {
+        if (clave.EndsWith(".NroDocumento", StringComparison.Ordinal) && ViewData["NombreDocumento"] is string nombreDocumento)
+        {
+            return nombreDocumento;
+        }
+
         var metadata = ViewData.ModelMetadata;
 
         foreach (var parte in clave.Split('.'))
         {
-            var propiedad = metadata.Properties.FirstOrDefault(p => p.Name == parte);
+            var propiedad = metadata.Properties.FirstOrDefault(p => string.Equals(p.Name, parte, StringComparison.OrdinalIgnoreCase));
 
             if (propiedad is null)
             {
@@ -58,7 +85,7 @@
                     }
                     else
                     {
-                        <li><a href="#@Html.GenerateIdFromName(campo.Key)">@NombreDelCampo(campo.Key)</a></li>
+                        <li><a href="#@Html.GenerateIdFromName(ClaveCanonica(campo.Key))">@NombreDelCampo(campo.Key)</a></li>
                     }
                 }
             </ul>
