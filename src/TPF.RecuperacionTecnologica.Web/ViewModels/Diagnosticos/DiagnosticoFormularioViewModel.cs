@@ -16,10 +16,12 @@ public class DiagnosticoFormularioViewModel
 
     [Display(Name = "Fallas detectadas")]
     [StringLength(500, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    [MotivoSignificativo]
     public string? DetalleFallas { get; set; }
 
     [Display(Name = "Detalle de reparación")]
     [StringLength(500, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    [MotivoSignificativo]
     public string? DetalleReparacionesRealizadas { get; set; }
 
     [StringLength(500, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]

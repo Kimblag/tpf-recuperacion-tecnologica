@@ -35,6 +35,13 @@ public static class ValidacionesFormato
     public static bool NombreValido(string? texto) =>
         !string.IsNullOrWhiteSpace(texto) && PatronNombre.IsMatch(texto.Trim());
 
+    public static bool MotivoSignificativo(string? texto)
+    {
+        var valor = texto?.Trim();
+
+        return !string.IsNullOrEmpty(valor) && valor.Length >= 5 && valor.Count(char.IsLetter) >= 3;
+    }
+
     private static readonly Regex PatronTextoInstitucional = new(
         @"^[\p{L}\p{N}\s.,;:'’""&()/°#!¡?¿+_\-–]+$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -106,4 +113,15 @@ public sealed class TextoInstitucionalAttribute : ValidationAttribute
 
     public override bool IsValid(object? value) =>
         value is null or "" || ValidacionesFormato.TextoInstitucionalValido(value as string);
+}
+
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class MotivoSignificativoAttribute : ValidationAttribute
+{
+    public MotivoSignificativoAttribute() : base("Explicá el motivo con al menos 5 caracteres y 3 letras.")
+    {
+    }
+
+    public override bool IsValid(object? value) =>
+        value is null or "" || ValidacionesFormato.MotivoSignificativo(value as string);
 }

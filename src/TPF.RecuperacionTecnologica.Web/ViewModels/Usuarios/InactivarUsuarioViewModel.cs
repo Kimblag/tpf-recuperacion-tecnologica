@@ -1,3 +1,4 @@
+using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
 using System.ComponentModel.DataAnnotations;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Usuarios;
@@ -9,6 +10,7 @@ public class InactivarUsuarioViewModel
     [Display(Name = "Motivo de inactivación")]
     [Required(ErrorMessage = "El motivo de inactivación es obligatorio.")]
     [StringLength(300, ErrorMessage = "Máximo 300 caracteres.")]
+    [MotivoSignificativo]
     public string MotivoInactivacion { get; set; } = string.Empty;
 
     public string? NombreCompleto { get; set; }
