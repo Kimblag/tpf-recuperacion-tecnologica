@@ -20,6 +20,11 @@
         var permitidos = TiposSolicitantePermitidos.Para(tipoDeCuenta.Value).Select(t => ((int)t).ToString()).ToList();
         tiposSolicitante = tiposSolicitante.Where(i => permitidos.Contains(i.Value)).ToList();
     }
+
+    if (tiposSolicitante.Count == 1 && Model.TipoSolicitante is null)
+    {
+        tiposSolicitante[0].Selected = true;
+    }
 }
 
 @section Migas {
