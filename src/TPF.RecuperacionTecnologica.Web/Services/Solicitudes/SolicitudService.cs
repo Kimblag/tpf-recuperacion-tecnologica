@@ -15,7 +15,6 @@ namespace TPF.RecuperacionTecnologica.Web.Services.Solicitudes;
 
 public class SolicitudService : ISolicitudService
 {
-    // se usa solo si todavía no existe la fila de configuración
     private const int MaximoPendientesPorDefecto = 3;
 
     private const string MensajeUsuarioNoHabilitado = "La cuenta no está habilitada para registrar solicitudes.";
@@ -333,7 +332,6 @@ public class SolicitudService : ISolicitudService
             .Select(p => (int?)p.CodigoPersonal)
             .FirstOrDefaultAsync();
 
-    // el Coordinador solo puede tocar solicitudes asistidas; las de autoservicio quedan en manos de la persona
     private async Task<(Solicitud? Solicitud, int CodigoCoordinador, IdentityResult? Error)> ObtenerAsistidaParaModificarAsync(
         string identityUserIdCoordinador, int nroSolicitud)
     {
@@ -384,7 +382,6 @@ public class SolicitudService : ISolicitudService
             return IdentityResult.Success;
         }
 
-        // FechaSolicitud no se toca: la solicitud conserva su lugar en la cola
         solicitud.MotivoSolicitud = motivoNuevo;
         solicitud.FechaUltimaModificacion = DateTime.UtcNow;
 
