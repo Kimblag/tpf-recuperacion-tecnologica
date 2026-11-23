@@ -14,7 +14,6 @@ namespace TPF.RecuperacionTecnologica.Web.Controllers;
 
 public class AsignacionesController : Controller
 {
-    // se usa solo si todavía no existe la fila de configuración
     private const int DiasLimiteRetiroPorDefecto = 10;
 
     private readonly IDonacionService _donacionService;
@@ -126,7 +125,6 @@ public class AsignacionesController : Controller
             return NotFound();
         }
 
-        // se conserva lo escrito para no perderlo al mostrar el error
         detalle.Liberacion.MotivoLiberacion = formulario.MotivoLiberacion;
 
         return View(nameof(Detalle), detalle);
@@ -196,7 +194,6 @@ public class AsignacionesController : Controller
         {
             var selector = formulario.Equipo;
 
-            // solo se ofrecen equipos con solicitudes pendientes; sin búsqueda se precargan los más recientes
             selector.BusquedaRealizada = true;
             selector.Resultados = await _asignacionService.ObtenerEquiposConSolicitudPendienteAsync(
                 selector.Busqueda, MaximoResultadosEquipo);
@@ -217,7 +214,6 @@ public class AsignacionesController : Controller
         formulario.Fotos = equipo.Imagenes;
         formulario.Candidatas = await _asignacionService.ObtenerCandidatasAsync(formulario.NroEquipo.Value);
 
-        // si no llegó una elección válida, se preselecciona la sugerida
         if (formulario.NroSolicitudSeleccionada is null
             || formulario.Candidatas.All(c => c.NroSolicitud != formulario.NroSolicitudSeleccionada))
         {
