@@ -6,6 +6,7 @@
     ViewData["FormularioId"] = "f-donacion-asistida";
     ViewData["Operacion"] = "donación";
     ViewData["OrdenResumen"] = new[] { "Usuario" };
+    ViewData["NombreDocumento"] = Model.Usuario.TipoUsuario == TipoUsuario.Persona ? "DNI" : "CUIT";
 
     var donante = Model.Usuario.Modo == ModoUsuarioAsistido.Existente
         ? (Model.Usuario.Encontrado?.Nombre ?? string.Empty)

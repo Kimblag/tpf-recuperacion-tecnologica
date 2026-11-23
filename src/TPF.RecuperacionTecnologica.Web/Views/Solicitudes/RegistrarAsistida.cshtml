@@ -5,7 +5,9 @@
 @{
     ViewData["Title"] = "Nueva solicitud asistida";
     ViewData["FormularioId"] = "f-solicitud-asistida";
+    ViewData["BusquedaEquipoObligatoria"] = true;
     ViewData["OrdenResumen"] = new[] { "NroEquipo", "Usuario", "TipoSolicitante", "MotivoSolicitud" };
+    ViewData["NombreDocumento"] = Model.Usuario.TipoUsuario == TipoUsuario.Persona ? "DNI" : "CUIT";
 
     var origenAsistida = Html.GetEnumSelectList<OrigenSolicitud>().First(i => i.Value == ((int)OrigenSolicitud.Asistida).ToString()).Text;
 
