@@ -36,6 +36,7 @@ public class DiagnosticosController : Controller
     public async Task<IActionResult> Index(DiagnosticoListadoViewModel filtros)
     {
         filtros.FiltroInvalido = !ModelState.IsValid
+            || !DiagnosticoService.OrdenValido(filtros.Orden)
             || (filtros.Tipo is { } tipo && !Enum.IsDefined(tipo))
             || (filtros.Dictamen is { } dictamen && !Enum.IsDefined(dictamen));
 

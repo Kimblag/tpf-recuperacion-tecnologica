@@ -167,7 +167,7 @@ public class EntregaService : IEntregaService
         var nombre = nombreQuienRetira?.Trim();
         var documento = SoloDigitos(documentoQuienRetira);
 
-        if (string.IsNullOrEmpty(nombre) || nombre.Length > MaximoNombre || documento.Length is < 7 or > 11)
+        if (!ValidacionesFormato.NombreValido(nombre) || nombre!.Length > MaximoNombre || documento.Length is < 7 or > 11 || documento.All(c => c == '0'))
         {
             return ResultadoEntrega.Fallo(ErrorEntrega.DatosInvalidos,
                 "Los datos de quien retira no son válidos. Revisá el nombre y el documento.");
@@ -288,6 +288,9 @@ public class EntregaService : IEntregaService
 
         return ResultadoEntrega.Ok(entrega.NroEntrega);
     }
+
+    public static bool OrdenValido(string? orden) =>
+        string.IsNullOrWhiteSpace(orden) || ColumnasOrden.ContainsKey(OrdenListado.Interpretar(orden).Columna);
 
     private static readonly IReadOnlyDictionary<string, Expression<Func<Entrega, object>>> ColumnasOrden =
         new Dictionary<string, Expression<Func<Entrega, object>>>

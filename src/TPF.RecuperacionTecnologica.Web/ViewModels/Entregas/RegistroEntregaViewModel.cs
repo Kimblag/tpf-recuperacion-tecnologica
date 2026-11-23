@@ -45,11 +45,12 @@ public class RegistroEntregaViewModel
     [Display(Name = "Nombre y apellido de quien retira")]
     [Required(ErrorMessage = "El nombre y apellido de quien retira es obligatorio.")]
     [StringLength(100, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    [NombrePersona]
     public string NombreQuienRetira { get; set; } = string.Empty;
 
     [Display(Name = "Documento de quien retira")]
     [Required(ErrorMessage = "El documento de quien retira es obligatorio.")]
-    [RegularExpression(@"^\d{7,11}$", ErrorMessage = "El documento debe tener entre 7 y 11 dígitos, sin puntos ni espacios.")]
+    [RegularExpression(@"^(?!0+$)\d{7,11}$", ErrorMessage = "El documento debe tener entre 7 y 11 dígitos, sin puntos ni espacios, y no puede ser solo ceros.")]
     public string DocumentoQuienRetira { get; set; } = string.Empty;
 
     [Display(Name = "Buscar asignación")]

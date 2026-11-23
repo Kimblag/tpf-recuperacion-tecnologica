@@ -41,7 +41,15 @@ public class EntregasController : Controller
     [Authorize(Policy = "Coordinacion")]
     public async Task<IActionResult> Index(EntregaListadoViewModel filtros)
     {
-        // con un rango de fechas invertido se muestra el mensaje sin consultar
+        filtros.FiltroInvalido = !EntregaService.OrdenValido(filtros.Orden);
+
+        if (ModelState.TryGetValue(nameof(filtros.Pagina), out var entradaPagina) && entradaPagina.Errors.Count > 0)
+        {
+            ModelState.Remove(nameof(filtros.Pagina));
+            filtros.Pagina = 1;
+            filtros.FiltroInvalido = true;
+        }
+
         if (!ModelState.IsValid)
         {
             return View(filtros);
