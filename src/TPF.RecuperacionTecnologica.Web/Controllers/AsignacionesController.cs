@@ -168,7 +168,9 @@ public class AsignacionesController : Controller
                 return RedirectToAction(nameof(Detalle), new { id = resultado.NroAsignacion });
             }
 
-            ModelState.AddModelError(string.Empty, resultado.Mensaje!);
+            ModelState.AddModelError(
+                resultado.Error == ErrorAsignacion.JustificacionRequerida ? nameof(formulario.JustificacionCambio) : string.Empty,
+                resultado.Mensaje!);
         }
 
         await CompletarFormularioAsync(formulario);
