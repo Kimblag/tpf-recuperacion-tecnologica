@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using TPF.RecuperacionTecnologica.Web.ViewModels.Compartido;
+using System.ComponentModel.DataAnnotations;
 using TPF.RecuperacionTecnologica.Web.Models.Enums;
 
 namespace TPF.RecuperacionTecnologica.Web.ViewModels.Solicitudes;
@@ -10,6 +11,7 @@ public class EditarMotivoSolicitudViewModel
     [Display(Name = "Motivo de la solicitud")]
     [Required(ErrorMessage = "El motivo de la solicitud es obligatorio.")]
     [StringLength(500, ErrorMessage = "El campo {0} no puede superar los {1} caracteres.")]
+    [MotivoSignificativo]
     public string MotivoSolicitud { get; set; } = string.Empty;
 
     public int NroEquipo { get; set; }

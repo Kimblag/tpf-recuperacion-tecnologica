@@ -114,7 +114,10 @@ public class UsuariosController : Controller
 
         if (!ModelState.IsValid)
         {
-            TempData["MensajeError"] = "El motivo de inactivación es obligatorio.";
+            TempData["MensajeError"] = ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(m => !string.IsNullOrWhiteSpace(m)) ?? "El motivo de inactivación no es válido.";
             return RedirectToAction(nameof(Detalle), new { id = modelo.NroUsuario });
         }
 
