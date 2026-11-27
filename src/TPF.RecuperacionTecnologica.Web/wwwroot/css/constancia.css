@@ -127,6 +127,10 @@ body.impresion {
         display: none !important;
     }
 
+    :root {
+        --fs: 1 !important;
+    }
+
     body.impresion {
         background: #fff;
         padding: 0;

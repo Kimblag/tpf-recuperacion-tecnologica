@@ -42,6 +42,7 @@
 <body>
     <div class="auth">
         <div class="auth-theme">
+            <partial name="_AccessibilityMenu" />
             <partial name="_ThemeToggle" />
         </div>
         <div class="auth-brand">
@@ -64,7 +65,9 @@
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/js/a11y.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

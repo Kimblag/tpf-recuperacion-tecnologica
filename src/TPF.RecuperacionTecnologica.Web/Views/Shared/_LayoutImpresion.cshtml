@@ -8,11 +8,25 @@
     <link rel="icon" href="~/favicon.ico" sizes="48x48" />
     <link rel="icon" href="~/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" />
+    <script>
+        (function () {
+            var html = document.documentElement;
+            try {
+                var saved = JSON.parse(localStorage.getItem('a11y') || 'null');
+                if (saved) {
+                    html.style.setProperty('--fs', saved.fs || '1');
+                    html.setAttribute('data-contrast', saved.contrast || 'normal');
+                    html.setAttribute('data-motion', saved.motion || 'normal');
+                }
+            } catch (e) { }
+        })();
+    </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/a11y.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/components.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/constancia.css" asp-append-version="true" />
 </head>
@@ -21,6 +35,8 @@
         @RenderBody()
     </main>
 
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/a11y.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
