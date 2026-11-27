@@ -204,6 +204,20 @@
     font-weight: 600;
 }
 
+.btn-surface {
+    background-color: var(--app-surface);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
+}
+
+    .btn-surface:hover {
+        background-color: var(--app-surface-low);
+    }
+
+    .btn-surface.dropdown-toggle::after {
+        display: none;
+    }
+
 @media (max-width: 767.98px) {
     .form-grid {
         grid-template-columns: 1fr;

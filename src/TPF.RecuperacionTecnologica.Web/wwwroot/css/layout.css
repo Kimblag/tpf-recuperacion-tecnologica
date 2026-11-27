@@ -149,20 +149,6 @@
     flex: none;
 }
 
-.btn-surface {
-    background-color: var(--app-surface);
-    color: var(--bs-body-color);
-    border: 1px solid var(--bs-border-color);
-}
-
-    .btn-surface:hover {
-        background-color: var(--app-surface-low);
-    }
-
-    .btn-surface.dropdown-toggle::after {
-        display: none;
-    }
-
 .btn-icon {
     width: 32px;
     height: 32px;
